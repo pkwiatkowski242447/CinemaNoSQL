@@ -1,0 +1,28 @@
+package model.managers;
+
+import model.Client;
+import model.Movie;
+import model.Ticket;
+import model.exceptions.repository_exceptions.RepositoryCreateException;
+import model.repositories.Repository;
+import model.ticket_types.TypeOfTicket;
+
+import java.util.Date;
+import java.util.UUID;
+
+public class TicketManager extends Manager<Ticket> {
+    public TicketManager(Repository<Ticket> objectRepository) {
+        super(objectRepository);
+    }
+
+    public Ticket register(Date movieTime, Date reservationTime, Movie movie, Client client, TypeOfTicket typeOfTicket) {
+        Ticket ticketToRepo = null;
+        try{
+            ticketToRepo = new Ticket(UUID.randomUUID(), movieTime, reservationTime, movie, client, typeOfTicket);
+            getObjectRepository().create(ticketToRepo);
+        } catch (RepositoryCreateException exception) {
+            exception.printStackTrace();
+        }
+        return ticketToRepo;
+    }
+}
