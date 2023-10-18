@@ -35,7 +35,6 @@ public class ClientRepositoryTest {
 
     @AfterAll
     public static void destroy() {
-        // entityManager.getTransaction().commit();
         if (entityManagerFactory != null) {
             entityManagerFactory.close();
         }

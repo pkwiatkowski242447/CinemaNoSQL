@@ -39,7 +39,6 @@ public class MovieManagerTest {
 
     @AfterAll
     public static void destroy() {
-        // entityManager.getTransaction().commit();
         if (entityManagerFactory != null) {
             entityManagerFactory.close();
         }

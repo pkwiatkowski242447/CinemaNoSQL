@@ -2,6 +2,7 @@ package model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import model.exceptions.model_exceptions.TicketReservationException;
 import model.ticket_types.TypeOfTicket;
 
 import java.util.Date;
@@ -43,14 +44,27 @@ public class Ticket {
     public Ticket() {
     }
 
-    public Ticket(UUID ticketID, Date movieTime, Date reservationTime, Movie movie, Client client, TypeOfTicket typeOfTicket) {
+    public Ticket(UUID ticketID, Date movieTime, Date reservationTime, Movie movie, Client client, TypeOfTicket typeOfTicket) throws TicketReservationException, NullPointerException{
+        try {
+            if (movie.getScreeningRoom().getNumberOfAvailableSeats() > 0) {
+                movie.getScreeningRoom().setNumberOfAvailableSeats(movie.getScreeningRoom().getNumberOfAvailableSeats() - 1);
+            } else {
+                throw new TicketReservationException("Cannot create a new ticket - there are no available seats.");
+            }
+        } catch (NullPointerException exception) {
+            throw new TicketReservationException("Reference to movie object is null.");
+        }
         this.ticketID = ticketID;
         this.movieTime = movieTime;
         this.reservationTime = reservationTime;
         this.movie = movie;
         this.client = client;
         this.typeOfTicket = typeOfTicket;
-        this.ticketFinalPrice = typeOfTicket.applyDiscount();
+        try {
+            this.ticketFinalPrice = typeOfTicket.applyDiscount();
+        } catch (NullPointerException exception) {
+            throw new TicketReservationException("Reference to ticket type object is null");
+        }
         this.ticketStatusActive = true;
     }
 

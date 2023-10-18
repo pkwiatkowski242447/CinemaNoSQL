@@ -3,6 +3,7 @@ package model.managers;
 import model.Client;
 import model.Movie;
 import model.Ticket;
+import model.exceptions.model_exceptions.TicketReservationException;
 import model.exceptions.repository_exceptions.RepositoryCreateException;
 import model.repositories.Repository;
 import model.ticket_types.TypeOfTicket;
@@ -20,7 +21,7 @@ public class TicketManager extends Manager<Ticket> {
         try{
             ticketToRepo = new Ticket(UUID.randomUUID(), movieTime, reservationTime, movie, client, typeOfTicket);
             getObjectRepository().create(ticketToRepo);
-        } catch (RepositoryCreateException exception) {
+        } catch (RepositoryCreateException | TicketReservationException exception) {
             exception.printStackTrace();
         }
         return ticketToRepo;

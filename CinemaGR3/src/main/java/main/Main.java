@@ -7,6 +7,7 @@ import model.Client;
 import model.Movie;
 import model.ScreeningRoom;
 import model.Ticket;
+import model.exceptions.model_exceptions.TicketReservationException;
 import model.managers.*;
 import model.repositories.*;
 import model.ticket_types.Normal;
@@ -52,9 +53,18 @@ public class Main {
         Date reservationTimeNo2 = new Calendar.Builder().setDate(2023, 9, 31).setTimeOfDay(14, 15, 0).build().getTime();;
         Date reservationTimeNo3 = new Calendar.Builder().setDate(2023, 10, 11).setTimeOfDay(18, 7, 15).build().getTime();;
 
-        Ticket ticketNo1 = new Ticket(UUID.randomUUID(), movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, new Normal(UUID.randomUUID(), 30));;
-        Ticket ticketNo2 = new Ticket(UUID.randomUUID(), movieTimeNo2, reservationTimeNo2, movieNo2, clientNo2, new Reduced(UUID.randomUUID(), 25));;
-        Ticket ticketNo3 = new Ticket(UUID.randomUUID(), movieTimeNo3, reservationTimeNo3, movieNo3, clientNo3, new Normal(UUID.randomUUID(), 40));;
+        Ticket ticketNo1;
+        Ticket ticketNo2;
+        Ticket ticketNo3;
+
+        try {
+            ticketNo1 = new Ticket(UUID.randomUUID(), movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, new Normal(UUID.randomUUID(), 30));;
+            ticketNo2 = new Ticket(UUID.randomUUID(), movieTimeNo2, reservationTimeNo2, movieNo2, clientNo2, new Reduced(UUID.randomUUID(), 25));;
+            ticketNo3 = new Ticket(UUID.randomUUID(), movieTimeNo3, reservationTimeNo3, movieNo3, clientNo3, new Normal(UUID.randomUUID(), 40));;
+        } catch (TicketReservationException exception) {
+            throw new RuntimeException("Fatal error.");
+        }
+
 
         screeningRoomManager.getObjectRepository().create(screeningRoomNo1);
         screeningRoomManager.getObjectRepository().create(screeningRoomNo2);

@@ -7,11 +7,13 @@ import model.Client;
 import model.Movie;
 import model.ScreeningRoom;
 import model.Ticket;
+import model.exceptions.model_exceptions.TicketReservationException;
 import model.managers.*;
 import model.repositories.*;
 import model.ticket_types.Normal;
 import model.ticket_types.Reduced;
 import org.junit.jupiter.api.*;
+import repository_tests.TicketRepositoryTest;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -69,14 +71,13 @@ public class TicketManagerTest {
 
     @AfterAll
     public static void destroy() {
-        // entityManager.getTransaction().commit();
         if (entityManagerFactory != null) {
             entityManagerFactory.close();
         }
     }
 
     @BeforeEach
-    public void populateTicketRepositoryForTests() {
+    public void populateTicketRepositoryForTests() throws TicketReservationException {
         clientRepositoryForTests.create(clientNo1);
         clientRepositoryForTests.create(clientNo2);
         clientRepositoryForTests.create(clientNo3);
@@ -190,7 +191,7 @@ public class TicketManagerTest {
     }
 
     @Test
-    public void getCertainTicketFromTicketRepositoryTestNegative() {
+    public void getCertainTicketFromTicketRepositoryTestNegative() throws TicketReservationException {
         Ticket ticket = new Ticket(UUID.randomUUID(), movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, new Normal(UUID.randomUUID(), 20));
         assertNotNull(ticket);
         Ticket foundTicket = ticketManagerForTests.get(ticket.getTicketID());
