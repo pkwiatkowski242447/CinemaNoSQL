@@ -45,6 +45,7 @@ public class Ticket {
     }
 
     public Ticket(UUID ticketID, Date movieTime, Date reservationTime, Movie movie, Client client, TypeOfTicket typeOfTicket) throws TicketReservationException, NullPointerException{
+        this.movie = movie;
         try {
             if (movie.getScreeningRoom().getNumberOfAvailableSeats() > 0) {
                 movie.getScreeningRoom().setNumberOfAvailableSeats(movie.getScreeningRoom().getNumberOfAvailableSeats() - 1);
@@ -54,11 +55,10 @@ public class Ticket {
         } catch (NullPointerException exception) {
             throw new TicketReservationException("Reference to movie object is null.");
         }
+        this.client = client;
         this.ticketID = ticketID;
         this.movieTime = movieTime;
         this.reservationTime = reservationTime;
-        this.movie = movie;
-        this.client = client;
         this.typeOfTicket = typeOfTicket;
         try {
             this.ticketFinalPrice = typeOfTicket.applyDiscount();
