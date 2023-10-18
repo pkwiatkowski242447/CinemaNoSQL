@@ -42,17 +42,7 @@ public abstract class Repository<Type> {
             throw new RepositoryUpdateException("Source: " + element.getClass() + "Repository ; " + exception.getMessage(), exception);
         }
     }
-    public void delete(Type element) {
-        try {
-            entityManager.getTransaction().begin();
-            entityManager.lock(element, LockModeType.PESSIMISTIC_WRITE);
-            entityManager.remove(entityManager.merge(element));
-            entityManager.getTransaction().commit();
-        } catch(IllegalArgumentException | PersistenceException exception) {
-            entityManager.getTransaction().rollback();
-            throw new RepositoryDeleteException("Source: " + element.getClass() + "Repository ; " + exception.getMessage(), exception);
-        }
-    }
+    public abstract void delete(Type element);
 
     // Other methods
 

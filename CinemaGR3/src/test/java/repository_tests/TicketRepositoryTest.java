@@ -276,6 +276,37 @@ public class TicketRepositoryTest {
     }
 
     @Test
+    public void removeCertainClientAlongWithTheirTicketTest() {
+        int numberOfTicketsBefore = ticketRepositoryForTests.findAll().size();
+        clientRepositoryForTests.delete(clientNo1);
+        int numberOfTicketsAfter = ticketRepositoryForTests.findAll().size();
+        assertNotEquals(numberOfTicketsBefore, numberOfTicketsAfter);
+        assertEquals(numberOfTicketsBefore - 1, numberOfTicketsAfter);
+    }
+
+    @Test
+    public void removeCertainMovieAlongWithTheirTicketTest() {
+        int numberOfTicketsBefore = ticketRepositoryForTests.findAll().size();
+        movieRepositoryForTests.delete(movieNo1);
+        int numberOfTicketsAfter = ticketRepositoryForTests.findAll().size();
+        assertNotEquals(numberOfTicketsBefore, numberOfTicketsAfter);
+        assertEquals(numberOfTicketsBefore - 1, numberOfTicketsAfter);
+    }
+
+    @Test
+    public void removeCertainScreeningRoomAlongWithTheirTicketsAndMoviesTest() {
+        int numberOfMoviesBefore = movieRepositoryForTests.findAll().size();
+        int numberOfTicketsBefore = ticketRepositoryForTests.findAll().size();
+        screeningRoomRepositoryForTests.delete(screeningRoomNo1);
+        int numberOfMoviesAfter = movieRepositoryForTests.findAll().size();
+        int numberOfTicketsAfter = ticketRepositoryForTests.findAll().size();
+        assertNotEquals(numberOfMoviesBefore, numberOfMoviesAfter);
+        assertEquals(numberOfMoviesBefore - 1, numberOfMoviesAfter);
+        assertNotEquals(numberOfTicketsBefore, numberOfTicketsAfter);
+        assertEquals(numberOfTicketsBefore - 1, numberOfTicketsAfter);
+    }
+
+    @Test
     public void findAllTicketsTestPositive() {
         List<Ticket> listOfTickets = ticketRepositoryForTests.findAll();
         assertNotNull(listOfTickets);

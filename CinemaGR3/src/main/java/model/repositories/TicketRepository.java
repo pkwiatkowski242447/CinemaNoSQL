@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import model.Ticket;
+import model.exceptions.repository_exceptions.RepositoryDeleteException;
 import model.exceptions.repository_exceptions.RepositoryReadException;
 
 import java.util.List;
@@ -13,6 +14,19 @@ public class TicketRepository extends Repository<Ticket> {
 
     public TicketRepository(EntityManager entityManager) {
         super(entityManager);
+    }
+
+    @Override
+    public void delete(Ticket ticket) {
+        try {
+            getEntityManager().getTransaction().begin();
+            getEntityManager().lock(ticket, LockModeType.PESSIMISTIC_WRITE);
+            getEntityManager().remove(getEntityManager().merge(ticket));
+            getEntityManager().getTransaction().commit();
+        } catch(IllegalArgumentException | PersistenceException exception) {
+            getEntityManager().getTransaction().rollback();
+            throw new RepositoryDeleteException("Source: TicketRepository ; " + exception.getMessage(), exception);
+        }
     }
 
     @Override
