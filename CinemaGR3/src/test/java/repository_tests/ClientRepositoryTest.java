@@ -1,14 +1,15 @@
 package repository_tests;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 import model.Client;
 import model.exceptions.repository_exceptions.RepositoryCreateException;
 import model.exceptions.repository_exceptions.RepositoryDeleteException;
 import model.exceptions.repository_exceptions.RepositoryUpdateException;
 import model.repositories.ClientRepository;
 import model.repositories.Repository;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,16 +18,28 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ClientRepositoryTest {
 
-    @Test
-    public void clientRepositoryConstructorTest() {
-        Repository<Client> clientRepository = new ClientRepository();
-        assertNotNull(clientRepository);
-    }
+    private static EntityManagerFactory entityManagerFactory;
+    private static EntityManager entityManager;
 
     private final Client clientNo1 = new Client(UUID.randomUUID(), "John", "Smith", 21);
     private final Client clientNo2 = new Client(UUID.randomUUID(), "Mary", "Jane", 18);
     private final Client clientNo3 = new Client(UUID.randomUUID(), "Vincent", "Vega", 40);
-    private final Repository<Client> clientRepositoryForTests = new ClientRepository();
+    private static Repository<Client> clientRepositoryForTests;
+
+    @BeforeAll
+    public static void init() {
+        entityManagerFactory = Persistence.createEntityManagerFactory("test");
+        entityManager = entityManagerFactory.createEntityManager();
+        clientRepositoryForTests = new ClientRepository(entityManager);
+    }
+
+    @AfterAll
+    public static void destroy() {
+        // entityManager.getTransaction().commit();
+        if (entityManagerFactory != null) {
+            entityManagerFactory.close();
+        }
+    }
 
     @BeforeEach
     public void insertExampleClients() {
@@ -41,6 +54,12 @@ public class ClientRepositoryTest {
         for (Client client : listOfAllClients) {
             clientRepositoryForTests.delete(client);
         }
+    }
+
+    @Test
+    public void clientRepositoryConstructorTest() {
+        Repository<Client> clientRepository = new ClientRepository(entityManager);
+        assertNotNull(clientRepository);
     }
 
     @Test

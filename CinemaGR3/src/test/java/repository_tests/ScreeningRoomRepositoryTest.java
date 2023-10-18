@@ -1,14 +1,15 @@
 package repository_tests;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 import model.ScreeningRoom;
 import model.exceptions.repository_exceptions.RepositoryCreateException;
 import model.exceptions.repository_exceptions.RepositoryDeleteException;
 import model.exceptions.repository_exceptions.RepositoryUpdateException;
 import model.repositories.Repository;
 import model.repositories.ScreeningRoomRepository;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,16 +18,27 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ScreeningRoomRepositoryTest {
 
-    @Test
-    public void screeningRoomRepositoryConstructorTest() {
-        Repository<ScreeningRoom> screeningRoomRepository = new ScreeningRoomRepository();
-        assertNotNull(screeningRoomRepository);
-    }
-
-    private final Repository<ScreeningRoom> screeningRoomRepositoryForTests = new ScreeningRoomRepository();
+    private static EntityManagerFactory entityManagerFactory;
+    private static EntityManager entityManager;
+    private static Repository<ScreeningRoom> screeningRoomRepositoryForTests;
     private final ScreeningRoom screeningRoomNo1 = new ScreeningRoom(UUID.randomUUID(), 1, 10, 45);
     private final ScreeningRoom screeningRoomNo2 = new ScreeningRoom(UUID.randomUUID(), 2, 5, 90);
     private final ScreeningRoom screeningRoomNo3 = new ScreeningRoom(UUID.randomUUID(), 0, 19, 120);
+
+    @BeforeAll
+    public static void init() {
+        entityManagerFactory = Persistence.createEntityManagerFactory("test");
+        entityManager = entityManagerFactory.createEntityManager();
+        screeningRoomRepositoryForTests = new ScreeningRoomRepository(entityManager);
+    }
+
+    @AfterAll
+    public static void destroy() {
+        // entityManager.getTransaction().commit();
+        if (entityManagerFactory != null) {
+            entityManagerFactory.close();
+        }
+    }
 
     @BeforeEach
     public void insertExampleScreeningRooms() {
@@ -41,6 +53,12 @@ public class ScreeningRoomRepositoryTest {
         for (ScreeningRoom screeningRoom : listOfScreeningRooms) {
             screeningRoomRepositoryForTests.delete(screeningRoom);
         }
+    }
+
+    @Test
+    public void screeningRoomRepositoryConstructorTest() {
+        Repository<ScreeningRoom> screeningRoomRepository = new ScreeningRoomRepository(entityManager);
+        assertNotNull(screeningRoomRepository);
     }
 
     @Test

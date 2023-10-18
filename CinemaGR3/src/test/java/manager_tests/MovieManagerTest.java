@@ -1,5 +1,8 @@
 package manager_tests;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 import model.Movie;
 import model.ScreeningRoom;
 import model.managers.Manager;
@@ -8,9 +11,7 @@ import model.managers.ScreeningRoomManager;
 import model.repositories.MovieRepository;
 import model.repositories.Repository;
 import model.repositories.ScreeningRoomRepository;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,31 +20,30 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class MovieManagerTest {
 
-    @Test
-    public void createMovieManagerTest() {
-        Repository<Movie> movieRepository = new MovieRepository();
-        assertNotNull(movieRepository);
-        Manager<Movie> movieManager = new MovieManager(movieRepository);
-        assertNotNull(movieManager);
+    private static EntityManagerFactory entityManagerFactory;
+    private static EntityManager entityManager;
+    private static Repository<Movie> movieRepositoryForTests;
+    private static Repository<ScreeningRoom> screeningRoomRepositoryForTests;
+    private static MovieManager movieManagerForTests;
+    private static ScreeningRoomManager screeningRoomManagerForTests;
+
+    @BeforeAll
+    public static void init() {
+        entityManagerFactory = Persistence.createEntityManagerFactory("test");
+        entityManager = entityManagerFactory.createEntityManager();
+        movieRepositoryForTests = new MovieRepository(entityManager);
+        screeningRoomRepositoryForTests = new ScreeningRoomRepository(entityManager);
+        movieManagerForTests = new MovieManager(movieRepositoryForTests);
+        screeningRoomManagerForTests = new ScreeningRoomManager(screeningRoomRepositoryForTests);
     }
 
-    @Test
-    public void setMovieRepositoryForMovieManagerTest() {
-        Repository<Movie> movieRepositoryNo1 = new MovieRepository();
-        assertNotNull(movieRepositoryNo1);
-        Repository<Movie> movieRepositoryNo2 = new MovieRepository();
-        assertNotNull(movieRepositoryNo2);
-        Manager<Movie> movieManager = new MovieManager(movieRepositoryNo1);
-        assertNotNull(movieManager);
-        movieManager.setObjectRepository(movieRepositoryNo2);
-        assertNotEquals(movieRepositoryNo1, movieManager.getObjectRepository());
-        assertEquals(movieRepositoryNo2, movieManager.getObjectRepository());
+    @AfterAll
+    public static void destroy() {
+        // entityManager.getTransaction().commit();
+        if (entityManagerFactory != null) {
+            entityManagerFactory.close();
+        }
     }
-
-    private final Repository<Movie> movieRepositoryForTests = new MovieRepository();
-    private final Repository<ScreeningRoom> screeningRoomRepositoryForTests = new ScreeningRoomRepository();
-    private final MovieManager movieManagerForTests = new MovieManager(movieRepositoryForTests);
-    private final ScreeningRoomManager screeningRoomManagerForTests = new ScreeningRoomManager(screeningRoomRepositoryForTests);
 
     @BeforeEach
     public void populateMovieRepositoryForTests() {
@@ -74,6 +74,27 @@ public class MovieManagerTest {
         for (ScreeningRoom screeningRoom : listOfScreeningRooms) {
             screeningRoomRepositoryForTests.delete(screeningRoom);
         }
+    }
+
+    @Test
+    public void createMovieManagerTest() {
+        Repository<Movie> movieRepository = new MovieRepository(entityManager);
+        assertNotNull(movieRepository);
+        Manager<Movie> movieManager = new MovieManager(movieRepository);
+        assertNotNull(movieManager);
+    }
+
+    @Test
+    public void setMovieRepositoryForMovieManagerTest() {
+        Repository<Movie> movieRepositoryNo1 = new MovieRepository(entityManager);
+        assertNotNull(movieRepositoryNo1);
+        Repository<Movie> movieRepositoryNo2 = new MovieRepository(entityManager);
+        assertNotNull(movieRepositoryNo2);
+        Manager<Movie> movieManager = new MovieManager(movieRepositoryNo1);
+        assertNotNull(movieManager);
+        movieManager.setObjectRepository(movieRepositoryNo2);
+        assertNotEquals(movieRepositoryNo1, movieManager.getObjectRepository());
+        assertEquals(movieRepositoryNo2, movieManager.getObjectRepository());
     }
 
     @Test

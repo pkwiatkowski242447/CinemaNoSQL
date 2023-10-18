@@ -10,40 +10,46 @@ import java.util.UUID;
 
 public abstract class Repository<Type> {
 
-    private final EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("default");
-    private final EntityManager entityManager = entityManagerFactory.createEntityManager();
+    private final EntityManager entityManager;
+
+    // Constructor
+
+    public Repository(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
+
 
     // Declaring CRUD methods.
 
     public void create(Type element) {
         try {
-            getEntityManager().getTransaction().begin();
-            getEntityManager().persist(element);
-            getEntityManager().getTransaction().commit();
+            entityManager.getTransaction().begin();
+            entityManager.persist(element);
+            entityManager.getTransaction().commit();
         } catch (PersistenceException | IllegalArgumentException exception) {
-            getEntityManager().getTransaction().rollback();
+            entityManager.getTransaction().rollback();
             throw new RepositoryCreateException("Source: " + element.getClass() + "Repository ; " + exception.getMessage(), exception);
         }
     }
     public void update(Type element) {
         try {
-            getEntityManager().getTransaction().begin();
-            getEntityManager().lock(element, LockModeType.PESSIMISTIC_WRITE);
-            getEntityManager().merge(element);
-            getEntityManager().getTransaction().commit();
+            entityManager.getTransaction().begin();
+            entityManager.lock(element, LockModeType.PESSIMISTIC_WRITE);
+            entityManager.merge(element);
+            entityManager.getTransaction().commit();
         } catch (PersistenceException | IllegalArgumentException exception) {
-            getEntityManager().getTransaction().rollback();
+            entityManager.getTransaction().rollback();
             throw new RepositoryUpdateException("Source: " + element.getClass() + "Repository ; " + exception.getMessage(), exception);
         }
     }
     public void delete(Type element) {
         try {
-            getEntityManager().getTransaction().begin();
-            getEntityManager().lock(element, LockModeType.PESSIMISTIC_WRITE);
-            getEntityManager().remove(getEntityManager().merge(element));
-            getEntityManager().getTransaction().commit();
+            entityManager.getTransaction().begin();
+            entityManager.lock(element, LockModeType.PESSIMISTIC_WRITE);
+            entityManager.remove(entityManager.merge(element));
+            entityManager.getTransaction().commit();
         } catch(IllegalArgumentException | PersistenceException exception) {
-            getEntityManager().getTransaction().rollback();
+            entityManager.getTransaction().rollback();
             throw new RepositoryDeleteException("Source: " + element.getClass() + "Repository ; " + exception.getMessage(), exception);
         }
     }
@@ -54,6 +60,6 @@ public abstract class Repository<Type> {
     public abstract List<Type> findAll();
 
     public EntityManager getEntityManager() {
-        return this.entityManager;
+        return entityManager;
     }
 }

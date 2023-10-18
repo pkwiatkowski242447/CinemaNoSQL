@@ -1,13 +1,14 @@
 package manager_tests;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 import model.ScreeningRoom;
 import model.managers.Manager;
 import model.managers.ScreeningRoomManager;
 import model.repositories.Repository;
 import model.repositories.ScreeningRoomRepository;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -16,29 +17,26 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ScreeningRoomManagerTest {
 
-    @Test
-    public void createScreeningRoomManagerTest() {
-        Repository<ScreeningRoom> screeningRoomRepository = new ScreeningRoomRepository();
-        assertNotNull(screeningRoomRepository);
-        Manager<ScreeningRoom> screeningRoomManager = new ScreeningRoomManager(screeningRoomRepository);
-        assertNotNull(screeningRoomManager);
+    private static EntityManagerFactory entityManagerFactory;
+    private static EntityManager entityManager;
+    private static Repository<ScreeningRoom> screeningRoomRepositoryForTest;
+    private static ScreeningRoomManager screeningRoomManagerForTest;
+
+    @BeforeAll
+    public static void init() {
+        entityManagerFactory = Persistence.createEntityManagerFactory("test");
+        entityManager = entityManagerFactory.createEntityManager();
+        screeningRoomRepositoryForTest = new ScreeningRoomRepository(entityManager);
+        screeningRoomManagerForTest = new ScreeningRoomManager(screeningRoomRepositoryForTest);
     }
 
-    @Test
-    public void setScreeningRoomRepositoryForScreeningRoomManagerTest() {
-        Repository<ScreeningRoom> screeningRoomRepositoryNo1 = new ScreeningRoomRepository();
-        assertNotNull(screeningRoomRepositoryNo1);
-        Repository<ScreeningRoom> screeningRoomRepositoryNo2 = new ScreeningRoomRepository();
-        assertNotNull(screeningRoomRepositoryNo2);
-        Manager<ScreeningRoom> screeningRoomManager = new ScreeningRoomManager(screeningRoomRepositoryNo1);
-        assertNotNull(screeningRoomManager);
-        screeningRoomManager.setObjectRepository(screeningRoomRepositoryNo2);
-        assertNotEquals(screeningRoomRepositoryNo1, screeningRoomManager.getObjectRepository());
-        assertEquals(screeningRoomRepositoryNo2, screeningRoomManager.getObjectRepository());
+    @AfterAll
+    public static void destroy() {
+        // entityManager.getTransaction().commit();
+        if (entityManagerFactory != null) {
+            entityManagerFactory.close();
+        }
     }
-
-    private final Repository<ScreeningRoom> screeningRoomRepositoryForTest = new ScreeningRoomRepository();
-    private final ScreeningRoomManager screeningRoomManagerForTest = new ScreeningRoomManager(screeningRoomRepositoryForTest);
 
     @BeforeEach
     public void populateScreeningRoomRepositoryForTests() {
@@ -57,6 +55,27 @@ public class ScreeningRoomManagerTest {
         for (ScreeningRoom screeningRoom : listOfScreeningRooms) {
             screeningRoomRepositoryForTest.delete(screeningRoom);
         }
+    }
+
+    @Test
+    public void createScreeningRoomManagerTest() {
+        Repository<ScreeningRoom> screeningRoomRepository = new ScreeningRoomRepository(entityManager);
+        assertNotNull(screeningRoomRepository);
+        Manager<ScreeningRoom> screeningRoomManager = new ScreeningRoomManager(screeningRoomRepository);
+        assertNotNull(screeningRoomManager);
+    }
+
+    @Test
+    public void setScreeningRoomRepositoryForScreeningRoomManagerTest() {
+        Repository<ScreeningRoom> screeningRoomRepositoryNo1 = new ScreeningRoomRepository(entityManager);
+        assertNotNull(screeningRoomRepositoryNo1);
+        Repository<ScreeningRoom> screeningRoomRepositoryNo2 = new ScreeningRoomRepository(entityManager);
+        assertNotNull(screeningRoomRepositoryNo2);
+        Manager<ScreeningRoom> screeningRoomManager = new ScreeningRoomManager(screeningRoomRepositoryNo1);
+        assertNotNull(screeningRoomManager);
+        screeningRoomManager.setObjectRepository(screeningRoomRepositoryNo2);
+        assertNotEquals(screeningRoomRepositoryNo1, screeningRoomManager.getObjectRepository());
+        assertEquals(screeningRoomRepositoryNo2, screeningRoomManager.getObjectRepository());
     }
 
     @Test

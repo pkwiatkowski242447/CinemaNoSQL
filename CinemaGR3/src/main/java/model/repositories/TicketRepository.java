@@ -10,6 +10,11 @@ import java.util.List;
 import java.util.UUID;
 
 public class TicketRepository extends Repository<Ticket> {
+
+    public TicketRepository(EntityManager entityManager) {
+        super(entityManager);
+    }
+
     @Override
     public Ticket findByUUID(UUID identifier) {
         Ticket ticketToBeRead = null;

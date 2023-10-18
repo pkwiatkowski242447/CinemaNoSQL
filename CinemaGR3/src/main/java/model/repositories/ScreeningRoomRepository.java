@@ -10,6 +10,11 @@ import java.util.List;
 import java.util.UUID;
 
 public class ScreeningRoomRepository extends Repository<ScreeningRoom> {
+
+    public ScreeningRoomRepository(EntityManager entityManager) {
+        super(entityManager);
+    }
+
     @Override
     public ScreeningRoom findByUUID(UUID identifier) {
         ScreeningRoom screeningRoomToBeRead = null;

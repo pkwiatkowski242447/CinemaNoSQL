@@ -11,6 +11,10 @@ import java.util.UUID;
 
 public class MovieRepository extends Repository<Movie> {
 
+    public MovieRepository(EntityManager entityManager) {
+        super(entityManager);
+    }
+
     @Override
     public Movie findByUUID(UUID identifier) {
         Movie movieToBeRead = null;
@@ -20,7 +24,6 @@ public class MovieRepository extends Repository<Movie> {
             getEntityManager().getTransaction().commit();
         } catch (IllegalArgumentException | TransactionRequiredException | OptimisticLockException |
                  PessimisticLockException | LockTimeoutException exception) {
-            getEntityManager().getTransaction().rollback();
             throw new RepositoryReadException("Source: MovieRepository ; " + exception.getMessage(), exception);
         }
         return movieToBeRead;
@@ -37,7 +40,6 @@ public class MovieRepository extends Repository<Movie> {
             listOfAllMovie = getEntityManager().createQuery(findAllMovies).setLockMode(LockModeType.PESSIMISTIC_READ).getResultList();
             getEntityManager().getTransaction().commit();
         } catch (IllegalStateException | IllegalArgumentException exception) {
-            getEntityManager().getTransaction().rollback();
             throw new RepositoryReadException("Source: MovieRepository ; " + exception.getMessage(), exception);
         }
         return listOfAllMovie;

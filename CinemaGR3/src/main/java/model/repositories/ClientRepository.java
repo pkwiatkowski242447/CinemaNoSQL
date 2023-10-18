@@ -11,6 +11,10 @@ import java.util.UUID;
 
 public class ClientRepository extends Repository<Client> {
 
+    public ClientRepository(EntityManager entityManager) {
+        super(entityManager);
+    }
+
     @Override
     public Client findByUUID(UUID identifier) {
         Client clientToBeRead = null;

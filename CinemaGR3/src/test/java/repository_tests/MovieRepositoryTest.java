@@ -1,14 +1,15 @@
 package repository_tests;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 import model.Movie;
 import model.ScreeningRoom;
 import model.exceptions.repository_exceptions.RepositoryCreateException;
 import model.exceptions.repository_exceptions.RepositoryDeleteException;
 import model.exceptions.repository_exceptions.RepositoryUpdateException;
 import model.repositories.*;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,14 +18,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class MovieRepositoryTest {
 
-    @Test
-    public void movieRepositoryConstructorTest() {
-        Repository<Movie> movieRepository = new MovieRepository();
-        assertNotNull(movieRepository);
-    }
-
-    private final Repository<Movie> movieRepositoryForTests = new MovieRepository();
-    private final Repository<ScreeningRoom> screeningRoomRepositoryForTests = new ScreeningRoomRepository();
+    private static EntityManagerFactory entityManagerFactory;
+    private static EntityManager entityManager;
+    private static Repository<Movie> movieRepositoryForTests;
+    private static Repository<ScreeningRoom> screeningRoomRepositoryForTests;
 
     private final ScreeningRoom screeningRoomNo1 = new ScreeningRoom(UUID.randomUUID(), 1, 10, 45);
     private final ScreeningRoom screeningRoomNo2 = new ScreeningRoom(UUID.randomUUID(), 2, 5, 90);
@@ -33,6 +30,22 @@ public class MovieRepositoryTest {
     private final Movie movieNo1 = new Movie(UUID.randomUUID(), "Harry Potter and The Goblet of Fire", screeningRoomNo1);
     private final Movie movieNo2 = new Movie(UUID.randomUUID(), "The Da Vinci Code", screeningRoomNo2);
     private final Movie movieNo3 = new Movie(UUID.randomUUID(), "A Space Odyssey", screeningRoomNo3);
+
+    @BeforeAll
+    public static void init() {
+        entityManagerFactory = Persistence.createEntityManagerFactory("test");
+        entityManager = entityManagerFactory.createEntityManager();
+        movieRepositoryForTests = new MovieRepository(entityManager);
+        screeningRoomRepositoryForTests = new ScreeningRoomRepository(entityManager);
+    }
+
+    @AfterAll
+    public static void destroy() {
+        // entityManager.getTransaction().commit();
+        if (entityManagerFactory != null) {
+            entityManagerFactory.close();
+        }
+    }
 
     @BeforeEach
     public void insertExampleMovies() {
@@ -55,6 +68,12 @@ public class MovieRepositoryTest {
         for (ScreeningRoom screeningRoom : listOfScreeningRooms) {
             screeningRoomRepositoryForTests.delete(screeningRoom);
         }
+    }
+
+    @Test
+    public void movieRepositoryConstructorTest() {
+        Repository<Movie> movieRepository = new MovieRepository(entityManager);
+        assertNotNull(movieRepository);
     }
 
     @Test

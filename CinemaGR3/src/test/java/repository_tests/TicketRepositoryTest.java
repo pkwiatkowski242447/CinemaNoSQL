@@ -1,5 +1,8 @@
 package repository_tests;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 import model.Client;
 import model.Movie;
 import model.ScreeningRoom;
@@ -11,9 +14,7 @@ import model.repositories.*;
 import model.ticket_types.Normal;
 import model.ticket_types.Reduced;
 import model.ticket_types.TypeOfTicket;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.Calendar;
 import java.util.List;
@@ -24,16 +25,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TicketRepositoryTest {
 
-    @Test
-    public void ticketRepositoryConstructorTest() {
-        Repository<Ticket> ticketRepository = new TicketRepository();
-        assertNotNull(ticketRepository);
-    }
-
-    private final Repository<Ticket> ticketRepositoryForTests = new TicketRepository();
-    private final Repository<Client> clientRepositoryForTests = new ClientRepository();
-    private final Repository<Movie> movieRepositoryForTests = new MovieRepository();
-    private final Repository<ScreeningRoom> screeningRoomRepositoryForTests = new ScreeningRoomRepository();
+    private static EntityManagerFactory entityManagerFactory;
+    private static EntityManager entityManager;
+    private static Repository<Ticket> ticketRepositoryForTests;
+    private static Repository<Client> clientRepositoryForTests;
+    private static Repository<Movie> movieRepositoryForTests;
+    private static Repository<ScreeningRoom> screeningRoomRepositoryForTests;
 
     private final ScreeningRoom screeningRoomNo1 = new ScreeningRoom(UUID.randomUUID(), 1, 10, 45);
     private final ScreeningRoom screeningRoomNo2 = new ScreeningRoom(UUID.randomUUID(), 2, 5, 90);
@@ -58,6 +55,24 @@ public class TicketRepositoryTest {
     private final Ticket ticketNo1 = new Ticket(UUID.randomUUID(), movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, new Normal(UUID.randomUUID(), 30));
     private final Ticket ticketNo2 = new Ticket(UUID.randomUUID(), movieTimeNo2, reservationTimeNo2, movieNo2, clientNo2, new Reduced(UUID.randomUUID(), 25));
     private final Ticket ticketNo3 = new Ticket(UUID.randomUUID(), movieTimeNo3, reservationTimeNo3, movieNo3, clientNo3, new Normal(UUID.randomUUID(), 40));
+
+    @BeforeAll
+    public static void init() {
+        entityManagerFactory = Persistence.createEntityManagerFactory("test");
+        entityManager = entityManagerFactory.createEntityManager();
+        ticketRepositoryForTests = new TicketRepository(entityManager);
+        movieRepositoryForTests = new MovieRepository(entityManager);
+        clientRepositoryForTests = new ClientRepository(entityManager);
+        screeningRoomRepositoryForTests = new ScreeningRoomRepository(entityManager);
+    }
+
+    @AfterAll
+    public static void destroy() {
+        // entityManager.getTransaction().commit();
+        if (entityManagerFactory != null) {
+            entityManagerFactory.close();
+        }
+    }
 
     @BeforeEach
     public void insertExampleTickets() {
@@ -96,6 +111,12 @@ public class TicketRepositoryTest {
         for (ScreeningRoom screeningRoom : listOfScreeningRooms) {
             screeningRoomRepositoryForTests.delete(screeningRoom);
         }
+    }
+
+    @Test
+    public void ticketRepositoryConstructorTest() {
+        Repository<Ticket> ticketRepository = new TicketRepository(entityManager);
+        assertNotNull(ticketRepository);
     }
 
     @Test
