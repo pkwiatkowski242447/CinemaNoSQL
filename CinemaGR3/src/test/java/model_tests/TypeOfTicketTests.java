@@ -1,6 +1,5 @@
 package model_tests;
 
-import model.exceptions.model_exceptions.InvalidTicketBasePriceException;
 import model.ticket_types.Normal;
 import model.ticket_types.Reduced;
 import model.ticket_types.TypeOfTicket;
@@ -13,29 +12,31 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TypeOfTicketTests {
 
     @Test
-    public void ticketTypeTestPositive() {
-        TypeOfTicket typeOfTicketNo1 = new Normal(UUID.randomUUID(), 25);
+    public void ticketTypeConstructorsTestPositive() {
+        TypeOfTicket typeOfTicketNo1 = new Normal();
         assertNotNull(typeOfTicketNo1);
+
+        TypeOfTicket typeOfTicketNo2 = new Normal(UUID.randomUUID());
+        assertNotNull(typeOfTicketNo2);
+
+        TypeOfTicket typeOfTicketNo3 = new Reduced();
+        assertNotNull(typeOfTicketNo3);
+
+        TypeOfTicket typeOfTicketNo4 = new Reduced(UUID.randomUUID());
+        assertNotNull(typeOfTicketNo4);
     }
 
     @Test
     public void ticketTypeIdGetterTest() {
         UUID ticketTypeId = UUID.randomUUID();
-        TypeOfTicket typeOfTicketNo1 = new Normal(ticketTypeId, 25);
+        TypeOfTicket typeOfTicketNo1 = new Normal(ticketTypeId);
         assertNotNull(typeOfTicketNo1);
         assertEquals(ticketTypeId, typeOfTicketNo1.getTicketTypeID());
     }
 
     @Test
-    public void ticketTypeTestNegative() {
-        assertThrows(InvalidTicketBasePriceException.class, () -> {
-            TypeOfTicket typeOfTicketNo1 = new Normal(UUID.randomUUID(),-25);
-        });
-    }
-
-    @Test
     public void getTicketTypeInfoForNormal() {
-        TypeOfTicket typeOfTicketNo1 = new Normal(UUID.randomUUID(),25);
+        TypeOfTicket typeOfTicketNo1 = new Normal(UUID.randomUUID());
 
         assertNotNull(typeOfTicketNo1);
         assertNotNull(typeOfTicketNo1.getTicketTypeInfo());
@@ -44,7 +45,7 @@ public class TypeOfTicketTests {
 
     @Test
     public void getTicketTypeInfoForReduced() {
-        TypeOfTicket typeOfTicketNo1 = new Reduced(UUID.randomUUID(),25);
+        TypeOfTicket typeOfTicketNo1 = new Reduced(UUID.randomUUID());
 
         assertNotNull(typeOfTicketNo1);
         assertNotNull(typeOfTicketNo1.getTicketTypeInfo());

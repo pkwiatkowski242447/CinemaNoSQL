@@ -10,10 +10,7 @@ import model.Ticket;
 import model.exceptions.model_exceptions.TicketReservationException;
 import model.managers.*;
 import model.repositories.*;
-import model.ticket_types.Normal;
-import model.ticket_types.Reduced;
 import org.junit.jupiter.api.*;
-import repository_tests.TicketRepositoryTest;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -40,9 +37,9 @@ public class TicketManagerTest {
     private final ScreeningRoom screeningRoomNo2 = new ScreeningRoom(UUID.randomUUID(), 2, 5, 90);
     private final ScreeningRoom screeningRoomNo3 = new ScreeningRoom(UUID.randomUUID(), 0, 19, 120);
 
-    private final Movie movieNo1 = new Movie(UUID.randomUUID(), "Harry Potter and The Goblet of Fire", screeningRoomNo1);
-    private final Movie movieNo2 = new Movie(UUID.randomUUID(), "The Da Vinci Code", screeningRoomNo2);
-    private final Movie movieNo3 = new Movie(UUID.randomUUID(), "A Space Odyssey", screeningRoomNo3);
+    private final Movie movieNo1 = new Movie(UUID.randomUUID(), "Harry Potter and The Goblet of Fire", 30, screeningRoomNo1);
+    private final Movie movieNo2 = new Movie(UUID.randomUUID(), "The Da Vinci Code", 25, screeningRoomNo2);
+    private final Movie movieNo3 = new Movie(UUID.randomUUID(), "A Space Odyssey", 40, screeningRoomNo3);
 
     private static EntityManagerFactory entityManagerFactory;
     private static EntityManager entityManager;
@@ -78,25 +75,25 @@ public class TicketManagerTest {
 
     @BeforeEach
     public void populateTicketRepositoryForTests() throws TicketReservationException {
-        clientRepositoryForTests.create(clientNo1);
-        clientRepositoryForTests.create(clientNo2);
-        clientRepositoryForTests.create(clientNo3);
+        clientManagerForTests.getObjectRepository().create(clientNo1);
+        clientManagerForTests.getObjectRepository().create(clientNo2);
+        clientManagerForTests.getObjectRepository().create(clientNo3);
 
-        screeningRoomRepositoryForTests.create(screeningRoomNo1);
-        screeningRoomRepositoryForTests.create(screeningRoomNo2);
-        screeningRoomRepositoryForTests.create(screeningRoomNo3);
+        screeningRoomManagerForTests.getObjectRepository().create(screeningRoomNo1);
+        screeningRoomManagerForTests.getObjectRepository().create(screeningRoomNo2);
+        screeningRoomManagerForTests.getObjectRepository().create(screeningRoomNo3);
 
-        movieRepositoryForTests.create(movieNo1);
-        movieRepositoryForTests.create(movieNo2);
-        movieRepositoryForTests.create(movieNo3);
+        movieManagerForTests.getObjectRepository().create(movieNo1);
+        movieManagerForTests.getObjectRepository().create(movieNo2);
+        movieManagerForTests.getObjectRepository().create(movieNo3);
 
-        Ticket ticketNo1 = new Ticket(UUID.randomUUID(), movieTimeNo1, reservationTimeNo1 , movieNo1, clientNo1, new Normal(UUID.randomUUID(), 30));
-        Ticket ticketNo2 = new Ticket(UUID.randomUUID(), movieTimeNo2, reservationTimeNo2 , movieNo2, clientNo2, new Reduced(UUID.randomUUID(), 25));
-        Ticket ticketNo3 = new Ticket(UUID.randomUUID(), movieTimeNo3, reservationTimeNo3 , movieNo3, clientNo3, new Normal(UUID.randomUUID(), 40));
+        Ticket ticketNo1 = new Ticket(UUID.randomUUID(), movieTimeNo1, reservationTimeNo1 , movieNo1, clientNo1, "normal");
+        Ticket ticketNo2 = new Ticket(UUID.randomUUID(), movieTimeNo2, reservationTimeNo2 , movieNo2, clientNo2, "normal");
+        Ticket ticketNo3 = new Ticket(UUID.randomUUID(), movieTimeNo3, reservationTimeNo3 , movieNo3, clientNo3, "normal");
 
-        ticketRepositoryForTests.create(ticketNo1);
-        ticketRepositoryForTests.create(ticketNo2);
-        ticketRepositoryForTests.create(ticketNo3);
+        ticketManagerForTests.getObjectRepository().create(ticketNo1);
+        ticketManagerForTests.getObjectRepository().create(ticketNo2);
+        ticketManagerForTests.getObjectRepository().create(ticketNo3);
     }
 
     @AfterEach
@@ -143,7 +140,7 @@ public class TicketManagerTest {
     @Test
     public void registerNewTicketTest() {
         int numOfTicketsBefore = ticketManagerForTests.getObjectRepository().findAll().size();
-        Ticket ticket = ticketManagerForTests.register(movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, new Normal(UUID.randomUUID(), 20));
+        Ticket ticket = ticketManagerForTests.register(movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, "normal");
         assertNotNull(ticket);
         int numOfTicketsAfter = ticketManagerForTests.getObjectRepository().findAll().size();
         assertNotEquals(numOfTicketsBefore, numOfTicketsAfter);
@@ -152,7 +149,7 @@ public class TicketManagerTest {
     @Test
     public void registerNewTicketTestNegative() {
         int numOfTicketsBefore = ticketManagerForTests.getObjectRepository().findAll().size();
-        Ticket ticket = ticketManagerForTests.register(null, reservationTimeNo1, movieNo1, clientNo1, new Normal(UUID.randomUUID(), 20));
+        Ticket ticket = ticketManagerForTests.register(null, reservationTimeNo1, movieNo1, clientNo1, "normal");
         assertNotNull(ticket);
         int numOfTicketsAfter = ticketManagerForTests.getObjectRepository().findAll().size();
         assertEquals(numOfTicketsBefore, numOfTicketsAfter);
@@ -174,7 +171,7 @@ public class TicketManagerTest {
     @Test
     public void unregisterCertainTicketTestNegative() {
         int numOfTicketsBefore = ticketManagerForTests.getObjectRepository().findAll().size();
-        Ticket ticket = ticketManagerForTests.register(movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, new Normal(UUID.randomUUID(), 20));
+        Ticket ticket = ticketManagerForTests.register(movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, "normal");
         assertNotNull(ticket);
         ticketManagerForTests.unregister(ticket);
         int numOfTicketsAfter = ticketManagerForTests.getObjectRepository().findAll().size();
@@ -192,7 +189,7 @@ public class TicketManagerTest {
 
     @Test
     public void getCertainTicketFromTicketRepositoryTestNegative() throws TicketReservationException {
-        Ticket ticket = new Ticket(UUID.randomUUID(), movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, new Normal(UUID.randomUUID(), 20));
+        Ticket ticket = new Ticket(UUID.randomUUID(), movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, "normal");
         assertNotNull(ticket);
         Ticket foundTicket = ticketManagerForTests.get(ticket.getTicketID());
         assertNull(foundTicket);

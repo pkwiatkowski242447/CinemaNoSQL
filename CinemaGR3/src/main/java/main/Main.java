@@ -10,8 +10,6 @@ import model.Ticket;
 import model.exceptions.model_exceptions.TicketReservationException;
 import model.managers.*;
 import model.repositories.*;
-import model.ticket_types.Normal;
-import model.ticket_types.Reduced;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -37,30 +35,30 @@ public class Main {
         ScreeningRoom screeningRoomNo2 = new ScreeningRoom(UUID.randomUUID(), 2, 5, 90);
         ScreeningRoom screeningRoomNo3 = new ScreeningRoom(UUID.randomUUID(), 0, 19, 120);
 
-        Movie movieNo1 = new Movie(UUID.randomUUID(), "Harry Potter and The Goblet of Fire", screeningRoomNo1);
-        Movie movieNo2 = new Movie(UUID.randomUUID(), "The Da Vinci Code", screeningRoomNo2);
-        Movie movieNo3 = new Movie(UUID.randomUUID(), "A Space Odyssey", screeningRoomNo3);
+        Movie movieNo1 = new Movie(UUID.randomUUID(), "Harry Potter and The Goblet of Fire", 30, screeningRoomNo1);
+        Movie movieNo2 = new Movie(UUID.randomUUID(), "The Da Vinci Code", 25, screeningRoomNo2);
+        Movie movieNo3 = new Movie(UUID.randomUUID(), "A Space Odyssey", 40, screeningRoomNo3);
 
         Client clientNo1 = new Client(UUID.randomUUID(), "John", "Smith", 21);
         Client clientNo2 = new Client(UUID.randomUUID(), "Mary", "Jane", 18);
         Client clientNo3 = new Client(UUID.randomUUID(), "Vincent", "Vega", 40);
 
-        Date movieTimeNo1 = new Calendar.Builder().setDate(2023, 10, 1).setTimeOfDay(10, 15, 0).build().getTime();;
-        Date movieTimeNo2 = new Calendar.Builder().setDate(2023, 10, 8).setTimeOfDay(16, 13, 0).build().getTime();;
-        Date movieTimeNo3 = new Calendar.Builder().setDate(2023, 10, 16).setTimeOfDay(20, 5, 0).build().getTime();;
+        Date movieTimeNo1 = new Calendar.Builder().setDate(2023, 10, 1).setTimeOfDay(10, 15, 0).build().getTime();
+        Date movieTimeNo2 = new Calendar.Builder().setDate(2023, 10, 8).setTimeOfDay(16, 13, 0).build().getTime();
+        Date movieTimeNo3 = new Calendar.Builder().setDate(2023, 10, 16).setTimeOfDay(20, 5, 0).build().getTime();
 
-        Date reservationTimeNo1 = new Calendar.Builder().setDate(2023, 9, 29).setTimeOfDay(12, 37, 0).build().getTime();;
-        Date reservationTimeNo2 = new Calendar.Builder().setDate(2023, 9, 31).setTimeOfDay(14, 15, 0).build().getTime();;
-        Date reservationTimeNo3 = new Calendar.Builder().setDate(2023, 10, 11).setTimeOfDay(18, 7, 15).build().getTime();;
+        Date reservationTimeNo1 = new Calendar.Builder().setDate(2023, 9, 29).setTimeOfDay(12, 37, 0).build().getTime();
+        Date reservationTimeNo2 = new Calendar.Builder().setDate(2023, 9, 31).setTimeOfDay(14, 15, 0).build().getTime();
+        Date reservationTimeNo3 = new Calendar.Builder().setDate(2023, 10, 11).setTimeOfDay(18, 7, 15).build().getTime();
 
         Ticket ticketNo1;
         Ticket ticketNo2;
         Ticket ticketNo3;
 
         try {
-            ticketNo1 = new Ticket(UUID.randomUUID(), movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, new Normal(UUID.randomUUID(), 30));;
-            ticketNo2 = new Ticket(UUID.randomUUID(), movieTimeNo2, reservationTimeNo2, movieNo2, clientNo2, new Reduced(UUID.randomUUID(), 25));;
-            ticketNo3 = new Ticket(UUID.randomUUID(), movieTimeNo3, reservationTimeNo3, movieNo3, clientNo3, new Normal(UUID.randomUUID(), 40));;
+            ticketNo1 = new Ticket(UUID.randomUUID(), movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, "normal");
+            ticketNo2 = new Ticket(UUID.randomUUID(), movieTimeNo2, reservationTimeNo2, movieNo2, clientNo2, "reduced");
+            ticketNo3 = new Ticket(UUID.randomUUID(), movieTimeNo3, reservationTimeNo3, movieNo3, clientNo3, "normal");
         } catch (TicketReservationException exception) {
             throw new RuntimeException("Fatal error.");
         }

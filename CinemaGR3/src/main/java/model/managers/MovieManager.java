@@ -12,10 +12,10 @@ public class MovieManager extends Manager<Movie> {
         super(objectRepository);
     }
 
-    public Movie register(String movieTitle, ScreeningRoom screeningRoom) {
+    public Movie register(String movieTitle, double baseMoviePrice, ScreeningRoom screeningRoom) {
         Movie movieToRepo = null;
         try {
-            movieToRepo = new Movie(UUID.randomUUID(), movieTitle, screeningRoom);
+            movieToRepo = new Movie(UUID.randomUUID(), movieTitle, baseMoviePrice, screeningRoom);
             getObjectRepository().create(movieToRepo);
         } catch (RepositoryCreateException exception) {
             exception.printStackTrace();

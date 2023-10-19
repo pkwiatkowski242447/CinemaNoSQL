@@ -7,28 +7,29 @@ import jakarta.validation.constraints.Min;
 import java.util.*;
 
 @Entity
+@Table(name = "screening_room")
 public class ScreeningRoom {
 
     @Id
-    @Column(nullable = false, unique = true)
+    @Column(name = "screening_room_id", nullable = false, unique = true)
     private UUID screeningRoomID;
 
-    @Column(nullable = false)
+    @Column(name = "screening_room_floor", nullable = false)
     @Min(0)
     @Max(3)
     private int screeningRoomFloor;
 
-    @Column(nullable = false)
+    @Column(name = "screening_room_number", nullable = false)
     @Min(1)
     @Max(20)
     private int screeningRoomNumber;
 
-    @Column(nullable = false)
+    @Column(name = "number_of_avail_seats", nullable = false)
     @Min(0)
     @Max(150)
     private int numberOfAvailableSeats;
 
-    @Column(nullable = false)
+    @Column(name = "screening_room_status_active", nullable = false)
     private boolean screeningRoomStatusActive;
 
     // Constructors
@@ -81,16 +82,16 @@ public class ScreeningRoom {
 
     public String getScreeningRoomInfo() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Sala nr. ")
+        stringBuilder.append(" Number of the screening room: ")
                 .append(this.screeningRoomNumber)
-                .append(", piętro: ")
+                .append(", floor: ")
                 .append(this.screeningRoomFloor)
-                .append(", liczba miejsc: ")
+                .append(", number of available seats: ")
                 .append(this.numberOfAvailableSeats);
         if (this.screeningRoomStatusActive) {
-            stringBuilder.append(", status sali: aktywna");
+            stringBuilder.append(", screening room status: active");
         } else {
-            stringBuilder.append(", status sali: aktywna");
+            stringBuilder.append(", screening room status: not active");
         }
         return stringBuilder.toString();
     }

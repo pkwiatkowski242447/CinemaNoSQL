@@ -16,7 +16,7 @@ public class TicketManager extends Manager<Ticket> {
         super(objectRepository);
     }
 
-    public Ticket register(Date movieTime, Date reservationTime, Movie movie, Client client, TypeOfTicket typeOfTicket) {
+    public Ticket register(Date movieTime, Date reservationTime, Movie movie, Client client, String typeOfTicket) {
         Ticket ticketToRepo = null;
         try{
             ticketToRepo = new Ticket(UUID.randomUUID(), movieTime, reservationTime, movie, client, typeOfTicket);

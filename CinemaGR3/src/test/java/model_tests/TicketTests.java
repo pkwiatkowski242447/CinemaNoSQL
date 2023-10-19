@@ -19,8 +19,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TicketTests {
 
+    private final double movieBasePrice = 40;
     private final ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 1, 6, 90);
-    private final Movie movieNo1 = new Movie(UUID.randomUUID(), "Pulp Fiction", screeningRoom);
+    private final Movie movieNo1 = new Movie(UUID.randomUUID(), "Pulp Fiction", movieBasePrice, screeningRoom);
     private final Movie movieNo2 = null;
     private final Client clientNo1 = new Client(UUID.randomUUID(), "Jules", "Winnfield", 74);
     private final Client clientNo2 = null;
@@ -34,10 +35,8 @@ public class TicketTests {
         Date movieTime = df.parse(exampleDateNo2);
 
         UUID ticketIDNo1 = UUID.randomUUID();
-        double basePriceNo1 = 25;
-        TypeOfTicket typeOfTicketNo1 = new Normal(UUID.randomUUID(), basePriceNo1);
 
-        Ticket ticketNo1 = new Ticket(ticketIDNo1, movieTime, reservationTime, movieNo1, clientNo1, typeOfTicketNo1);
+        Ticket ticketNo1 = new Ticket(ticketIDNo1, movieTime, reservationTime, movieNo1, clientNo1, "normal");
 
         assertNotNull(ticketNo1);
 
@@ -47,8 +46,8 @@ public class TicketTests {
         assertTrue(ticketNo1.isTicketStatusActive());
         assertEquals(clientNo1, ticketNo1.getClient());
         assertEquals(movieNo1, ticketNo1.getMovie());
-        assertEquals(typeOfTicketNo1, ticketNo1.getTicketType());
-        assertEquals(basePriceNo1, ticketNo1.getTicketFinalPrice());
+        assertEquals(Normal.class, ticketNo1.getTicketType().getClass());
+        assertEquals(movieBasePrice, ticketNo1.getTicketFinalPrice());
     }
 
     @Test
@@ -61,9 +60,8 @@ public class TicketTests {
 
         UUID ticketID = UUID.randomUUID();
         boolean ticketStatusActive = false;
-        TypeOfTicket typeOfTicket = new Normal(UUID.randomUUID(), 25);
 
-        Ticket ticket = new Ticket(ticketID, movieTime, reservationTime, movieNo1, clientNo1, typeOfTicket);
+        Ticket ticket = new Ticket(ticketID, movieTime, reservationTime, movieNo1, clientNo1, "normal");
 
         assertNotNull(ticket);
         assertTrue(ticket.isTicketStatusActive());
@@ -83,9 +81,8 @@ public class TicketTests {
         Date movieTime = df.parse(exampleDateNo2);
 
         UUID ticketID = UUID.randomUUID();
-        TypeOfTicket typeOfTicket = new Normal(UUID.randomUUID(), 25);
 
-        Ticket ticket = new Ticket(ticketID, movieTime, reservationTime, movieNo1, clientNo1, typeOfTicket);
+        Ticket ticket = new Ticket(ticketID, movieTime, reservationTime, movieNo1, clientNo1, "normal");
 
         assertNotNull(ticket);
         assertNotNull(ticket.getTicketInfo());
@@ -101,13 +98,32 @@ public class TicketTests {
         Date movieTime = df.parse(exampleDateNo2);
 
         UUID ticketID = UUID.randomUUID();
-        TypeOfTicket typeOfTicket = new Normal(UUID.randomUUID(), 25);
 
-        Ticket ticket = new Ticket(ticketID, movieTime, reservationTime, movieNo1, clientNo1, typeOfTicket);
+        Ticket ticket = new Ticket(ticketID, movieTime, reservationTime, movieNo1, clientNo1, "normal");
         ticket.setTicketStatusActive(false);
 
         assertNotNull(ticket);
         assertNotNull(ticket.getTicketInfo());
         assertNotEquals("", ticket.getTicketInfo());
+    }
+
+    @Test
+    public void setTicketTypeForACertainMovie() throws ParseException, TicketReservationException {
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        String exampleDateNo1 = "2023-09-30 12:12";
+        String exampleDateNo2 = "2023-10-02 20:15";
+        Date reservationTime = df.parse(exampleDateNo1);
+        Date movieTime = df.parse(exampleDateNo2);
+
+        UUID ticketID = UUID.randomUUID();
+
+        TypeOfTicket typeOfTicketNo1 = new Normal(UUID.randomUUID());
+
+        Ticket ticket = new Ticket(ticketID, movieTime, reservationTime, movieNo1, clientNo1, "normal");
+        ticket.setTicketStatusActive(false);
+        assertNotEquals(typeOfTicketNo1, ticket.getTicketType());
+
+        ticket.setTypeOfTicket(typeOfTicketNo1);
+        assertEquals(typeOfTicketNo1, ticket.getTicketType());
     }
 }

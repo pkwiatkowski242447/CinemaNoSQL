@@ -3,28 +3,31 @@ package model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import model.exceptions.model_exceptions.TicketReservationException;
+import model.ticket_types.Normal;
+import model.ticket_types.Reduced;
 import model.ticket_types.TypeOfTicket;
 
 import java.util.Date;
 import java.util.UUID;
 
 @Entity
+@Table(name = "ticket")
 public class Ticket {
 
     @Id
-    @Column(nullable = false, unique = true)
+    @Column(name = "ticket_id", nullable = false, unique = true)
     private UUID ticketID;
 
-    @Column(nullable = false)
+    @Column(name = "movie_time", nullable = false)
     private Date movieTime;
 
-    @Column(nullable = false)
+    @Column(name = "reservation_time", nullable = false)
     private Date reservationTime;
 
-    @Column(nullable = false)
+    @Column(name = "ticket_status_active", nullable = false)
     private boolean ticketStatusActive;
 
-    @Column(nullable = false)
+    @Column(name = "ticket_final_price", nullable = false)
     private double ticketFinalPrice;
 
     @ManyToOne
@@ -35,7 +38,7 @@ public class Ticket {
     @NotNull
     private Client client;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
     @NotNull
     private TypeOfTicket typeOfTicket;
 
@@ -44,7 +47,7 @@ public class Ticket {
     public Ticket() {
     }
 
-    public Ticket(UUID ticketID, Date movieTime, Date reservationTime, Movie movie, Client client, TypeOfTicket typeOfTicket) throws TicketReservationException, NullPointerException{
+    public Ticket(UUID ticketID, Date movieTime, Date reservationTime, Movie movie, Client client, String typeOfTicket) throws TicketReservationException, NullPointerException{
         this.movie = movie;
         try {
             if (movie.getScreeningRoom().getNumberOfAvailableSeats() > 0) {
@@ -59,12 +62,21 @@ public class Ticket {
         this.ticketID = ticketID;
         this.movieTime = movieTime;
         this.reservationTime = reservationTime;
-        this.typeOfTicket = typeOfTicket;
+
+        TypeOfTicket ticketType;
         try {
-            this.ticketFinalPrice = typeOfTicket.applyDiscount();
+            switch (typeOfTicket) {
+                case "reduced":
+                    ticketType = new Reduced(UUID.randomUUID());
+                    break;
+                default:
+                    ticketType = new Normal(UUID.randomUUID());
+            }
         } catch (NullPointerException exception) {
-            throw new TicketReservationException("Reference to ticket type object is null");
+            throw new TicketReservationException("Ticket type was not entered correctly.");
         }
+        this.typeOfTicket = ticketType;
+        this.ticketFinalPrice = ticketType.applyDiscount(movie.getMovieBasePrice());
         this.ticketStatusActive = true;
     }
 
@@ -104,6 +116,11 @@ public class Ticket {
 
     // Setters
 
+
+    public void setTypeOfTicket(TypeOfTicket typeOfTicket) {
+        this.typeOfTicket = typeOfTicket;
+    }
+
     public void setTicketStatusActive(boolean ticketStatusActive) {
         this.ticketStatusActive = ticketStatusActive;
     }
@@ -112,18 +129,18 @@ public class Ticket {
 
     public String getTicketInfo() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Bilet: ")
+        stringBuilder.append("Ticket identifier: ")
                 .append(this.ticketID)
-                .append(" Czas złożenia rezerwacji: ")
+                .append(" Date of making reservation: ")
                 .append(this.reservationTime.toString())
-                .append(" Czas seansu: ")
+                .append(" Date of the movie: ")
                 .append(this.movieTime.toString());
         if (this.ticketStatusActive) {
-            stringBuilder.append(" Staus rezerwacji: aktywna");
+            stringBuilder.append(" Reservation status: active");
         } else {
-            stringBuilder.append(" Staus rezerwacji: nieaktywna");
+            stringBuilder.append(" Reservation status: not active");
         }
-        stringBuilder.append(" Cena końcowa: ").append(this.ticketFinalPrice);
+        stringBuilder.append(" Final price of the ticket: ").append(this.ticketFinalPrice);
         stringBuilder.append(this.typeOfTicket.getTicketTypeInfo());
         return stringBuilder.toString();
     }

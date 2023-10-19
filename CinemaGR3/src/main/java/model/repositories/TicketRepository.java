@@ -4,8 +4,10 @@ import jakarta.persistence.*;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import model.Ticket;
+import model.exceptions.repository_exceptions.RepositoryCreateException;
 import model.exceptions.repository_exceptions.RepositoryDeleteException;
 import model.exceptions.repository_exceptions.RepositoryReadException;
+import model.ticket_types.TypeOfTicket;
 
 import java.util.List;
 import java.util.UUID;
@@ -14,6 +16,36 @@ public class TicketRepository extends Repository<Ticket> {
 
     public TicketRepository(EntityManager entityManager) {
         super(entityManager);
+    }
+
+    @Override
+    public void create(Ticket ticket) {
+        try {
+            getEntityManager().getTransaction().begin();
+
+            CriteriaQuery<TypeOfTicket> getAllTypesOfTickets = getEntityManager().getCriteriaBuilder().createQuery(TypeOfTicket.class);
+            Root<TypeOfTicket> typeOfTicketRoot = getAllTypesOfTickets.from(TypeOfTicket.class);
+            getAllTypesOfTickets.select(typeOfTicketRoot);
+            List<TypeOfTicket> listOfTypesOfTickets = getEntityManager().createQuery(getAllTypesOfTickets).setLockMode(LockModeType.PESSIMISTIC_WRITE).getResultList();
+
+            boolean isInTheDB = false;
+            for (TypeOfTicket type : listOfTypesOfTickets) {
+                if (ticket.getTicketType().getClass().equals(type.getClass())) {
+                    ticket.setTypeOfTicket(type);
+                    isInTheDB = true;
+                }
+            }
+
+            if (!isInTheDB) {
+                getEntityManager().persist(ticket.getTicketType());
+            }
+
+            getEntityManager().persist(ticket);
+            getEntityManager().getTransaction().commit();
+        } catch (PersistenceException | IllegalArgumentException exception) {
+            getEntityManager().getTransaction().rollback();
+            throw new RepositoryCreateException("Source: TicketRepository ; " + exception.getMessage(), exception);
+        }
     }
 
     @Override

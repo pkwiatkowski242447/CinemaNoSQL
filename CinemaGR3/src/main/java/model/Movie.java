@@ -1,24 +1,32 @@
 package model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Length;
 
 import java.util.UUID;
 
 @Entity
+@Table(name = "movie")
 public class Movie {
 
     @Id
-    @Column(nullable = false, unique = true)
+    @Column(name = "movie_id", nullable = false, unique = true)
     private UUID movieID;
 
-    @Column(nullable = false)
+    @Column(name = "movie_title", nullable = false)
     @Length(min = 1, max = 150)
     private String movieTitle;
 
-    @Column(nullable = false)
+    @Column(name = "movie_status_active", nullable = false)
     private boolean movieStatusActive;
+
+    @Column(name = "movie_base_price")
+    @Min(0)
+    @Max(100)
+    private double movieBasePrice;
 
     @ManyToOne
     @NotNull
@@ -29,9 +37,10 @@ public class Movie {
     public Movie() {
     }
 
-    public Movie(UUID movieID, String movieTitle, ScreeningRoom screeningRoom) {
+    public Movie(UUID movieID, String movieTitle, double movieBasePrice, ScreeningRoom screeningRoom) {
         this.movieID = movieID;
         this.movieTitle = movieTitle;
+        this.movieBasePrice = movieBasePrice;
         this.movieStatusActive = true;
         this.screeningRoom = screeningRoom;
     }
@@ -54,11 +63,18 @@ public class Movie {
         return screeningRoom;
     }
 
-    // Setters
+    public double getMovieBasePrice() {
+        return movieBasePrice;
+    }
 
+    // Setters
 
     public void setMovieTitle(String movieTitle) {
         this.movieTitle = movieTitle;
+    }
+
+    public void setMovieBasePrice(double movieBasePrice) {
+        this.movieBasePrice = movieBasePrice;
     }
 
     public void setMovieStatusActive(boolean movieStatusActive) {
@@ -69,9 +85,10 @@ public class Movie {
 
     public String getMovieInfo() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Film pt. ")
+        stringBuilder.append("Movie title: ")
                 .append(this.movieTitle)
                 .append(", ")
+                .append(" location of the spectacle: ")
                 .append(this.screeningRoom.getScreeningRoomInfo());
         return stringBuilder.toString();
     }

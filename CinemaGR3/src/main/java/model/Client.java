@@ -9,26 +9,27 @@ import java.io.Serializable;
 import java.util.UUID;
 
 @Entity
+@Table(name = "client")
 public class Client implements Serializable {
 
     @Id
-    @Column(nullable = false, unique = true)
+    @Column(name = "client_id", nullable = false, unique = true)
     private UUID clientID;
 
-    @Column(nullable = false)
+    @Column(name = "client_name", nullable = false)
     @Length(min = 1, max = 50)
     private String clientName;
 
-    @Column(nullable = false)
+    @Column(name = "client_surname", nullable = false)
     @Length(min = 2, max = 100)
     private String clientSurname;
 
-    @Column(nullable = false)
+    @Column(name = "client_age", nullable = false)
     @Min(18)
     @Max(120)
     private int clientAge;
 
-    @Column(nullable = false)
+    @Column(name = "client_status_active", nullable = false)
     private boolean clientStatusActive;
 
     // Constructors
@@ -88,18 +89,18 @@ public class Client implements Serializable {
 
     public String getClientInfo() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Klient: ")
+        stringBuilder.append("Client identifier: ")
                 .append(this.clientID)
-                .append(", imię i nazwisko: ")
+                .append(", name and surname: ")
                 .append(this.clientName)
                 .append(" ")
                 .append(this.clientSurname)
-                .append(", wiek: ")
+                .append(", age: ")
                 .append(this.clientAge);
         if (this.clientStatusActive) {
-            stringBuilder.append(", status klienta: aktywny");
+            stringBuilder.append(", client status: active");
         } else {
-            stringBuilder.append(", status klienta: nieaktywny");
+            stringBuilder.append(", client status: not active");
         }
         return stringBuilder.toString();
     }

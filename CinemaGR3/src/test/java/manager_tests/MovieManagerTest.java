@@ -50,9 +50,9 @@ public class MovieManagerTest {
         ScreeningRoom screeningRoomNo2 = new ScreeningRoom(UUID.randomUUID(), 2, 5, 90);
         ScreeningRoom screeningRoomNo3 = new ScreeningRoom(UUID.randomUUID(), 0, 19, 120);
 
-        Movie movieNo1 = new Movie(UUID.randomUUID(), "Harry Potter and The Globlet of Fire", screeningRoomNo1);
-        Movie movieNo2 = new Movie(UUID.randomUUID(), "The Da Vinci Code", screeningRoomNo2);
-        Movie movieNo3 = new Movie(UUID.randomUUID(), "A Space Odyssey", screeningRoomNo3);
+        Movie movieNo1 = new Movie(UUID.randomUUID(), "Harry Potter and The Goblet of Fire", 20.05, screeningRoomNo1);
+        Movie movieNo2 = new Movie(UUID.randomUUID(), "The Da Vinci Code", 40.5, screeningRoomNo2);
+        Movie movieNo3 = new Movie(UUID.randomUUID(), "A Space Odyssey", 59.99, screeningRoomNo3);
 
         screeningRoomRepositoryForTests.create(screeningRoomNo1);
         screeningRoomRepositoryForTests.create(screeningRoomNo2);
@@ -102,7 +102,7 @@ public class MovieManagerTest {
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
         assertNotNull(screeningRoom);
         screeningRoomManagerForTests.getObjectRepository().create(screeningRoom);
-        Movie movie = movieManagerForTests.register("American Psycho", screeningRoom);
+        Movie movie = movieManagerForTests.register("American Psycho", 48.25, screeningRoom);
         assertNotNull(movie);
         int numOfMoviesAfter = movieManagerForTests.getObjectRepository().findAll().size();
         assertNotEquals(numOfMoviesBefore, numOfMoviesAfter);
@@ -114,7 +114,7 @@ public class MovieManagerTest {
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
         assertNotNull(screeningRoom);
         screeningRoomManagerForTests.getObjectRepository().create(screeningRoom);
-        Movie movie = movieManagerForTests.register(null, screeningRoom);
+        Movie movie = movieManagerForTests.register(null, 48.25, screeningRoom);
         assertNotNull(movie);
         int numOfMoviesAfter = movieManagerForTests.getObjectRepository().findAll().size();
         assertEquals(numOfMoviesBefore, numOfMoviesAfter);
@@ -138,7 +138,7 @@ public class MovieManagerTest {
         int numOfMoviesBefore = movieManagerForTests.getObjectRepository().findAll().size();
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
         assertNotNull(screeningRoom);
-        Movie movie = new Movie(UUID.randomUUID(), "American Psycho", screeningRoom);
+        Movie movie = new Movie(UUID.randomUUID(), "American Psycho", 48.25,  screeningRoom);
         assertNotNull(movie);
         movieManagerForTests.unregister(movie);
         int numOfMoviesAfter = movieManagerForTests.getObjectRepository().findAll().size();
@@ -158,7 +158,7 @@ public class MovieManagerTest {
     public void getCertainMovieFromMovieRepositoryTestNegative() {
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
         assertNotNull(screeningRoom);
-        Movie movie = new Movie(UUID.randomUUID(), "American Psycho", screeningRoom);
+        Movie movie = new Movie(UUID.randomUUID(), "American Psycho", 48.25, screeningRoom);
         assertNotNull(movie);
         Movie foundMovie = movieManagerForTests.get(movie.getMovieID());
         assertNull(foundMovie);

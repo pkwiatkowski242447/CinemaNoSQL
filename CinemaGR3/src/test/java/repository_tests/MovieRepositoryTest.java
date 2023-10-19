@@ -27,9 +27,9 @@ public class MovieRepositoryTest {
     private final ScreeningRoom screeningRoomNo2 = new ScreeningRoom(UUID.randomUUID(), 2, 5, 90);
     private final ScreeningRoom screeningRoomNo3 = new ScreeningRoom(UUID.randomUUID(), 0, 19, 120);
 
-    private final Movie movieNo1 = new Movie(UUID.randomUUID(), "Harry Potter and The Goblet of Fire", screeningRoomNo1);
-    private final Movie movieNo2 = new Movie(UUID.randomUUID(), "The Da Vinci Code", screeningRoomNo2);
-    private final Movie movieNo3 = new Movie(UUID.randomUUID(), "A Space Odyssey", screeningRoomNo3);
+    private final Movie movieNo1 = new Movie(UUID.randomUUID(), "Harry Potter and The Goblet of Fire", 25, screeningRoomNo1);
+    private final Movie movieNo2 = new Movie(UUID.randomUUID(), "The Da Vinci Code", 40, screeningRoomNo2);
+    private final Movie movieNo3 = new Movie(UUID.randomUUID(), "A Space Odyssey", 60.5, screeningRoomNo3);
 
     @BeforeAll
     public static void init() {
@@ -79,7 +79,7 @@ public class MovieRepositoryTest {
     public void createNewMovieTestPositive() {
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
         assertNotNull(screeningRoom);
-        Movie movie = new Movie(UUID.randomUUID(), "American Psycho", screeningRoom);
+        Movie movie = new Movie(UUID.randomUUID(), "American Psycho", 35.75, screeningRoom);
         assertNotNull(movie);
         screeningRoomRepositoryForTests.create(screeningRoom);
         assertDoesNotThrow(() -> movieRepositoryForTests.create(movie));
@@ -92,7 +92,7 @@ public class MovieRepositoryTest {
     public void createNewMovieWithNullIdTestNegative() {
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
         assertNotNull(screeningRoom);
-        Movie movie = new Movie(null, "American Psycho", screeningRoom);
+        Movie movie = new Movie(null, "American Psycho", 35.75, screeningRoom);
         assertNotNull(movie);
         screeningRoomRepositoryForTests.create(screeningRoom);
         assertThrows(RepositoryCreateException.class, () -> movieRepositoryForTests.create(movie));
@@ -102,7 +102,7 @@ public class MovieRepositoryTest {
     public void createNewMovieWithNullTitleTestNegative() {
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
         assertNotNull(screeningRoom);
-        Movie movie = new Movie(UUID.randomUUID(), null, screeningRoom);
+        Movie movie = new Movie(UUID.randomUUID(), null, 35.75, screeningRoom);
         assertNotNull(movie);
         screeningRoomRepositoryForTests.create(screeningRoom);
         assertThrows(RepositoryCreateException.class, () -> movieRepositoryForTests.create(movie));
@@ -112,7 +112,7 @@ public class MovieRepositoryTest {
     public void createNewMovieWithEmptyTitleTestNegative() {
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
         assertNotNull(screeningRoom);
-        Movie movie = new Movie(UUID.randomUUID(), "", screeningRoom);
+        Movie movie = new Movie(UUID.randomUUID(), "", 35.75, screeningRoom);
         assertNotNull(movie);
         screeningRoomRepositoryForTests.create(screeningRoom);
         assertThrows(RepositoryCreateException.class, () -> movieRepositoryForTests.create(movie));
@@ -123,7 +123,7 @@ public class MovieRepositoryTest {
         String movieTitle = "ddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfd";
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
         assertNotNull(screeningRoom);
-        Movie movie = new Movie(UUID.randomUUID(), movieTitle, screeningRoom);
+        Movie movie = new Movie(UUID.randomUUID(), movieTitle, 35.75,  screeningRoom);
         assertNotNull(movie);
         screeningRoomRepositoryForTests.create(screeningRoom);
         assertThrows(RepositoryCreateException.class, () -> movieRepositoryForTests.create(movie));
@@ -131,7 +131,7 @@ public class MovieRepositoryTest {
 
     @Test
     public void createNewMovieWithNullScreeningRoom() {
-        Movie movie = new Movie(UUID.randomUUID(), "Pulp fiction", null);
+        Movie movie = new Movie(UUID.randomUUID(), "Pulp fiction", 35.75, null);
         assertNotNull(movie);
         assertThrows(RepositoryCreateException.class, () -> movieRepositoryForTests.create(movie));
     }
@@ -140,7 +140,7 @@ public class MovieRepositoryTest {
     public void createNewMovieTestNegative() {
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
         assertNotNull(screeningRoom);
-        Movie movie = new Movie(movieNo1.getMovieID(), "American Psycho", screeningRoom);
+        Movie movie = new Movie(movieNo1.getMovieID(), "American Psycho", 45.85, screeningRoom);
         assertNotNull(movie);
         assertThrows(RepositoryCreateException.class, () -> movieRepositoryForTests.create(movie));
     }
@@ -162,7 +162,7 @@ public class MovieRepositoryTest {
     public void updateCertainMovieTestNegative() {
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
         assertNotNull(screeningRoom);
-        Movie movie = new Movie(UUID.randomUUID(), "American Psycho", screeningRoom);
+        Movie movie = new Movie(UUID.randomUUID(), "American Psycho", 45.85, screeningRoom);
         assertNotNull(movie);
         assertThrows(RepositoryUpdateException.class, () -> movieRepositoryForTests.update(movie));
     }
@@ -208,7 +208,7 @@ public class MovieRepositoryTest {
     public void deleteCertainMovieTestNegative() {
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
         assertNotNull(screeningRoom);
-        Movie movie = new Movie(UUID.randomUUID(), "American Psycho", screeningRoom);
+        Movie movie = new Movie(UUID.randomUUID(), "American Psycho", 45.85, screeningRoom);
         assertNotNull(movie);
         assertThrows(RepositoryDeleteException.class, () -> movieRepositoryForTests.delete(movie));
     }
@@ -224,7 +224,7 @@ public class MovieRepositoryTest {
     public void findCertainMovieTestNegative() {
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
         assertNotNull(screeningRoom);
-        Movie movie = new Movie(UUID.randomUUID(), "American Psycho", screeningRoom);
+        Movie movie = new Movie(UUID.randomUUID(), "American Psycho", 45.85, screeningRoom);
         assertNotNull(movie);
         Movie foundMovie = movieRepositoryForTests.findByUUID(movie.getMovieID());
         assertNull(foundMovie);
