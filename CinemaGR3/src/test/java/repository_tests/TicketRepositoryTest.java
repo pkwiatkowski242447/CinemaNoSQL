@@ -12,9 +12,6 @@ import model.exceptions.repository_exceptions.RepositoryCreateException;
 import model.exceptions.repository_exceptions.RepositoryDeleteException;
 import model.exceptions.repository_exceptions.RepositoryUpdateException;
 import model.repositories.*;
-import model.ticket_types.Normal;
-import model.ticket_types.Reduced;
-import model.ticket_types.TypeOfTicket;
 import org.junit.jupiter.api.*;
 
 import java.util.Calendar;

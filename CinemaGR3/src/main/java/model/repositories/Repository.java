@@ -2,7 +2,6 @@ package model.repositories;
 
 import jakarta.persistence.*;
 import model.exceptions.repository_exceptions.RepositoryCreateException;
-import model.exceptions.repository_exceptions.RepositoryDeleteException;
 import model.exceptions.repository_exceptions.RepositoryUpdateException;
 
 import java.util.List;

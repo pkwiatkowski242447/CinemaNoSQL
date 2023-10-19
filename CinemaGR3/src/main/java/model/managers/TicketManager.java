@@ -6,7 +6,6 @@ import model.Ticket;
 import model.exceptions.model_exceptions.TicketReservationException;
 import model.exceptions.repository_exceptions.RepositoryCreateException;
 import model.repositories.Repository;
-import model.ticket_types.TypeOfTicket;
 
 import java.util.Date;
 import java.util.UUID;
