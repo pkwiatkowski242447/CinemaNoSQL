@@ -21,6 +21,7 @@ public class TicketManager extends Manager<Ticket> {
         try{
             ticketToRepo = new Ticket(UUID.randomUUID(), movieTime, reservationTime, movie, client, typeOfTicket);
             getObjectRepository().create(ticketToRepo);
+            ticketToRepo = getObjectRepository().findByUUID(ticketToRepo.getTicketID());
         } catch (RepositoryCreateException | TicketReservationException exception) {
             exception.printStackTrace();
         }
