@@ -4,9 +4,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import model.ScreeningRoom;
-import model.managers.Manager;
 import model.managers.ScreeningRoomManager;
-import model.repositories.Repository;
 import model.repositories.ScreeningRoomRepository;
 import org.junit.jupiter.api.*;
 
@@ -19,15 +17,15 @@ public class ScreeningRoomManagerTest {
 
     private static EntityManagerFactory entityManagerFactory;
     private static EntityManager entityManager;
-    private static Repository<ScreeningRoom> screeningRoomRepositoryForTest;
-    private static ScreeningRoomManager screeningRoomManagerForTest;
+    private static ScreeningRoomRepository screeningRoomRepositoryForTests;
+    private static ScreeningRoomManager screeningRoomManagerForTests;
 
     @BeforeAll
     public static void init() {
         entityManagerFactory = Persistence.createEntityManagerFactory("test");
         entityManager = entityManagerFactory.createEntityManager();
-        screeningRoomRepositoryForTest = new ScreeningRoomRepository(entityManager);
-        screeningRoomManagerForTest = new ScreeningRoomManager(screeningRoomRepositoryForTest);
+        screeningRoomRepositoryForTests = new ScreeningRoomRepository(entityManager);
+        screeningRoomManagerForTests = new ScreeningRoomManager(screeningRoomRepositoryForTests);
     }
 
     @AfterAll
@@ -39,90 +37,93 @@ public class ScreeningRoomManagerTest {
 
     @BeforeEach
     public void populateScreeningRoomRepositoryForTests() {
-        ScreeningRoom screeningRoomNo1 = new ScreeningRoom(UUID.randomUUID(), 1, 10, 45);
-        ScreeningRoom screeningRoomNo2 = new ScreeningRoom(UUID.randomUUID(), 2, 5, 90);
-        ScreeningRoom screeningRoomNo3 = new ScreeningRoom(UUID.randomUUID(), 0, 19, 120);
+        int screeningRoomNo1Floor = 1;
+        int screeningRoomNo1Number = 10;
+        int screeningRoomNo1NumberOfAvailSeats = 45;
+        int screeningRoomNo2Floor = 2;
+        int screeningRoomNo2Number = 5;
+        int screeningRoomNo2NumberOfAvailSeats = 90;
+        int screeningRoomNo3Floor = 0;
+        int screeningRoomNo3Number = 19;
+        int screeningRoomNo3NumberOfAvailSeats = 120;
 
-        screeningRoomRepositoryForTest.create(screeningRoomNo1);
-        screeningRoomRepositoryForTest.create(screeningRoomNo2);
-        screeningRoomRepositoryForTest.create(screeningRoomNo3);
+        screeningRoomRepositoryForTests.create(screeningRoomNo1Floor, screeningRoomNo1Number, screeningRoomNo1NumberOfAvailSeats);
+        screeningRoomRepositoryForTests.create(screeningRoomNo2Floor, screeningRoomNo2Number, screeningRoomNo2NumberOfAvailSeats);
+        screeningRoomRepositoryForTests.create(screeningRoomNo3Floor, screeningRoomNo3Number, screeningRoomNo3NumberOfAvailSeats);
     }
 
     @AfterEach
     public void depopulateScreeningRoomRepositoryForTests() {
-        List<ScreeningRoom> listOfScreeningRooms = screeningRoomRepositoryForTest.findAll();
+        List<ScreeningRoom> listOfScreeningRooms = screeningRoomRepositoryForTests.findAll();
         for (ScreeningRoom screeningRoom : listOfScreeningRooms) {
-            screeningRoomRepositoryForTest.delete(screeningRoom);
+            screeningRoomRepositoryForTests.delete(screeningRoom);
         }
     }
 
     @Test
     public void createScreeningRoomManagerTest() {
-        Repository<ScreeningRoom> screeningRoomRepository = new ScreeningRoomRepository(entityManager);
+        ScreeningRoomRepository screeningRoomRepository = new ScreeningRoomRepository(entityManager);
         assertNotNull(screeningRoomRepository);
-        Manager<ScreeningRoom> screeningRoomManager = new ScreeningRoomManager(screeningRoomRepository);
+        ScreeningRoomManager screeningRoomManager = new ScreeningRoomManager(screeningRoomRepository);
         assertNotNull(screeningRoomManager);
     }
 
     @Test
     public void setScreeningRoomRepositoryForScreeningRoomManagerTest() {
-        Repository<ScreeningRoom> screeningRoomRepositoryNo1 = new ScreeningRoomRepository(entityManager);
+        ScreeningRoomRepository screeningRoomRepositoryNo1 = new ScreeningRoomRepository(entityManager);
         assertNotNull(screeningRoomRepositoryNo1);
-        Repository<ScreeningRoom> screeningRoomRepositoryNo2 = new ScreeningRoomRepository(entityManager);
+        ScreeningRoomRepository screeningRoomRepositoryNo2 = new ScreeningRoomRepository(entityManager);
         assertNotNull(screeningRoomRepositoryNo2);
-        Manager<ScreeningRoom> screeningRoomManager = new ScreeningRoomManager(screeningRoomRepositoryNo1);
+        ScreeningRoomManager screeningRoomManager = new ScreeningRoomManager(screeningRoomRepositoryNo1);
         assertNotNull(screeningRoomManager);
-        screeningRoomManager.setObjectRepository(screeningRoomRepositoryNo2);
-        assertNotEquals(screeningRoomRepositoryNo1, screeningRoomManager.getObjectRepository());
-        assertEquals(screeningRoomRepositoryNo2, screeningRoomManager.getObjectRepository());
+        screeningRoomManager.setScreeningRoomRepository(screeningRoomRepositoryNo2);
+        assertNotEquals(screeningRoomRepositoryNo1, screeningRoomManager.getScreeningRoomRepository());
+        assertEquals(screeningRoomRepositoryNo2, screeningRoomManager.getScreeningRoomRepository());
     }
 
     @Test
     public void registerNewScreeningRoomTestPositive() {
-        int numOfScreeningRoomsBefore = screeningRoomManagerForTest.getObjectRepository().findAll().size();
-        ScreeningRoom screeningRoom = screeningRoomManagerForTest.register(1, 6, 70);
+        int numOfScreeningRoomsBefore = screeningRoomManagerForTests.getAll().size();
+        ScreeningRoom screeningRoom = screeningRoomManagerForTests.register(1, 6, 70);
         assertNotNull(screeningRoom);
-        int numOfScreeningRoomsAfter = screeningRoomManagerForTest.getObjectRepository().findAll().size();
+        int numOfScreeningRoomsAfter = screeningRoomManagerForTests.getAll().size();
         assertNotEquals(numOfScreeningRoomsBefore, numOfScreeningRoomsAfter);
     }
 
     @Test
     public void registerNewScreeningRoomTestNegative() {
-        int numOfScreeningRoomsBefore = screeningRoomManagerForTest.getObjectRepository().findAll().size();
-        ScreeningRoom screeningRoom = screeningRoomManagerForTest.register(-1, 6, 70);
-        assertNotNull(screeningRoom);
-        int numOfScreeningRoomsAfter = screeningRoomManagerForTest.getObjectRepository().findAll().size();
-        assertEquals(numOfScreeningRoomsBefore, numOfScreeningRoomsAfter);
+        ScreeningRoom screeningRoom = screeningRoomManagerForTests.register(-1, 6, 70);
+        assertNull(screeningRoom);
     }
 
     @Test
     public void unregisterCertainScreeningRoomTestPositive() {
-        int numberOfScreeningRoomsBefore = screeningRoomManagerForTest.getObjectRepository().findAll().size();
-        ScreeningRoom screeningRoom = screeningRoomManagerForTest.getObjectRepository().findAll().get(0);
+        int numberOfScreeningRoomsBefore = screeningRoomManagerForTests.getAll().size();
+        ScreeningRoom screeningRoom = screeningRoomManagerForTests.getAll().get(0);
         assertNotNull(screeningRoom);
         UUID removedScreeningRoomID = screeningRoom.getScreeningRoomID();
-        assertDoesNotThrow(() -> screeningRoomManagerForTest.unregister(screeningRoom));
-        int numberOfScreeningRoomsAfter = screeningRoomManagerForTest.getObjectRepository().findAll().size();
-        ScreeningRoom foundScreeningRoom = screeningRoomManagerForTest.get(removedScreeningRoomID);
+        assertDoesNotThrow(() -> screeningRoomManagerForTests.unregister(screeningRoom));
+        int numberOfScreeningRoomsAfter = screeningRoomManagerForTests.getAll().size();
+        ScreeningRoom foundScreeningRoom = screeningRoomManagerForTests.get(removedScreeningRoomID);
         assertNull(foundScreeningRoom);
         assertNotEquals(numberOfScreeningRoomsBefore, numberOfScreeningRoomsAfter);
     }
 
     @Test
     public void unregisterCertainScreeningRoomTestNegative() {
-        int numberOfScreeningRoomsBefore = screeningRoomManagerForTest.getObjectRepository().findAll().size();
+        int numberOfScreeningRoomsBefore = screeningRoomManagerForTests.getAll().size();
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 1, 6, 70);
         assertNotNull(screeningRoom);
-        screeningRoomManagerForTest.unregister(screeningRoom);
-        int numberOfScreeningRoomsAfter = screeningRoomManagerForTest.getObjectRepository().findAll().size();
+        screeningRoomManagerForTests.unregister(screeningRoom);
+        int numberOfScreeningRoomsAfter = screeningRoomManagerForTests.getAll().size();
         assertEquals(numberOfScreeningRoomsBefore, numberOfScreeningRoomsAfter);
     }
 
     @Test
     public void getCertainScreeningRoomFromScreeningRoomRepositoryTestPositive() {
-        ScreeningRoom screeningRoom = screeningRoomManagerForTest.getObjectRepository().findAll().get(0);
+        ScreeningRoom screeningRoom = screeningRoomManagerForTests.getAll().get(0);
         assertNotNull(screeningRoom);
-        ScreeningRoom foundScreeningRoom = screeningRoomManagerForTest.get(screeningRoom.getScreeningRoomID());
+        ScreeningRoom foundScreeningRoom = screeningRoomManagerForTests.get(screeningRoom.getScreeningRoomID());
         assertNotNull(foundScreeningRoom);
         assertEquals(screeningRoom, foundScreeningRoom);
     }
@@ -131,14 +132,16 @@ public class ScreeningRoomManagerTest {
     public void getCertainScreeningRoomFromScreeningRoomRepositoryTestNegative() {
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 1, 6, 70);
         assertNotNull(screeningRoom);
-        ScreeningRoom foundScreeningRoom = screeningRoomManagerForTest.get(screeningRoom.getScreeningRoomID());
+        ScreeningRoom foundScreeningRoom = screeningRoomManagerForTests.get(screeningRoom.getScreeningRoomID());
         assertNull(foundScreeningRoom);
     }
 
     @Test
     public void getAllScreeningRoomsFromRepositoryTest() {
-        List<ScreeningRoom> listOfScreeningRooms = screeningRoomManagerForTest.getObjectRepository().findAll();
-        assertNotNull(listOfScreeningRooms);
-        assertEquals(3, listOfScreeningRooms.size());
+        List<ScreeningRoom> listOfScreeningRoomsNo1 = screeningRoomManagerForTests.getScreeningRoomRepository().findAll();
+        List<ScreeningRoom> listOfScreeningRoomsNo2 = screeningRoomManagerForTests.getAll();
+        assertNotNull(listOfScreeningRoomsNo1);
+        assertNotNull(listOfScreeningRoomsNo2);
+        assertEquals(listOfScreeningRoomsNo1.size(), listOfScreeningRoomsNo2.size());
     }
 }

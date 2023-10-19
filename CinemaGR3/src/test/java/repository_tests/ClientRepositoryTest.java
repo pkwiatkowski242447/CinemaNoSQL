@@ -4,9 +4,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import model.Client;
-import model.exceptions.repository_exceptions.RepositoryCreateException;
-import model.exceptions.repository_exceptions.RepositoryDeleteException;
-import model.exceptions.repository_exceptions.RepositoryUpdateException;
+import model.exceptions.repository_exceptions.*;
 import model.repositories.ClientRepository;
 import model.repositories.Repository;
 import org.junit.jupiter.api.*;
@@ -21,10 +19,10 @@ public class ClientRepositoryTest {
     private static EntityManagerFactory entityManagerFactory;
     private static EntityManager entityManager;
 
-    private final Client clientNo1 = new Client(UUID.randomUUID(), "John", "Smith", 21);
-    private final Client clientNo2 = new Client(UUID.randomUUID(), "Mary", "Jane", 18);
-    private final Client clientNo3 = new Client(UUID.randomUUID(), "Vincent", "Vega", 40);
-    private static Repository<Client> clientRepositoryForTests;
+    private Client clientNo1;
+    private Client clientNo2;
+    private Client clientNo3;
+    private static ClientRepository clientRepositoryForTests;
 
     @BeforeAll
     public static void init() {
@@ -42,9 +40,18 @@ public class ClientRepositoryTest {
 
     @BeforeEach
     public void insertExampleClients() {
-        clientRepositoryForTests.create(clientNo1);
-        clientRepositoryForTests.create(clientNo2);
-        clientRepositoryForTests.create(clientNo3);
+        String clientNo1Name = "John";
+        String clientNo1Surname = "Smith";
+        int clientNo1Age = 21;
+        clientNo1 = clientRepositoryForTests.create(clientNo1Name, clientNo1Surname, clientNo1Age);
+        String clientNo2Name = "Mary";
+        String clientNo2Surname = "Jane";
+        int clientNo2Age = 18;
+        clientNo2 = clientRepositoryForTests.create(clientNo2Name, clientNo2Surname, clientNo2Age);
+        String clientNo3Name = "Vincent";
+        String clientNo3Surname = "Vega";
+        int clientNo3Age = 40;
+        clientNo3 = clientRepositoryForTests.create(clientNo3Name, clientNo3Surname, clientNo3Age);
     }
 
     @AfterEach
@@ -63,77 +70,49 @@ public class ClientRepositoryTest {
 
     @Test
     public void createNewClientTestPositive() {
-        Client newClient = new Client(UUID.randomUUID(), "Stefania", "Czarnecka", 80);
-        assertNotNull(newClient);
-        assertDoesNotThrow(() -> clientRepositoryForTests.create(newClient));
-        Client createdClient = clientRepositoryForTests.findByUUID(newClient.getClientID());
-        assertEquals(createdClient, newClient);
-    }
-
-    @Test
-    public void createNewClientTestNegativeNullId() {
-        Client newClient = new Client(null, "Stefania", "Czarnecka", 80);
-        assertNotNull(newClient);
-        assertThrows(RepositoryCreateException.class, () -> clientRepositoryForTests.create(newClient));
+        final Client[] newClient = new Client[1];
+        assertDoesNotThrow(() -> {
+            newClient[0] = clientRepositoryForTests.create("Stefania", "Czarnecka", 80);
+        });
+        Client createdClient = clientRepositoryForTests.findByUUID(newClient[0].getClientID());
+        assertEquals(createdClient, newClient[0]);
     }
 
     @Test
     public void createNewClientTestNegativeNameNull() {
-        Client newClient = new Client(UUID.randomUUID(), null, "Czarnecka", 80);
-        assertNotNull(newClient);
-        assertThrows(RepositoryCreateException.class, () -> clientRepositoryForTests.create(newClient));
+        assertThrows(ClientRepositoryCreateException.class, () -> clientRepositoryForTests.create(null, "Czarnecka", 80));
     }
 
     @Test
     public void createNewClientTestNegativeNameEmpty() {
-        Client newClient = new Client(UUID.randomUUID(), "", "Czarnecka", 80);
-        assertNotNull(newClient);
-        assertThrows(RepositoryCreateException.class, () -> clientRepositoryForTests.create(newClient));
+        assertThrows(ClientRepositoryCreateException.class, () -> clientRepositoryForTests.create("", "Czarnecka", 80));
     }
 
     @Test
     public void createNewClientTestNegativeNameTooLong() {
         String name = "ddddddddddddddddddddddddddddddddddddddddddddddddddd";
-        Client newClient = new Client(UUID.randomUUID(), name, "Czarnecka", 80);
-        assertNotNull(newClient);
-        assertThrows(RepositoryCreateException.class, () -> clientRepositoryForTests.create(newClient));
+        assertThrows(ClientRepositoryCreateException.class, () -> clientRepositoryForTests.create(name, "Czarnecka", 80));
     }
 
     @Test
     public void createNewClientTestNegativeSurnameEmpty() {
-        Client newClient = new Client(UUID.randomUUID(), "Stefania", "", 80);
-        assertNotNull(newClient);
-        assertThrows(RepositoryCreateException.class, () -> clientRepositoryForTests.create(newClient));
+        assertThrows(ClientRepositoryCreateException.class, () -> clientRepositoryForTests.create("Stefania", "", 80));
     }
 
     @Test
     public void createNewClientTestNegativeSurnameTooLong() {
         String surname = "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd";
-        Client newClient = new Client(UUID.randomUUID(), "Stefania", surname, 80);
-        assertNotNull(newClient);
-        assertThrows(RepositoryCreateException.class, () -> clientRepositoryForTests.create(newClient));
+        assertThrows(ClientRepositoryCreateException.class, () -> clientRepositoryForTests.create("Stefania", surname, 80));
     }
 
     @Test
     public void createNewClientTestNegativeAgeTooLesserThan18() {
-        Client newClient = new Client(UUID.randomUUID(), "Stefania", "Czarnecka", 17);
-        assertNotNull(newClient);
-        assertThrows(RepositoryCreateException.class, () -> clientRepositoryForTests.create(newClient));
+        assertThrows(ClientRepositoryCreateException.class, () -> clientRepositoryForTests.create("Stefania", "Czarnecka", 17));
     }
 
     @Test
     public void createNewClientTestNegativeAgeGreaterThan120() {
-        Client newClient = new Client(UUID.randomUUID(), "Stefania", "Czarnecka", 121);
-        assertNotNull(newClient);
-        assertThrows(RepositoryCreateException.class, () -> clientRepositoryForTests.create(newClient));
-    }
-
-    @Test
-    public void createNewClientTestNegative() {
-        // Creating new client with UUID from different one already in the db is required - since when
-        // if is exactly the same object - this test didn't pass.
-        Client newClient = new Client(clientNo1.getClientID(), "Stefania", "Czarnecka", 80);
-        assertThrows(RepositoryCreateException.class, () -> clientRepositoryForTests.create(newClient));
+        assertThrows(ClientRepositoryCreateException.class, () -> clientRepositoryForTests.create("Stefania", "Czarnecka", 121));
     }
 
     @Test
@@ -238,7 +217,7 @@ public class ClientRepositoryTest {
     public void deleteCertainClientTestNegative() {
         Client newClient = new Client(UUID.randomUUID(), "Stefania", "Czarnecka", 80);
         assertNotNull(newClient);
-        assertThrows(RepositoryDeleteException.class, () -> clientRepositoryForTests.delete(newClient));
+        assertThrows(ClientRepositoryDeleteException.class, () -> clientRepositoryForTests.delete(newClient));
     }
 
     @Test

@@ -7,41 +7,27 @@ import model.Client;
 import model.Movie;
 import model.ScreeningRoom;
 import model.Ticket;
-import model.exceptions.model_exceptions.TicketReservationException;
 import model.managers.*;
 import model.repositories.*;
 
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 public class Main {
     public static void main(String[] args) {
         EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("test");
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
-        Repository<Client> clientRepository = new ClientRepository(entityManager);
-        Repository<ScreeningRoom> screeningRoomRepository = new ScreeningRoomRepository(entityManager);
-        Repository<Movie> movieRepository = new MovieRepository(entityManager);
-        Repository<Ticket> ticketRepository = new TicketRepository(entityManager);
+        ClientRepository clientRepository = new ClientRepository(entityManager);
+        ScreeningRoomRepository screeningRoomRepository = new ScreeningRoomRepository(entityManager);
+        MovieRepository movieRepository = new MovieRepository(entityManager);
+        TicketRepository ticketRepository = new TicketRepository(entityManager);
 
-        Manager<Client> clientManager = new ClientManager(clientRepository);
-        Manager<ScreeningRoom> screeningRoomManager = new ScreeningRoomManager(screeningRoomRepository);
-        Manager<Movie> movieManager = new MovieManager(movieRepository);
-        Manager<Ticket> ticketManager = new TicketManager(ticketRepository);
-
-        ScreeningRoom screeningRoomNo1 = new ScreeningRoom(UUID.randomUUID(), 1, 10, 45);
-        ScreeningRoom screeningRoomNo2 = new ScreeningRoom(UUID.randomUUID(), 2, 5, 90);
-        ScreeningRoom screeningRoomNo3 = new ScreeningRoom(UUID.randomUUID(), 0, 19, 120);
-
-        Movie movieNo1 = new Movie(UUID.randomUUID(), "Harry Potter and The Goblet of Fire", 30, screeningRoomNo1);
-        Movie movieNo2 = new Movie(UUID.randomUUID(), "The Da Vinci Code", 25, screeningRoomNo2);
-        Movie movieNo3 = new Movie(UUID.randomUUID(), "A Space Odyssey", 40, screeningRoomNo3);
-
-        Client clientNo1 = new Client(UUID.randomUUID(), "John", "Smith", 21);
-        Client clientNo2 = new Client(UUID.randomUUID(), "Mary", "Jane", 18);
-        Client clientNo3 = new Client(UUID.randomUUID(), "Vincent", "Vega", 40);
+        ClientManager clientManager = new ClientManager(clientRepository);
+        ScreeningRoomManager screeningRoomManager = new ScreeningRoomManager(screeningRoomRepository);
+        MovieManager movieManager = new MovieManager(movieRepository);
+        TicketManager ticketManager = new TicketManager(ticketRepository);
 
         Date movieTimeNo1 = new Calendar.Builder().setDate(2023, 10, 1).setTimeOfDay(10, 15, 0).build().getTime();
         Date movieTimeNo2 = new Calendar.Builder().setDate(2023, 10, 8).setTimeOfDay(16, 13, 0).build().getTime();
@@ -51,61 +37,73 @@ public class Main {
         Date reservationTimeNo2 = new Calendar.Builder().setDate(2023, 9, 31).setTimeOfDay(14, 15, 0).build().getTime();
         Date reservationTimeNo3 = new Calendar.Builder().setDate(2023, 10, 11).setTimeOfDay(18, 7, 15).build().getTime();
 
-        Ticket ticketNo1;
-        Ticket ticketNo2;
-        Ticket ticketNo3;
+        String clientNo1Name = "John";
+        String clientNo1Surname = "Smith";
+        int clientNo1Age = 21;
+        Client clientNo1 = clientManager.register(clientNo1Name, clientNo1Surname, clientNo1Age);
+        String clientNo2Name = "Mary";
+        String clientNo2Surname = "Jane";
+        int clientNo2Age = 18;
+        Client clientNo2 = clientManager.register(clientNo2Name, clientNo2Surname, clientNo2Age);
+        String clientNo3Name = "Vincent";
+        String clientNo3Surname = "Vega";
+        int clientNo3Age = 40;
+        Client clientNo3 = clientManager.register(clientNo3Name, clientNo3Surname, clientNo3Age);
 
-        try {
-            ticketNo1 = new Ticket(UUID.randomUUID(), movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, "normal");
-            ticketNo2 = new Ticket(UUID.randomUUID(), movieTimeNo2, reservationTimeNo2, movieNo2, clientNo2, "reduced");
-            ticketNo3 = new Ticket(UUID.randomUUID(), movieTimeNo3, reservationTimeNo3, movieNo3, clientNo3, "normal");
-        } catch (TicketReservationException exception) {
-            throw new RuntimeException("Fatal error.");
-        }
+        int screeningRoomNo1Floor = 1;
+        int screeningRoomNo1Number = 10;
+        int screeningRoomNo1NumberOfAvailSeats = 45;
+        ScreeningRoom screeningRoomNo1 = screeningRoomManager.register(screeningRoomNo1Floor, screeningRoomNo1Number, screeningRoomNo1NumberOfAvailSeats);
+        int screeningRoomNo2Floor = 2;
+        int screeningRoomNo2Number = 5;
+        int screeningRoomNo2NumberOfAvailSeats = 90;
+        ScreeningRoom screeningRoomNo2 = screeningRoomManager.register(screeningRoomNo2Floor, screeningRoomNo2Number, screeningRoomNo2NumberOfAvailSeats);
+        int screeningRoomNo3Floor = 0;
+        int screeningRoomNo3Number = 19;
+        int screeningRoomNo3NumberOfAvailSeats = 120;
+        ScreeningRoom screeningRoomNo3 = screeningRoomManager.register(screeningRoomNo3Floor, screeningRoomNo3Number, screeningRoomNo3NumberOfAvailSeats);
 
+        String movieNo1Title = "Harry Potter and The Goblet of Fire";
+        double movieNo1BasePrice = 20.05;
+        String movieNo2Title = "The Da Vinci Code";
+        double movieNo2BasePrice = 40.5;
+        String movieNo3Title = "A Space Odyssey";
+        double movieNo3BasePrice = 59.99;
 
-        screeningRoomManager.getObjectRepository().create(screeningRoomNo1);
-        screeningRoomManager.getObjectRepository().create(screeningRoomNo2);
-        screeningRoomManager.getObjectRepository().create(screeningRoomNo3);
+        Movie movieNo1 = movieManager.register(movieNo1Title, movieNo1BasePrice, screeningRoomNo1);
+        Movie movieNo2 = movieManager.register(movieNo2Title, movieNo2BasePrice, screeningRoomNo2);
+        Movie movieNo3 = movieManager.register(movieNo3Title, movieNo3BasePrice, screeningRoomNo3);
 
-        clientManager.getObjectRepository().create(clientNo1);
-        clientManager.getObjectRepository().create(clientNo2);
-        clientManager.getObjectRepository().create(clientNo3);
+        ticketManager.register(movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, "normal");
+        ticketManager.register(movieTimeNo2, reservationTimeNo2, movieNo2, clientNo2, "normal");
+        ticketManager.register(movieTimeNo3, reservationTimeNo3, movieNo3, clientNo3, "normal");
 
-        movieManager.getObjectRepository().create(movieNo1);
-        movieManager.getObjectRepository().create(movieNo2);
-        movieManager.getObjectRepository().create(movieNo3);
-
-        ticketManager.getObjectRepository().create(ticketNo1);
-        ticketManager.getObjectRepository().create(ticketNo2);
-        ticketManager.getObjectRepository().create(ticketNo3);
-
-        List<Ticket> ticketList = ticketManager.getObjectRepository().findAll();
+        List<Ticket> ticketList = ticketManager.getTicketRepository().findAll();
         int numOfTicketsBefore = ticketList.size();
         for (Ticket ticket : ticketList) {
             System.out.println(ticket.getTicketInfo());
         }
 
         for (Ticket ticket : ticketList) {
-            ticketManager.getObjectRepository().delete(ticket);
+            ticketManager.getTicketRepository().delete(ticket);
         }
 
-        int numOfTicketsAfter = ticketManager.getObjectRepository().findAll().size();
+        int numOfTicketsAfter = ticketManager.getTicketRepository().findAll().size();
 
-        System.out.println("Liczba biletów przed: " + numOfTicketsBefore);
-        System.out.println("Liczba biletów po: " + numOfTicketsAfter);
+        System.out.println("Number of tickets before: " + numOfTicketsBefore);
+        System.out.println("Number of tickets after: " + numOfTicketsAfter);
 
-        List<Client> listOfClients = clientManager.getObjectRepository().findAll();
+        List<Client> listOfClients = clientManager.getClientRepository().findAll();
         for (Client client : listOfClients) {
             System.out.println(client.getClientInfo());
         }
 
-        List<Movie> listOfMovies = movieManager.getObjectRepository().findAll();
+        List<Movie> listOfMovies = movieManager.getMovieRepository().findAll();
         for (Movie movie : listOfMovies) {
             System.out.println(movie.getMovieInfo());
         }
 
-        List<ScreeningRoom> listOfScreeningRooms = screeningRoomManager.getObjectRepository().findAll();
+        List<ScreeningRoom> listOfScreeningRooms = screeningRoomManager.getScreeningRoomRepository().findAll();
         for (ScreeningRoom screeningRoom : listOfScreeningRooms) {
             System.out.println(screeningRoom.getScreeningRoomInfo());
         }

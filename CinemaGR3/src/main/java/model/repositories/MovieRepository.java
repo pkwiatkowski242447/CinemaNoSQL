@@ -4,9 +4,9 @@ import jakarta.persistence.*;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import model.Movie;
+import model.ScreeningRoom;
 import model.Ticket;
-import model.exceptions.repository_exceptions.RepositoryDeleteException;
-import model.exceptions.repository_exceptions.RepositoryReadException;
+import model.exceptions.repository_exceptions.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,6 +15,20 @@ public class MovieRepository extends Repository<Movie> {
 
     public MovieRepository(EntityManager entityManager) {
         super(entityManager);
+    }
+
+    public Movie create(String movieTitle, double baseMoviePrice, ScreeningRoom screeningRoom) {
+        Movie movie;
+        try {
+            movie = new Movie(UUID.randomUUID(), movieTitle, baseMoviePrice, screeningRoom);
+            getEntityManager().getTransaction().begin();
+            getEntityManager().persist(movie);
+            getEntityManager().getTransaction().commit();
+        } catch (PersistenceException | IllegalArgumentException exception) {
+            getEntityManager().getTransaction().rollback();
+            throw new MovieRepositoryCreateException(exception.getMessage(), exception);
+        }
+        return movie;
     }
 
     @Override
@@ -36,7 +50,7 @@ public class MovieRepository extends Repository<Movie> {
             getEntityManager().getTransaction().commit();
         } catch(IllegalArgumentException | PersistenceException exception) {
             getEntityManager().getTransaction().rollback();
-            throw new RepositoryDeleteException("Source: MovieRepository ; " + exception.getMessage(), exception);
+            throw new MovieRepositoryDeleteException(exception.getMessage(), exception);
         }
     }
 
@@ -49,7 +63,7 @@ public class MovieRepository extends Repository<Movie> {
             getEntityManager().getTransaction().commit();
         } catch (IllegalArgumentException | TransactionRequiredException | OptimisticLockException |
                  PessimisticLockException | LockTimeoutException exception) {
-            throw new RepositoryReadException("Source: MovieRepository ; " + exception.getMessage(), exception);
+            throw new MovieRepositoryReadException(exception.getMessage(), exception);
         }
         return movieToBeRead;
     }
@@ -65,7 +79,7 @@ public class MovieRepository extends Repository<Movie> {
             listOfAllMovie = getEntityManager().createQuery(findAllMovies).setLockMode(LockModeType.PESSIMISTIC_READ).getResultList();
             getEntityManager().getTransaction().commit();
         } catch (IllegalStateException | IllegalArgumentException exception) {
-            throw new RepositoryReadException("Source: MovieRepository ; " + exception.getMessage(), exception);
+            throw new MovieRepositoryReadException(exception.getMessage(), exception);
         }
         return listOfAllMovie;
     }

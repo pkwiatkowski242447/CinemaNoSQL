@@ -4,9 +4,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import model.ScreeningRoom;
-import model.exceptions.repository_exceptions.RepositoryCreateException;
-import model.exceptions.repository_exceptions.RepositoryDeleteException;
-import model.exceptions.repository_exceptions.RepositoryUpdateException;
+import model.exceptions.repository_exceptions.*;
 import model.repositories.Repository;
 import model.repositories.ScreeningRoomRepository;
 import org.junit.jupiter.api.*;
@@ -20,10 +18,10 @@ public class ScreeningRoomRepositoryTest {
 
     private static EntityManagerFactory entityManagerFactory;
     private static EntityManager entityManager;
-    private static Repository<ScreeningRoom> screeningRoomRepositoryForTests;
-    private final ScreeningRoom screeningRoomNo1 = new ScreeningRoom(UUID.randomUUID(), 1, 10, 45);
-    private final ScreeningRoom screeningRoomNo2 = new ScreeningRoom(UUID.randomUUID(), 2, 5, 90);
-    private final ScreeningRoom screeningRoomNo3 = new ScreeningRoom(UUID.randomUUID(), 0, 19, 120);
+    private static ScreeningRoomRepository screeningRoomRepositoryForTests;
+    private ScreeningRoom screeningRoomNo1;
+    private ScreeningRoom screeningRoomNo2;
+    private ScreeningRoom screeningRoomNo3;
 
     @BeforeAll
     public static void init() {
@@ -41,9 +39,18 @@ public class ScreeningRoomRepositoryTest {
 
     @BeforeEach
     public void insertExampleScreeningRooms() {
-        screeningRoomRepositoryForTests.create(screeningRoomNo1);
-        screeningRoomRepositoryForTests.create(screeningRoomNo2);
-        screeningRoomRepositoryForTests.create(screeningRoomNo3);
+        int screeningRoomNo1Floor = 1;
+        int screeningRoomNo1Number = 10;
+        int screeningRoomNo1NumberOfAvailSeats = 45;
+        screeningRoomNo1 = screeningRoomRepositoryForTests.create(screeningRoomNo1Floor, screeningRoomNo1Number, screeningRoomNo1NumberOfAvailSeats);
+        int screeningRoomNo2Floor = 2;
+        int screeningRoomNo2Number = 5;
+        int screeningRoomNo2NumberOfAvailSeats = 90;
+        screeningRoomNo2 = screeningRoomRepositoryForTests.create(screeningRoomNo2Floor, screeningRoomNo2Number, screeningRoomNo2NumberOfAvailSeats);
+        int screeningRoomNo3Floor = 0;
+        int screeningRoomNo3Number = 19;
+        int screeningRoomNo3NumberOfAvailSeats = 120;
+        screeningRoomNo3 = screeningRoomRepositoryForTests.create(screeningRoomNo3Floor, screeningRoomNo3Number, screeningRoomNo3NumberOfAvailSeats);
     }
 
     @AfterEach
@@ -62,68 +69,43 @@ public class ScreeningRoomRepositoryTest {
 
     @Test
     public void createScreeningRoomTestPositive() {
-        ScreeningRoom newScreeningRoom = new ScreeningRoom(UUID.randomUUID(), 1, 6, 70);
-        assertNotNull(newScreeningRoom);
-        assertDoesNotThrow(() -> screeningRoomRepositoryForTests.create(newScreeningRoom));
-        ScreeningRoom newlyCreatedScreeningRoom = screeningRoomRepositoryForTests.findByUUID(newScreeningRoom.getScreeningRoomID());
+        final ScreeningRoom[] newScreeningRoom = new ScreeningRoom[1];
+        assertDoesNotThrow(() -> {
+            newScreeningRoom[0] = screeningRoomRepositoryForTests.create(1, 6, 70);
+        });
+        ScreeningRoom newlyCreatedScreeningRoom = screeningRoomRepositoryForTests.findByUUID(newScreeningRoom[0].getScreeningRoomID());
         assertNotNull(newlyCreatedScreeningRoom);
-        assertEquals(newScreeningRoom, newlyCreatedScreeningRoom);
-    }
-
-    @Test
-    public void createScreeningRoomTestNegative() {
-        ScreeningRoom newScreeningRoom = new ScreeningRoom(screeningRoomNo1.getScreeningRoomID(), 0, 8, 30);
-        assertNotNull(newScreeningRoom);
-        assertThrows(RepositoryCreateException.class, () -> screeningRoomRepositoryForTests.create(newScreeningRoom));
-    }
-
-    @Test
-    public void createScreeningWithNullIdRoomTestNegative() {
-        ScreeningRoom newScreeningRoom = new ScreeningRoom(null, 0, 8, 30);
-        assertNotNull(newScreeningRoom);
-        assertThrows(RepositoryCreateException.class, () -> screeningRoomRepositoryForTests.create(newScreeningRoom));
+        assertEquals(newScreeningRoom[0], newlyCreatedScreeningRoom);
     }
 
     @Test
     public void createScreeningRoomWithFloorNumberLesserThan0() {
-        ScreeningRoom newScreeningRoom = new ScreeningRoom(UUID.randomUUID(), -1, 8, 30);
-        assertNotNull(newScreeningRoom);
-        assertThrows(RepositoryCreateException.class, () -> screeningRoomRepositoryForTests.create(newScreeningRoom));
+        assertThrows(ScreeningRoomRepositoryCreateException.class, () -> screeningRoomRepositoryForTests.create(-1, 8, 30));
     }
 
     @Test
     public void createScreeningRoomWithFloorNumberGreaterThan3() {
-        ScreeningRoom newScreeningRoom = new ScreeningRoom(UUID.randomUUID(), 4, 8, 30);
-        assertNotNull(newScreeningRoom);
-        assertThrows(RepositoryCreateException.class, () -> screeningRoomRepositoryForTests.create(newScreeningRoom));
+        assertThrows(ScreeningRoomRepositoryCreateException.class, () -> screeningRoomRepositoryForTests.create(4, 8, 30));
     }
 
     @Test
     public void createScreeningRoomWithRoomNumberLesserThan1() {
-        ScreeningRoom newScreeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 0, 30);
-        assertNotNull(newScreeningRoom);
-        assertThrows(RepositoryCreateException.class, () -> screeningRoomRepositoryForTests.create(newScreeningRoom));
+        assertThrows(ScreeningRoomRepositoryCreateException.class, () -> screeningRoomRepositoryForTests.create(0, 0, 30));
     }
 
     @Test
     public void createScreeningRoomWithRoomNumberGreaterThan20() {
-        ScreeningRoom newScreeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 21, 30);
-        assertNotNull(newScreeningRoom);
-        assertThrows(RepositoryCreateException.class, () -> screeningRoomRepositoryForTests.create(newScreeningRoom));
+        assertThrows(ScreeningRoomRepositoryCreateException.class, () -> screeningRoomRepositoryForTests.create(0, 21, 30));
     }
 
     @Test
     public void createScreeningRoomWithNumberOfAvailableSeatsLesserThan0() {
-        ScreeningRoom newScreeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 8, -1);
-        assertNotNull(newScreeningRoom);
-        assertThrows(RepositoryCreateException.class, () -> screeningRoomRepositoryForTests.create(newScreeningRoom));
+        assertThrows(ScreeningRoomRepositoryCreateException.class, () -> screeningRoomRepositoryForTests.create(0, 8, -1));
     }
 
     @Test
     public void createScreeningRoomWithNumberOfAvailableSeatsGreaterThan150() {
-        ScreeningRoom newScreeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 8, 151);
-        assertNotNull(newScreeningRoom);
-        assertThrows(RepositoryCreateException.class, () -> screeningRoomRepositoryForTests.create(newScreeningRoom));
+        assertThrows(ScreeningRoomRepositoryCreateException.class, () -> screeningRoomRepositoryForTests.create(0, 8, 151));
     }
 
     @Test
@@ -174,7 +156,7 @@ public class ScreeningRoomRepositoryTest {
     public void deleteCertainScreeningRoomTestNegative() {
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0 , 6, 90);
         assertNotNull(screeningRoom);
-        assertThrows(RepositoryDeleteException.class, () -> screeningRoomRepositoryForTests.delete(screeningRoom));
+        assertThrows(ScreeningRoomRepositoryDeleteException.class, () -> screeningRoomRepositoryForTests.delete(screeningRoom));
     }
 
     @Test

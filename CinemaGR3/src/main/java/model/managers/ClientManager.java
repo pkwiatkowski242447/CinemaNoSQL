@@ -2,23 +2,64 @@ package model.managers;
 
 import model.Client;
 import model.exceptions.repository_exceptions.RepositoryCreateException;
-import model.repositories.Repository;
+import model.exceptions.repository_exceptions.RepositoryDeleteException;
+import model.exceptions.repository_exceptions.RepositoryReadException;
+import model.repositories.ClientRepository;
 
+import java.util.List;
 import java.util.UUID;
 
-public class ClientManager extends Manager<Client> {
-    public ClientManager(Repository<Client> objectRepository) {
-        super(objectRepository);
+public class ClientManager {
+
+    private ClientRepository clientRepository;
+
+    public ClientManager(ClientRepository clientRepository) {
+        this.clientRepository = clientRepository;
     }
 
     public Client register(String clientName, String clientSurname, int clientAge) {
         Client clientToRepo = null;
         try {
-            clientToRepo = new Client(UUID.randomUUID(), clientName, clientSurname, clientAge);
-            getObjectRepository().create(clientToRepo);
+            clientToRepo = clientRepository.create(clientName, clientSurname, clientAge);
         } catch (RepositoryCreateException exception) {
             exception.printStackTrace();
         }
         return clientToRepo;
+    }
+
+    public void unregister(Client client) {
+        try {
+            clientRepository.delete(client);
+        } catch (RepositoryDeleteException exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    public Client get(UUID identifier) {
+        Client client = null;
+        try {
+            client = clientRepository.findByUUID(identifier);
+        } catch (RepositoryReadException exception) {
+            exception.printStackTrace();
+        }
+        return client;
+    }
+
+    public List<Client> getAll() {
+        List<Client> listOfClients = null;
+        try {
+            listOfClients = clientRepository.findAll();
+        } catch (RepositoryReadException exception) {
+            exception.printStackTrace();
+        }
+        return listOfClients;
+    }
+
+    public ClientRepository getClientRepository() {
+        return clientRepository;
+    }
+
+    public void setClientRepository(ClientRepository clientRepository) {
+        this.clientRepository = clientRepository;
     }
 }

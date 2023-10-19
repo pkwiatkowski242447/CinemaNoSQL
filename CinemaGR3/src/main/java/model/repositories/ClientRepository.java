@@ -5,8 +5,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import model.Client;
 import model.Ticket;
-import model.exceptions.repository_exceptions.RepositoryDeleteException;
-import model.exceptions.repository_exceptions.RepositoryReadException;
+import model.exceptions.repository_exceptions.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -15,6 +14,20 @@ public class ClientRepository extends Repository<Client> {
 
     public ClientRepository(EntityManager entityManager) {
         super(entityManager);
+    }
+
+    public Client create(String clientName, String clientSurname, int clientAge) {
+        Client client;
+        try {
+            client = new Client(UUID.randomUUID(), clientName, clientSurname, clientAge);
+            getEntityManager().getTransaction().begin();
+            getEntityManager().persist(client);
+            getEntityManager().getTransaction().commit();
+        } catch (PersistenceException | IllegalArgumentException exception) {
+            getEntityManager().getTransaction().rollback();
+            throw new ClientRepositoryCreateException(exception.getMessage(), exception);
+        }
+        return client;
     }
 
     @Override
@@ -36,7 +49,7 @@ public class ClientRepository extends Repository<Client> {
             getEntityManager().getTransaction().commit();
         } catch(IllegalArgumentException | PersistenceException exception) {
             getEntityManager().getTransaction().rollback();
-            throw new RepositoryDeleteException("Source: ClientRepository ; " + exception.getMessage(), exception);
+            throw new ClientRepositoryDeleteException(exception.getMessage(), exception);
         }
     }
 
@@ -50,7 +63,7 @@ public class ClientRepository extends Repository<Client> {
         } catch (IllegalArgumentException | TransactionRequiredException | OptimisticLockException |
                 PessimisticLockException | LockTimeoutException exception) {
             getEntityManager().getTransaction().rollback();
-            throw new RepositoryReadException("Source: ClientRepository ; " + exception.getMessage(), exception);
+            throw new ClientRepositoryReadException(exception.getMessage(), exception);
         }
         return clientToBeRead;
     }
@@ -67,7 +80,7 @@ public class ClientRepository extends Repository<Client> {
             getEntityManager().getTransaction().commit();
         } catch (IllegalStateException | IllegalArgumentException exception) {
             getEntityManager().getTransaction().rollback();
-            throw new RepositoryReadException("Source: ClientRepository ; " + exception.getMessage(), exception);
+            throw new ClientRepositoryReadException(exception.getMessage(), exception);
         }
         return listOfAllClients;
     }

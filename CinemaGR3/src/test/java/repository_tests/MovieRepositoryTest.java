@@ -5,9 +5,7 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import model.Movie;
 import model.ScreeningRoom;
-import model.exceptions.repository_exceptions.RepositoryCreateException;
-import model.exceptions.repository_exceptions.RepositoryDeleteException;
-import model.exceptions.repository_exceptions.RepositoryUpdateException;
+import model.exceptions.repository_exceptions.*;
 import model.repositories.*;
 import org.junit.jupiter.api.*;
 
@@ -20,16 +18,16 @@ public class MovieRepositoryTest {
 
     private static EntityManagerFactory entityManagerFactory;
     private static EntityManager entityManager;
-    private static Repository<Movie> movieRepositoryForTests;
-    private static Repository<ScreeningRoom> screeningRoomRepositoryForTests;
+    private static MovieRepository movieRepositoryForTests;
+    private static ScreeningRoomRepository screeningRoomRepositoryForTests;
 
-    private final ScreeningRoom screeningRoomNo1 = new ScreeningRoom(UUID.randomUUID(), 1, 10, 45);
-    private final ScreeningRoom screeningRoomNo2 = new ScreeningRoom(UUID.randomUUID(), 2, 5, 90);
-    private final ScreeningRoom screeningRoomNo3 = new ScreeningRoom(UUID.randomUUID(), 0, 19, 120);
+    private ScreeningRoom screeningRoomNo1;
+    private ScreeningRoom screeningRoomNo2;
+    private ScreeningRoom screeningRoomNo3;
 
-    private final Movie movieNo1 = new Movie(UUID.randomUUID(), "Harry Potter and The Goblet of Fire", 25, screeningRoomNo1);
-    private final Movie movieNo2 = new Movie(UUID.randomUUID(), "The Da Vinci Code", 40, screeningRoomNo2);
-    private final Movie movieNo3 = new Movie(UUID.randomUUID(), "A Space Odyssey", 60.5, screeningRoomNo3);
+    private Movie movieNo1;
+    private Movie movieNo2;
+    private Movie movieNo3;
 
     @BeforeAll
     public static void init() {
@@ -48,13 +46,29 @@ public class MovieRepositoryTest {
 
     @BeforeEach
     public void insertExampleMovies() {
-        screeningRoomRepositoryForTests.create(screeningRoomNo1);
-        screeningRoomRepositoryForTests.create(screeningRoomNo2);
-        screeningRoomRepositoryForTests.create(screeningRoomNo3);
+        int screeningRoomNo1Floor = 1;
+        int screeningRoomNo1Number = 10;
+        int screeningRoomNo1NumberOfAvailSeats = 45;
+        screeningRoomNo1 = screeningRoomRepositoryForTests.create(screeningRoomNo1Floor, screeningRoomNo1Number, screeningRoomNo1NumberOfAvailSeats);
+        int screeningRoomNo2Floor = 2;
+        int screeningRoomNo2Number = 5;
+        int screeningRoomNo2NumberOfAvailSeats = 90;
+        screeningRoomNo2 = screeningRoomRepositoryForTests.create(screeningRoomNo2Floor, screeningRoomNo2Number, screeningRoomNo2NumberOfAvailSeats);
+        int screeningRoomNo3Floor = 0;
+        int screeningRoomNo3Number = 19;
+        int screeningRoomNo3NumberOfAvailSeats = 120;
+        screeningRoomNo3 = screeningRoomRepositoryForTests.create(screeningRoomNo3Floor, screeningRoomNo3Number, screeningRoomNo3NumberOfAvailSeats);
 
-        movieRepositoryForTests.create(movieNo1);
-        movieRepositoryForTests.create(movieNo2);
-        movieRepositoryForTests.create(movieNo3);
+        String movieNo1Title = "Harry Potter and The Goblet of Fire";
+        double movieNo1BasePrice = 20.05;
+        String movieNo2Title = "The Da Vinci Code";
+        double movieNo2BasePrice = 40.5;
+        String movieNo3Title = "A Space Odyssey";
+        double movieNo3BasePrice = 59.99;
+
+        movieNo1 = movieRepositoryForTests.create(movieNo1Title, movieNo1BasePrice, screeningRoomNo1);
+        movieNo2 = movieRepositoryForTests.create(movieNo2Title, movieNo2BasePrice, screeningRoomNo2);
+        movieNo3 = movieRepositoryForTests.create(movieNo3Title, movieNo3BasePrice, screeningRoomNo3);
     }
 
     @AfterEach
@@ -77,72 +91,43 @@ public class MovieRepositoryTest {
 
     @Test
     public void createNewMovieTestPositive() {
-        ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
+        ScreeningRoom screeningRoom = screeningRoomRepositoryForTests.create(0, 5, 50);
         assertNotNull(screeningRoom);
-        Movie movie = new Movie(UUID.randomUUID(), "American Psycho", 35.75, screeningRoom);
-        assertNotNull(movie);
-        screeningRoomRepositoryForTests.create(screeningRoom);
-        assertDoesNotThrow(() -> movieRepositoryForTests.create(movie));
-        Movie foundMovie = movieRepositoryForTests.findByUUID(movie.getMovieID());
+        final Movie[] movie = new Movie[1];
+        assertDoesNotThrow(() -> {
+            movie[0] = movieRepositoryForTests.create("American Psycho", 35.75, screeningRoom);
+        });
+        assertNotNull(movie[0]);
+        Movie foundMovie = movieRepositoryForTests.findByUUID(movie[0].getMovieID());
         assertNotNull(foundMovie);
-        assertEquals(foundMovie, movie);
-    }
-
-    @Test
-    public void createNewMovieWithNullIdTestNegative() {
-        ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
-        assertNotNull(screeningRoom);
-        Movie movie = new Movie(null, "American Psycho", 35.75, screeningRoom);
-        assertNotNull(movie);
-        screeningRoomRepositoryForTests.create(screeningRoom);
-        assertThrows(RepositoryCreateException.class, () -> movieRepositoryForTests.create(movie));
+        assertEquals(foundMovie, movie[0]);
     }
 
     @Test
     public void createNewMovieWithNullTitleTestNegative() {
-        ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
+        ScreeningRoom screeningRoom = screeningRoomRepositoryForTests.create(0, 5, 50);
         assertNotNull(screeningRoom);
-        Movie movie = new Movie(UUID.randomUUID(), null, 35.75, screeningRoom);
-        assertNotNull(movie);
-        screeningRoomRepositoryForTests.create(screeningRoom);
-        assertThrows(RepositoryCreateException.class, () -> movieRepositoryForTests.create(movie));
+        assertThrows(MovieRepositoryCreateException.class, () -> movieRepositoryForTests.create(null, 35.75, screeningRoom));
     }
 
     @Test
     public void createNewMovieWithEmptyTitleTestNegative() {
-        ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
+        ScreeningRoom screeningRoom = screeningRoomRepositoryForTests.create(0, 5, 50);
         assertNotNull(screeningRoom);
-        Movie movie = new Movie(UUID.randomUUID(), "", 35.75, screeningRoom);
-        assertNotNull(movie);
-        screeningRoomRepositoryForTests.create(screeningRoom);
-        assertThrows(RepositoryCreateException.class, () -> movieRepositoryForTests.create(movie));
+        assertThrows(MovieRepositoryCreateException.class, () -> movieRepositoryForTests.create("", 35.75, screeningRoom));
     }
 
     @Test
     public void createNewMovieWithTooLongTitleTestNegative() {
         String movieTitle = "ddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfddddfd";
-        ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
+        ScreeningRoom screeningRoom = screeningRoomRepositoryForTests.create(0, 5, 50);
         assertNotNull(screeningRoom);
-        Movie movie = new Movie(UUID.randomUUID(), movieTitle, 35.75,  screeningRoom);
-        assertNotNull(movie);
-        screeningRoomRepositoryForTests.create(screeningRoom);
-        assertThrows(RepositoryCreateException.class, () -> movieRepositoryForTests.create(movie));
+        assertThrows(MovieRepositoryCreateException.class, () -> movieRepositoryForTests.create(movieTitle, 35.75,  screeningRoom));
     }
 
     @Test
     public void createNewMovieWithNullScreeningRoom() {
-        Movie movie = new Movie(UUID.randomUUID(), "Pulp fiction", 35.75, null);
-        assertNotNull(movie);
-        assertThrows(RepositoryCreateException.class, () -> movieRepositoryForTests.create(movie));
-    }
-
-    @Test
-    public void createNewMovieTestNegative() {
-        ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
-        assertNotNull(screeningRoom);
-        Movie movie = new Movie(movieNo1.getMovieID(), "American Psycho", 45.85, screeningRoom);
-        assertNotNull(movie);
-        assertThrows(RepositoryCreateException.class, () -> movieRepositoryForTests.create(movie));
+        assertThrows(MovieRepositoryCreateException.class, () -> movieRepositoryForTests.create("Pulp fiction", 35.75, null));
     }
 
     @Test
@@ -210,7 +195,7 @@ public class MovieRepositoryTest {
         assertNotNull(screeningRoom);
         Movie movie = new Movie(UUID.randomUUID(), "American Psycho", 45.85, screeningRoom);
         assertNotNull(movie);
-        assertThrows(RepositoryDeleteException.class, () -> movieRepositoryForTests.delete(movie));
+        assertThrows(MovieRepositoryDeleteException.class, () -> movieRepositoryForTests.delete(movie));
     }
 
     @Test

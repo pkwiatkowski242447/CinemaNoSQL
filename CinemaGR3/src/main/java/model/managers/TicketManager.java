@@ -3,27 +3,66 @@ package model.managers;
 import model.Client;
 import model.Movie;
 import model.Ticket;
-import model.exceptions.model_exceptions.TicketReservationException;
 import model.exceptions.repository_exceptions.RepositoryCreateException;
-import model.repositories.Repository;
+import model.exceptions.repository_exceptions.RepositoryDeleteException;
+import model.exceptions.repository_exceptions.RepositoryReadException;
+import model.repositories.TicketRepository;
 
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
-public class TicketManager extends Manager<Ticket> {
-    public TicketManager(Repository<Ticket> objectRepository) {
-        super(objectRepository);
+public class TicketManager {
+
+    private TicketRepository ticketRepository;
+
+    public TicketManager(TicketRepository ticketRepository) {
+        this.ticketRepository = ticketRepository;
     }
 
     public Ticket register(Date movieTime, Date reservationTime, Movie movie, Client client, String typeOfTicket) {
         Ticket ticketToRepo = null;
         try{
-            ticketToRepo = new Ticket(UUID.randomUUID(), movieTime, reservationTime, movie, client, typeOfTicket);
-            getObjectRepository().create(ticketToRepo);
-            ticketToRepo = getObjectRepository().findByUUID(ticketToRepo.getTicketID());
-        } catch (RepositoryCreateException | TicketReservationException exception) {
+            ticketToRepo = ticketRepository.create(movieTime, reservationTime, movie, client, typeOfTicket);
+        } catch (RepositoryCreateException exception) {
             exception.printStackTrace();
         }
         return ticketToRepo;
+    }
+
+    public void unregister(Ticket ticket) {
+        try {
+            ticketRepository.delete(ticket);
+        } catch (RepositoryDeleteException exception) {
+            exception.printStackTrace();
+        }
+    }
+
+    public Ticket get(UUID identifier) {
+        Ticket ticket = null;
+        try {
+            ticket = ticketRepository.findByUUID(identifier);
+        } catch (RepositoryReadException exception) {
+            exception.printStackTrace();
+        }
+        return ticket;
+    }
+
+    public List<Ticket> getAll() {
+        List<Ticket> listOfTickets = null;
+        try {
+            listOfTickets = ticketRepository.findAll();
+        } catch (RepositoryReadException exception) {
+            exception.printStackTrace();
+        }
+        return listOfTickets;
+    }
+
+    public TicketRepository getTicketRepository() {
+        return ticketRepository;
+    }
+
+    public void setTicketRepository(TicketRepository ticketRepository) {
+        this.ticketRepository = ticketRepository;
     }
 }

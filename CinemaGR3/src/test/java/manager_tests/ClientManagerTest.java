@@ -5,9 +5,7 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 import model.Client;
 import model.managers.ClientManager;
-import model.managers.Manager;
 import model.repositories.ClientRepository;
-import model.repositories.Repository;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -19,7 +17,7 @@ public class ClientManagerTest {
 
     private static EntityManagerFactory entityManagerFactory;
     private static EntityManager entityManager;
-    private static Repository<Client> clientRepositoryForTests;
+    private static ClientRepository clientRepositoryForTests;
     private static ClientManager clientManagerForTests;
 
     @BeforeAll
@@ -39,13 +37,19 @@ public class ClientManagerTest {
 
     @BeforeEach
     public void populateClientRepositoryForTests() {
-        Client clientNo1 = new Client(UUID.randomUUID(), "John", "Smith", 21);
-        Client clientNo2 = new Client(UUID.randomUUID(), "Mary", "Jane", 18);
-        Client clientNo3 = new Client(UUID.randomUUID(), "Vincent", "Vega", 40);
+        String clientNo1Name = "John";
+        String clientNo1Surname = "Smith";
+        int clientNo1Age = 21;
+        String clientNo2Name = "Mary";
+        String clientNo2Surname = "Jane";
+        int clientNo2Age = 18;
+        String clientNo3Name = "Vincent";
+        String clientNo3Surname = "Vega";
+        int clientNo3Age = 40;
 
-        clientRepositoryForTests.create(clientNo1);
-        clientRepositoryForTests.create(clientNo2);
-        clientRepositoryForTests.create(clientNo3);
+        clientRepositoryForTests.create(clientNo1Name, clientNo1Surname, clientNo1Age);
+        clientRepositoryForTests.create(clientNo2Name, clientNo2Surname, clientNo2Age);
+        clientRepositoryForTests.create(clientNo3Name, clientNo3Surname, clientNo3Age);
     }
 
     @AfterEach
@@ -58,51 +62,48 @@ public class ClientManagerTest {
 
     @Test
     public void createClientManagerTest() {
-        Repository<Client> clientRepository = new ClientRepository(entityManager);
+        ClientRepository clientRepository = new ClientRepository(entityManager);
         assertNotNull(clientRepository);
-        Manager<Client> clientManager = new ClientManager(clientRepository);
+        ClientManager clientManager = new ClientManager(clientRepository);
         assertNotNull(clientManager);
     }
 
     @Test
     public void setClientRepositoryForClientManagerTest() {
-        Repository<Client> clientRepositoryNo1 = new ClientRepository(entityManager);
+        ClientRepository clientRepositoryNo1 = new ClientRepository(entityManager);
         assertNotNull(clientRepositoryNo1);
-        Repository<Client> clientRepositoryNo2 = new ClientRepository(entityManager);
+        ClientRepository clientRepositoryNo2 = new ClientRepository(entityManager);
         assertNotNull(clientRepositoryNo2);
-        Manager<Client> clientManager = new ClientManager(clientRepositoryNo1);
+        ClientManager clientManager = new ClientManager(clientRepositoryNo1);
         assertNotNull(clientManager);
-        clientManager.setObjectRepository(clientRepositoryNo2);
-        assertNotEquals(clientRepositoryNo1, clientManager.getObjectRepository());
-        assertEquals(clientRepositoryNo2, clientManager.getObjectRepository());
+        clientManager.setClientRepository(clientRepositoryNo2);
+        assertNotEquals(clientRepositoryNo1, clientManager.getClientRepository());
+        assertEquals(clientRepositoryNo2, clientManager.getClientRepository());
     }
 
     @Test
     public void registerNewClientTestTestPositive() {
-        int numOfClientsBefore = clientManagerForTests.getObjectRepository().findAll().size();
+        int numOfClientsBefore = clientManagerForTests.getAll().size();
         Client client = clientManagerForTests.register("Stefania", "Czarnecka", 80);
         assertNotNull(client);
-        int numOfClientsAfter = clientManagerForTests.getObjectRepository().findAll().size();
+        int numOfClientsAfter = clientManagerForTests.getAll().size();
         assertNotEquals(numOfClientsBefore, numOfClientsAfter);
     }
 
     @Test
     public void registerNewClientTestNegative() {
-        int numOfClientsBefore = clientManagerForTests.getObjectRepository().findAll().size();
         Client client = clientManagerForTests.register(null, "Czarnecka", 80);
-        assertNotNull(client);
-        int numOfClientsAfter = clientManagerForTests.getObjectRepository().findAll().size();
-        assertEquals(numOfClientsBefore, numOfClientsAfter);
+        assertNull(client);
     }
 
     @Test
     public void unregisterCertainClientTestPositive() {
-        int numberOfClientsBefore = clientManagerForTests.getObjectRepository().findAll().size();
-        Client someClientFromRepo = clientManagerForTests.getObjectRepository().findAll().get(0);
+        int numberOfClientsBefore = clientManagerForTests.getAll().size();
+        Client someClientFromRepo = clientManagerForTests.getAll().get(0);
         assertNotNull(someClientFromRepo);
         UUID unregisteredClientID = someClientFromRepo.getClientID();
         assertDoesNotThrow(() -> clientManagerForTests.unregister(someClientFromRepo));
-        int numberOfClientsAfter = clientManagerForTests.getObjectRepository().findAll().size();
+        int numberOfClientsAfter = clientManagerForTests.getAll().size();
         Client foundClient = clientManagerForTests.get(unregisteredClientID);
         assertNull(foundClient);
         assertNotEquals(numberOfClientsBefore, numberOfClientsAfter);
@@ -120,7 +121,7 @@ public class ClientManagerTest {
 
     @Test
     public void getCertainClientFromClientRepositoryTestPositive() {
-        Client someClientFromRepo = clientManagerForTests.getObjectRepository().findAll().get(0);
+        Client someClientFromRepo = clientManagerForTests.getAll().get(0);
         assertNotNull(someClientFromRepo);
         Client foundClient = clientManagerForTests.get(someClientFromRepo.getClientID());
         assertNotNull(foundClient);
@@ -137,8 +138,10 @@ public class ClientManagerTest {
 
     @Test
     public void getAllClientsFromRepositoryTest() {
-        List<Client> listOfAllClients = clientManagerForTests.getObjectRepository().findAll();
-        assertNotNull(listOfAllClients);
-        assertEquals(3, listOfAllClients.size());
+        List<Client> listOfAllClientsNo1 = clientManagerForTests.getClientRepository().findAll();
+        List<Client> listOfAllClientsNo2 = clientManagerForTests.getAll();
+        assertNotNull(listOfAllClientsNo1);
+        assertNotNull(listOfAllClientsNo2);
+        assertEquals(listOfAllClientsNo1.size(), listOfAllClientsNo2.size());
     }
 }

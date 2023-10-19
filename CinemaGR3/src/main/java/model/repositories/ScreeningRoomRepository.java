@@ -6,8 +6,7 @@ import jakarta.persistence.criteria.Root;
 import model.Movie;
 import model.ScreeningRoom;
 import model.Ticket;
-import model.exceptions.repository_exceptions.RepositoryDeleteException;
-import model.exceptions.repository_exceptions.RepositoryReadException;
+import model.exceptions.repository_exceptions.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -16,6 +15,20 @@ public class ScreeningRoomRepository extends Repository<ScreeningRoom> {
 
     public ScreeningRoomRepository(EntityManager entityManager) {
         super(entityManager);
+    }
+
+    public ScreeningRoom create(int screeningRoomFloor, int screeningRoomNumber, int numberOfSeats) {
+        ScreeningRoom screeningRoom;
+        try {
+            screeningRoom = new ScreeningRoom(UUID.randomUUID(), screeningRoomFloor, screeningRoomNumber, numberOfSeats);
+            getEntityManager().getTransaction().begin();
+            getEntityManager().persist(screeningRoom);
+            getEntityManager().getTransaction().commit();
+        } catch (PersistenceException | IllegalArgumentException exception) {
+            getEntityManager().getTransaction().rollback();
+            throw new ScreeningRoomRepositoryCreateException(exception.getMessage(), exception);
+        }
+        return screeningRoom;
     }
 
     @Override
@@ -47,7 +60,7 @@ public class ScreeningRoomRepository extends Repository<ScreeningRoom> {
             getEntityManager().getTransaction().commit();
         } catch(IllegalArgumentException | PersistenceException exception) {
             getEntityManager().getTransaction().rollback();
-            throw new RepositoryDeleteException("Source: ScreeningRoomRepository ; " + exception.getMessage(), exception);
+            throw new ScreeningRoomRepositoryDeleteException(exception.getMessage(), exception);
         }
     }
 
@@ -61,7 +74,7 @@ public class ScreeningRoomRepository extends Repository<ScreeningRoom> {
         } catch (IllegalArgumentException | TransactionRequiredException | OptimisticLockException |
                  PessimisticLockException | LockTimeoutException exception) {
             getEntityManager().getTransaction().rollback();
-            throw new RepositoryReadException("Source: ScreeningRoomRepository ; " + exception.getMessage(), exception);
+            throw new ScreeningRoomRepositoryReadException(exception.getMessage(), exception);
         }
         return screeningRoomToBeRead;
     }
@@ -78,7 +91,7 @@ public class ScreeningRoomRepository extends Repository<ScreeningRoom> {
             getEntityManager().getTransaction().commit();
         } catch (IllegalStateException | IllegalArgumentException exception) {
             getEntityManager().getTransaction().rollback();
-            throw new RepositoryReadException("Source: ScreeningRoomRepository ; " + exception.getMessage(), exception);
+            throw new ScreeningRoomRepositoryReadException(exception.getMessage(), exception);
         }
         return listOfAllScreeningRooms;
     }

@@ -3,12 +3,14 @@ package model.repositories;
 import jakarta.persistence.*;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
+import model.Client;
+import model.Movie;
 import model.Ticket;
-import model.exceptions.repository_exceptions.RepositoryCreateException;
-import model.exceptions.repository_exceptions.RepositoryDeleteException;
-import model.exceptions.repository_exceptions.RepositoryReadException;
+import model.exceptions.model_exceptions.TicketReservationException;
+import model.exceptions.repository_exceptions.*;
 import model.ticket_types.TypeOfTicket;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,9 +20,11 @@ public class TicketRepository extends Repository<Ticket> {
         super(entityManager);
     }
 
-    @Override
-    public void create(Ticket ticket) {
+
+    public Ticket create(Date movieTime, Date reservationTime, Movie movie, Client client, String typeOfTicket) {
+        Ticket ticket;
         try {
+            ticket = new Ticket(UUID.randomUUID(), movieTime, reservationTime, movie, client, typeOfTicket);
             getEntityManager().getTransaction().begin();
 
             CriteriaQuery<TypeOfTicket> getAllTypesOfTickets = getEntityManager().getCriteriaBuilder().createQuery(TypeOfTicket.class);
@@ -44,8 +48,11 @@ public class TicketRepository extends Repository<Ticket> {
             getEntityManager().getTransaction().commit();
         } catch (PersistenceException | IllegalArgumentException exception) {
             getEntityManager().getTransaction().rollback();
-            throw new RepositoryCreateException("Source: TicketRepository ; " + exception.getMessage(), exception);
+            throw new TicketRepositoryCreateException(exception.getMessage(), exception);
+        } catch (TicketReservationException exception) {
+            throw new TicketRepositoryCreateException(exception.getMessage(), exception);
         }
+        return ticket;
     }
 
     @Override
@@ -57,7 +64,7 @@ public class TicketRepository extends Repository<Ticket> {
             getEntityManager().getTransaction().commit();
         } catch(IllegalArgumentException | PersistenceException exception) {
             getEntityManager().getTransaction().rollback();
-            throw new RepositoryDeleteException("Source: TicketRepository ; " + exception.getMessage(), exception);
+            throw new TicketRepositoryDeleteException(exception.getMessage(), exception);
         }
     }
 
@@ -71,7 +78,7 @@ public class TicketRepository extends Repository<Ticket> {
         } catch (IllegalArgumentException | TransactionRequiredException | OptimisticLockException |
                  PessimisticLockException | LockTimeoutException exception) {
             getEntityManager().getTransaction().rollback();
-            throw new RepositoryReadException("Source: TicketRepository ; " + exception.getMessage(), exception);
+            throw new TicketRepositoryReadException(exception.getMessage(), exception);
         }
         return ticketToBeRead;
     }
@@ -88,7 +95,7 @@ public class TicketRepository extends Repository<Ticket> {
             getEntityManager().getTransaction().commit();
         } catch (IllegalStateException | IllegalArgumentException exception) {
             getEntityManager().getTransaction().rollback();
-            throw new RepositoryReadException("Source: TicketRepository ; " + exception.getMessage(), exception);
+            throw new TicketRepositoryReadException(exception.getMessage(), exception);
         }
         return listOfAllTickets;
     }
