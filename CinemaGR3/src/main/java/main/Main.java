@@ -108,7 +108,6 @@ public class Main {
             System.out.println(screeningRoom.getScreeningRoomInfo());
         }
 
-        // entityManager.getTransaction().commit();
         if (entityManagerFactory != null) {
             entityManagerFactory.close();
         }

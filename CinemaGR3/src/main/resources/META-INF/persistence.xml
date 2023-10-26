@@ -21,6 +21,7 @@
             <property name="jakarta.persistence.jdbc.user" value="postgres"/>
             <property name="jakarta.persistence.jdbc.password" value="admin"/>
             <property name="jakarta.persistence.schema-generation.database.action" value="drop-and-create"/>
+            <property name="hibernate.connection.isolation" value="2"/>
         </properties>
     </persistence-unit>
 
@@ -42,6 +43,7 @@
             <property name="jakarta.persistence.jdbc.user" value="cinemadbuser"/>
             <property name="jakarta.persistence.jdbc.password" value="cinemadbuserpassword"/>
             <property name="jakarta.persistence.schema-generation.database.action" value="drop-and-create"/>
+            <property name="hibernate.connection.isolation" value="2"/>
         </properties>
     </persistence-unit>
 </persistence>
