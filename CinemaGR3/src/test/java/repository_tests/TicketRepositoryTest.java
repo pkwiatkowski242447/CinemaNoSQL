@@ -254,6 +254,32 @@ public class TicketRepositoryTest {
     }
 
     @Test
+    public void expireCertainTicketTestPositive() {
+        UUID expiredTicketUUID = ticketNo1.getTicketID();
+        int beforeExpiringTicket = ticketRepositoryForTests.findAll().size();
+        int numOfActiveTicketsBefore = ticketRepositoryForTests.findAllActive().size();
+        ticketRepositoryForTests.expire(ticketNo1);
+        int afterExpiringTicket = ticketRepositoryForTests.findAll().size();
+        int numOfActiveTicketsAfter = ticketRepositoryForTests.findAllActive().size();
+        Ticket foundTicket = ticketRepositoryForTests.findByUUID(expiredTicketUUID);
+        assertNotNull(foundTicket);
+        assertEquals(beforeExpiringTicket, afterExpiringTicket);
+        assertFalse(ticketNo1.isTicketStatusActive());
+        assertEquals(beforeExpiringTicket, afterExpiringTicket);
+        assertNotEquals(numOfActiveTicketsBefore, numOfActiveTicketsAfter);
+        assertEquals(numOfActiveTicketsBefore - 1, numOfActiveTicketsAfter);
+    }
+
+    @Test
+    public void expireCertainTicketTestNegative() throws TicketReservationException {
+        Ticket ticket = new Ticket(UUID.randomUUID(), ticketNo1.getMovieTime(), ticketNo1.getReservationTime(), movieNo1, clientNo1, "reduced");
+        assertNotNull(ticket);
+        assertThrows(TicketRepositoryDeleteException.class, () -> {
+            ticketRepositoryForTests.expire(ticket);
+        });
+    }
+
+    @Test
     public void findCertainTicketTestPositive() {
         Ticket ticket = ticketRepositoryForTests.findByUUID(ticketNo1.getTicketID());
         assertNotNull(ticket);
@@ -304,5 +330,16 @@ public class TicketRepositoryTest {
         List<Ticket> listOfTickets = ticketRepositoryForTests.findAll();
         assertNotNull(listOfTickets);
         assertEquals(3, listOfTickets.size());
+    }
+
+    @Test
+    public void findAllActiveTicketsTestPositive() {
+        List<Ticket> startingListOfTickets = ticketRepositoryForTests.findAllActive();
+        assertNotNull(startingListOfTickets);
+        ticketRepositoryForTests.expire(startingListOfTickets.get(0));
+        List<Ticket> endingListOfTickets = ticketRepositoryForTests.findAllActive();
+        assertNotNull(endingListOfTickets);
+        assertEquals(startingListOfTickets.size(), 3);
+        assertEquals(endingListOfTickets.size(), 2);
     }
 }

@@ -54,6 +54,20 @@ public class ClientRepository extends Repository<Client> {
     }
 
     @Override
+    public void expire(Client client) {
+        try {
+            getEntityManager().getTransaction().begin();
+            getEntityManager().lock(client, LockModeType.PESSIMISTIC_WRITE);
+            client.setClientStatusActive(false);
+            getEntityManager().merge(client);
+            getEntityManager().getTransaction().commit();
+        } catch (PersistenceException | IllegalArgumentException exception) {
+            getEntityManager().getTransaction().rollback();
+            throw new ClientRepositoryDeleteException(exception.getMessage(), exception);
+        }
+    }
+
+    @Override
     public Client findByUUID(UUID identifier) {
         Client clientToBeRead = null;
         try {
@@ -83,5 +97,22 @@ public class ClientRepository extends Repository<Client> {
             throw new ClientRepositoryReadException(exception.getMessage(), exception);
         }
         return listOfAllClients;
+    }
+
+    @Override
+    public List<Client> findAllActive() {
+        List<Client> listOfAllActiveClients = null;
+        try {
+            getEntityManager().getTransaction().begin();
+            CriteriaQuery<Client> findAllActiveClients = getEntityManager().getCriteriaBuilder().createQuery(Client.class);
+            Root<Client> clientRoot = findAllActiveClients.from(Client.class);
+            findAllActiveClients.select(clientRoot).where(getEntityManager().getCriteriaBuilder().equal(clientRoot.get("clientStatusActive"), true));
+            listOfAllActiveClients = getEntityManager().createQuery(findAllActiveClients).setLockMode(LockModeType.PESSIMISTIC_READ).getResultList();
+            getEntityManager().getTransaction().commit();
+        } catch (IllegalStateException | IllegalArgumentException exception) {
+            getEntityManager().getTransaction().rollback();
+            throw new ClientRepositoryReadException(exception.getMessage(), exception);
+        }
+        return listOfAllActiveClients;
     }
 }

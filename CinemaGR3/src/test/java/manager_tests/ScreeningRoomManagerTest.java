@@ -98,14 +98,16 @@ public class ScreeningRoomManagerTest {
 
     @Test
     public void unregisterCertainScreeningRoomTestPositive() {
-        int numberOfScreeningRoomsBefore = screeningRoomManagerForTests.getAll().size();
-        ScreeningRoom screeningRoom = screeningRoomManagerForTests.getAll().get(0);
+        int numberOfScreeningRoomsBefore = screeningRoomManagerForTests.getAllActive().size();
+        ScreeningRoom screeningRoom = screeningRoomManagerForTests.getAllActive().get(0);
         assertNotNull(screeningRoom);
+        assertTrue(screeningRoom.isScreeningRoomStatusActive());
         UUID removedScreeningRoomID = screeningRoom.getScreeningRoomID();
         assertDoesNotThrow(() -> screeningRoomManagerForTests.unregister(screeningRoom));
-        int numberOfScreeningRoomsAfter = screeningRoomManagerForTests.getAll().size();
+        int numberOfScreeningRoomsAfter = screeningRoomManagerForTests.getAllActive().size();
         ScreeningRoom foundScreeningRoom = screeningRoomManagerForTests.get(removedScreeningRoomID);
-        assertNull(foundScreeningRoom);
+        assertNotNull(foundScreeningRoom);
+        assertFalse(foundScreeningRoom.isScreeningRoomStatusActive());
         assertNotEquals(numberOfScreeningRoomsBefore, numberOfScreeningRoomsAfter);
     }
 

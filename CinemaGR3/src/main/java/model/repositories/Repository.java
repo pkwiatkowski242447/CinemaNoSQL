@@ -1,6 +1,7 @@
 package model.repositories;
 
 import jakarta.persistence.*;
+import model.exceptions.repository_exceptions.RepositoryDeleteException;
 import model.exceptions.repository_exceptions.RepositoryUpdateException;
 
 import java.util.List;
@@ -19,6 +20,8 @@ public abstract class Repository<Type> {
 
     // Declaring CRUD methods.
 
+    // Update method.
+
     public void update(Type element) {
         try {
             entityManager.getTransaction().begin();
@@ -31,10 +34,17 @@ public abstract class Repository<Type> {
         }
     }
 
+    // Delete type of methods
+
     public abstract void delete(Type element);
+
+    public abstract void expire(Type element);
+
+    // Read type of methods
 
     public abstract Type findByUUID(UUID identifier);
     public abstract List<Type> findAll();
+    public abstract List<Type> findAllActive();
 
     public EntityManager getEntityManager() {
         return entityManager;

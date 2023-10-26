@@ -29,7 +29,7 @@ public class ClientManager {
 
     public void unregister(Client client) {
         try {
-            clientRepository.delete(client);
+            clientRepository.expire(client);
         } catch (RepositoryDeleteException exception) {
             exception.printStackTrace();
         }
@@ -49,6 +49,16 @@ public class ClientManager {
         List<Client> listOfClients = null;
         try {
             listOfClients = clientRepository.findAll();
+        } catch (RepositoryReadException exception) {
+            exception.printStackTrace();
+        }
+        return listOfClients;
+    }
+
+    public List<Client> getAllActive() {
+        List<Client> listOfClients = null;
+        try {
+            listOfClients = clientRepository.findAllActive();
         } catch (RepositoryReadException exception) {
             exception.printStackTrace();
         }

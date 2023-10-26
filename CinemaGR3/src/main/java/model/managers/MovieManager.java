@@ -30,7 +30,7 @@ public class MovieManager{
 
     public void unregister(Movie movie) {
         try {
-            movieRepository.delete(movie);
+            movieRepository.expire(movie);
         } catch (RepositoryDeleteException exception) {
             exception.printStackTrace();
         }
@@ -50,6 +50,16 @@ public class MovieManager{
         List<Movie> listOfMovies = null;
         try {
             listOfMovies = movieRepository.findAll();
+        } catch (RepositoryReadException exception) {
+            exception.printStackTrace();
+        }
+        return listOfMovies;
+    }
+
+    public List<Movie> getAllActive() {
+        List<Movie> listOfMovies = null;
+        try {
+            listOfMovies = movieRepository.findAllActive();
         } catch (RepositoryReadException exception) {
             exception.printStackTrace();
         }

@@ -65,6 +65,20 @@ public class ScreeningRoomRepository extends Repository<ScreeningRoom> {
     }
 
     @Override
+    public void expire(ScreeningRoom screeningRoom) {
+        try {
+            getEntityManager().getTransaction().begin();
+            getEntityManager().lock(screeningRoom, LockModeType.PESSIMISTIC_WRITE);
+            screeningRoom.setScreeningRoomStatusActive(false);
+            getEntityManager().merge(screeningRoom);
+            getEntityManager().getTransaction().commit();
+        } catch (PersistenceException | IllegalArgumentException exception) {
+            getEntityManager().getTransaction().rollback();
+            throw new ScreeningRoomRepositoryDeleteException(exception.getMessage(), exception);
+        }
+    }
+
+    @Override
     public ScreeningRoom findByUUID(UUID identifier) {
         ScreeningRoom screeningRoomToBeRead = null;
         try {
@@ -94,5 +108,22 @@ public class ScreeningRoomRepository extends Repository<ScreeningRoom> {
             throw new ScreeningRoomRepositoryReadException(exception.getMessage(), exception);
         }
         return listOfAllScreeningRooms;
+    }
+
+    @Override
+    public List<ScreeningRoom> findAllActive() {
+        List<ScreeningRoom> listOfAllActiveScreeningRooms = null;
+        try {
+            getEntityManager().getTransaction().begin();
+            CriteriaQuery<ScreeningRoom> findAllActiveScreeningRooms = getEntityManager().getCriteriaBuilder().createQuery(ScreeningRoom.class);
+            Root<ScreeningRoom> screeningRoomRoot = findAllActiveScreeningRooms.from(ScreeningRoom.class);
+            findAllActiveScreeningRooms.select(screeningRoomRoot).where(getEntityManager().getCriteriaBuilder().equal(screeningRoomRoot.get("screeningRoomStatusActive"), true));
+            listOfAllActiveScreeningRooms = getEntityManager().createQuery(findAllActiveScreeningRooms).setLockMode(LockModeType.PESSIMISTIC_READ).getResultList();
+            getEntityManager().getTransaction().commit();
+        } catch (IllegalStateException | IllegalArgumentException exception) {
+            getEntityManager().getTransaction().rollback();
+            throw new ScreeningRoomRepositoryReadException(exception.getMessage(), exception);
+        }
+        return listOfAllActiveScreeningRooms;
     }
 }

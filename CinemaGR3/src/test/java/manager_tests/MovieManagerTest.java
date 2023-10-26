@@ -124,14 +124,16 @@ public class MovieManagerTest {
 
     @Test
     public void unregisterCertainMovieTestPositive() {
-        int numOfMoviesBefore = movieManagerForTests.getAll().size();
-        Movie someMovieFromRepo = movieManagerForTests.getAll().get(0);
+        int numOfMoviesBefore = movieManagerForTests.getAllActive().size();
+        Movie someMovieFromRepo = movieManagerForTests.getAllActive().get(0);
         assertNotNull(someMovieFromRepo);
+        assertTrue(someMovieFromRepo.isMovieStatusActive());
         UUID removedMovieID = someMovieFromRepo.getMovieID();
         movieManagerForTests.unregister(someMovieFromRepo);
-        int numOfMoviesAfter = movieManagerForTests.getAll().size();
+        int numOfMoviesAfter = movieManagerForTests.getAllActive().size();
         Movie foundMovie = movieManagerForTests.get(removedMovieID);
-        assertNull(foundMovie);
+        assertNotNull(foundMovie);
+        assertFalse(foundMovie.isMovieStatusActive());
         assertNotEquals(numOfMoviesBefore, numOfMoviesAfter);
     }
 

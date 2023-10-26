@@ -29,7 +29,7 @@ public class ScreeningRoomManager {
 
     public void unregister(ScreeningRoom screeningRoom) {
         try {
-            screeningRoomRepository.delete(screeningRoom);
+            screeningRoomRepository.expire(screeningRoom);
         } catch (RepositoryDeleteException exception) {
             exception.printStackTrace();
         }
@@ -49,6 +49,16 @@ public class ScreeningRoomManager {
         List<ScreeningRoom> listOfScreeningRooms = null;
         try {
             listOfScreeningRooms = screeningRoomRepository.findAll();
+        } catch (RepositoryReadException exception) {
+            exception.printStackTrace();
+        }
+        return listOfScreeningRooms;
+    }
+
+    public List<ScreeningRoom> getAllActive() {
+        List<ScreeningRoom> listOfScreeningRooms = null;
+        try {
+            listOfScreeningRooms = screeningRoomRepository.findAllActive();
         } catch (RepositoryReadException exception) {
             exception.printStackTrace();
         }

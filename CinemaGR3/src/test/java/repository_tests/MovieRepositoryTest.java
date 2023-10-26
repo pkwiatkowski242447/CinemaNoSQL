@@ -199,6 +199,34 @@ public class MovieRepositoryTest {
     }
 
     @Test
+    public void expireCertainMovieTestPositive() {
+        UUID expiredMovieUUID = movieNo1.getMovieID();
+        int beforeExpiringMovie = movieRepositoryForTests.findAll().size();
+        int numOfActiveMoviesBefore = movieRepositoryForTests.findAllActive().size();
+        movieRepositoryForTests.expire(movieNo1);
+        int afterExpiringMovie = movieRepositoryForTests.findAll().size();
+        int numOfActiveMoviesAfter = movieRepositoryForTests.findAllActive().size();
+        Movie foundMovie = movieRepositoryForTests.findByUUID(expiredMovieUUID);
+        assertNotNull(foundMovie);
+        assertEquals(foundMovie, movieNo1);
+        assertFalse(movieNo1.isMovieStatusActive());
+        assertEquals(beforeExpiringMovie, afterExpiringMovie);
+        assertNotEquals(numOfActiveMoviesBefore, numOfActiveMoviesAfter);
+        assertEquals(numOfActiveMoviesBefore - 1, numOfActiveMoviesAfter);
+    }
+
+    @Test
+    public void expireCertainMovieTestNegative() {
+        ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
+        assertNotNull(screeningRoom);
+        Movie movie = new Movie(UUID.randomUUID(), "American Psycho", 45.85, screeningRoom);
+        assertNotNull(movie);
+        assertThrows(MovieRepositoryDeleteException.class, () -> {
+            movieRepositoryForTests.expire(movie);
+        });
+    }
+
+    @Test
     public void findCertainMovieTestPositive() {
         Movie foundMovie = movieRepositoryForTests.findByUUID(movieNo1.getMovieID());
         assertNotNull(foundMovie);
@@ -220,5 +248,16 @@ public class MovieRepositoryTest {
         List<Movie> listOfAllMovies = movieRepositoryForTests.findAll();
         assertNotNull(listOfAllMovies);
         assertEquals(3, listOfAllMovies.size());
+    }
+
+    @Test
+    public void findAllActiveMoviesTestPositive() {
+        List<Movie> startingListOfMovies = movieRepositoryForTests.findAllActive();
+        assertNotNull(startingListOfMovies);
+        movieRepositoryForTests.expire(startingListOfMovies.get(0));
+        List<Movie> endingListOfMovies = movieRepositoryForTests.findAllActive();
+        assertNotNull(startingListOfMovies);
+        assertEquals(startingListOfMovies.size(), 3);
+        assertEquals(endingListOfMovies.size(), 2);
     }
 }

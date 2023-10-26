@@ -98,14 +98,16 @@ public class ClientManagerTest {
 
     @Test
     public void unregisterCertainClientTestPositive() {
-        int numberOfClientsBefore = clientManagerForTests.getAll().size();
-        Client someClientFromRepo = clientManagerForTests.getAll().get(0);
+        int numberOfClientsBefore = clientManagerForTests.getAllActive().size();
+        Client someClientFromRepo = clientManagerForTests.getAllActive().get(0);
         assertNotNull(someClientFromRepo);
+        assertTrue(someClientFromRepo.isClientStatusActive());
         UUID unregisteredClientID = someClientFromRepo.getClientID();
         assertDoesNotThrow(() -> clientManagerForTests.unregister(someClientFromRepo));
-        int numberOfClientsAfter = clientManagerForTests.getAll().size();
+        int numberOfClientsAfter = clientManagerForTests.getAllActive().size();
         Client foundClient = clientManagerForTests.get(unregisteredClientID);
-        assertNull(foundClient);
+        assertNotNull(foundClient);
+        assertFalse(foundClient.isClientStatusActive());
         assertNotEquals(numberOfClientsBefore, numberOfClientsAfter);
     }
 

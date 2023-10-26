@@ -160,6 +160,32 @@ public class ScreeningRoomRepositoryTest {
     }
 
     @Test
+    public void expireCertainScreeningRoomTestPositive() {
+        UUID expiredScreeningRoomUUID = screeningRoomNo1.getScreeningRoomID();
+        int beforeExpiringScreeningRoom = screeningRoomRepositoryForTests.findAll().size();
+        int numOfActiveScreeningRoomsBefore = screeningRoomRepositoryForTests.findAllActive().size();
+        screeningRoomRepositoryForTests.expire(screeningRoomNo1);
+        int afterExpiringScreeningRoom = screeningRoomRepositoryForTests.findAll().size();
+        int numOfActiveScreeningRoomsAfter = screeningRoomRepositoryForTests.findAllActive().size();
+        ScreeningRoom foundScreeningRoom = screeningRoomRepositoryForTests.findByUUID(expiredScreeningRoomUUID);
+        assertNotNull(foundScreeningRoom);
+        assertEquals(foundScreeningRoom, screeningRoomNo1);
+        assertFalse(screeningRoomNo1.isScreeningRoomStatusActive());
+        assertEquals(beforeExpiringScreeningRoom, afterExpiringScreeningRoom);
+        assertNotEquals(numOfActiveScreeningRoomsBefore, numOfActiveScreeningRoomsAfter);
+        assertEquals(numOfActiveScreeningRoomsBefore - 1, numOfActiveScreeningRoomsAfter);
+    }
+
+    @Test
+    public void expireCertainScreeningRoomTestNegative() {
+        ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0 , 6, 90);
+        assertNotNull(screeningRoom);
+        assertThrows(ScreeningRoomRepositoryDeleteException.class, () -> {
+            screeningRoomRepositoryForTests.expire(screeningRoom);
+        });
+    }
+
+    @Test
     public void findCertainScreeningRoomTestPositive() {
         ScreeningRoom foundScreeningRoom = screeningRoomRepositoryForTests.findByUUID(screeningRoomNo1.getScreeningRoomID());
         assertNotNull(foundScreeningRoom);
@@ -179,5 +205,16 @@ public class ScreeningRoomRepositoryTest {
         List<ScreeningRoom> listOfAllScreeningRooms = screeningRoomRepositoryForTests.findAll();
         assertNotNull(listOfAllScreeningRooms);
         assertEquals(3, listOfAllScreeningRooms.size());
+    }
+
+    @Test
+    public void findAllActiveScreeningRoomTestPositive() {
+        List<ScreeningRoom> startingListOfScreeningRooms = screeningRoomRepositoryForTests.findAllActive();
+        assertNotNull(startingListOfScreeningRooms);
+        screeningRoomRepositoryForTests.expire(startingListOfScreeningRooms.get(0));
+        List<ScreeningRoom> endingListOfScreeningRooms = screeningRoomRepositoryForTests.findAllActive();
+        assertNotNull(endingListOfScreeningRooms);
+        assertEquals(startingListOfScreeningRooms.size(), 3);
+        assertEquals(endingListOfScreeningRooms.size(), 2);
     }
 }

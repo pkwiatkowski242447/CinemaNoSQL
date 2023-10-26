@@ -181,14 +181,16 @@ public class TicketManagerTest {
 
     @Test
     public void unregisterCertainTicketTestPositive() {
-        int numOfTicketsBefore = ticketManagerForTests.getAll().size();
-        Ticket someTicketFromRepo = ticketManagerForTests.getAll().get(0);
+        int numOfTicketsBefore = ticketManagerForTests.getAllActive().size();
+        Ticket someTicketFromRepo = ticketManagerForTests.getAllActive().get(0);
         assertNotNull(someTicketFromRepo);
+        assertTrue(someTicketFromRepo.isTicketStatusActive());
         UUID removedTicketID = someTicketFromRepo.getTicketID();
         ticketManagerForTests.unregister(someTicketFromRepo);
-        int numOfTicketsAfter = ticketManagerForTests.getAll().size();
+        int numOfTicketsAfter = ticketManagerForTests.getAllActive().size();
         Ticket foundTicket = ticketManagerForTests.get(removedTicketID);
-        assertNull(foundTicket);
+        assertNotNull(foundTicket);
+        assertFalse(foundTicket.isTicketStatusActive());
         assertNotEquals(numOfTicketsBefore, numOfTicketsAfter);
     }
 

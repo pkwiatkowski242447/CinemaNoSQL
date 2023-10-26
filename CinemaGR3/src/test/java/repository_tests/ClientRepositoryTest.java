@@ -221,6 +221,32 @@ public class ClientRepositoryTest {
     }
 
     @Test
+    public void expireCertainClientTestPositive() {
+        UUID expiredClientUUID = clientNo1.getClientID();
+        int beforeExpiringClient = clientRepositoryForTests.findAll().size();
+        int numOfActiveClientsBefore = clientRepositoryForTests.findAllActive().size();
+        clientRepositoryForTests.expire(clientNo1);
+        int afterExpiringClient = clientRepositoryForTests.findAll().size();
+        int numOfActiveClientsAfter = clientRepositoryForTests.findAllActive().size();
+        Client foundClient = clientRepositoryForTests.findByUUID(expiredClientUUID);
+        assertNotNull(foundClient);
+        assertEquals(foundClient, clientNo1);
+        assertFalse(clientNo1.isClientStatusActive());
+        assertEquals(beforeExpiringClient, afterExpiringClient);
+        assertNotEquals(numOfActiveClientsBefore, numOfActiveClientsAfter);
+        assertEquals(numOfActiveClientsBefore - 1, numOfActiveClientsAfter);
+    }
+
+    @Test
+    public void expireCertainClientTestNegative() {
+        Client newClient = new Client(UUID.randomUUID(), "Stefania", "Czarnecka", 80);
+        assertNotNull(newClient);
+        assertThrows(ClientRepositoryDeleteException.class, () -> {
+            clientRepositoryForTests.expire(newClient);
+        });
+    }
+
+    @Test
     public void findCertainClientTestPositive() {
         Client foundClient = clientRepositoryForTests.findByUUID(clientNo1.getClientID());
         assertNotNull(foundClient);
@@ -240,5 +266,16 @@ public class ClientRepositoryTest {
         List<Client> listOfAllClients = clientRepositoryForTests.findAll();
         assertNotNull(listOfAllClients);
         assertEquals(3, listOfAllClients.size());
+    }
+
+    @Test
+    public void findAllActiveClientsTestPositive() {
+        List<Client> startingListOfClients = clientRepositoryForTests.findAllActive();
+        assertNotNull(startingListOfClients);
+        clientRepositoryForTests.expire(startingListOfClients.get(0));
+        List<Client> endingListOfClients = clientRepositoryForTests.findAllActive();
+        assertNotNull(endingListOfClients);
+        assertEquals(startingListOfClients.size(), 3);
+        assertEquals(endingListOfClients.size(), 2);
     }
 }

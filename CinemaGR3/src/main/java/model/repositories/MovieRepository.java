@@ -55,6 +55,20 @@ public class MovieRepository extends Repository<Movie> {
     }
 
     @Override
+    public void expire(Movie movie) {
+        try {
+            getEntityManager().getTransaction().begin();
+            getEntityManager().lock(movie, LockModeType.PESSIMISTIC_WRITE);
+            movie.setMovieStatusActive(false);
+            getEntityManager().merge(movie);
+            getEntityManager().getTransaction().commit();
+        } catch (PersistenceException | IllegalArgumentException exception) {
+            getEntityManager().getTransaction().rollback();
+            throw new MovieRepositoryDeleteException(exception.getMessage(), exception);
+        }
+    }
+
+    @Override
     public Movie findByUUID(UUID identifier) {
         Movie movieToBeRead = null;
         try {
@@ -63,6 +77,7 @@ public class MovieRepository extends Repository<Movie> {
             getEntityManager().getTransaction().commit();
         } catch (IllegalArgumentException | TransactionRequiredException | OptimisticLockException |
                  PessimisticLockException | LockTimeoutException exception) {
+            getEntityManager().getTransaction().rollback();
             throw new MovieRepositoryReadException(exception.getMessage(), exception);
         }
         return movieToBeRead;
@@ -79,8 +94,26 @@ public class MovieRepository extends Repository<Movie> {
             listOfAllMovie = getEntityManager().createQuery(findAllMovies).setLockMode(LockModeType.PESSIMISTIC_READ).getResultList();
             getEntityManager().getTransaction().commit();
         } catch (IllegalStateException | IllegalArgumentException exception) {
+            getEntityManager().getTransaction().rollback();
             throw new MovieRepositoryReadException(exception.getMessage(), exception);
         }
         return listOfAllMovie;
+    }
+
+    @Override
+    public List<Movie> findAllActive() {
+        List<Movie> listOfAllActiveMovies = null;
+        try {
+            getEntityManager().getTransaction().begin();
+            CriteriaQuery<Movie> findAllActiveMovies = getEntityManager().getCriteriaBuilder().createQuery(Movie.class);
+            Root<Movie> movieRoot = findAllActiveMovies.from(Movie.class);
+            findAllActiveMovies.select(movieRoot).where(getEntityManager().getCriteriaBuilder().equal(movieRoot.get("movieStatusActive"), true));
+            listOfAllActiveMovies = getEntityManager().createQuery(findAllActiveMovies).setLockMode(LockModeType.PESSIMISTIC_READ).getResultList();
+            getEntityManager().getTransaction().commit();
+        } catch (IllegalStateException | IllegalArgumentException exception) {
+            getEntityManager().getTransaction().rollback();
+            throw new MovieRepositoryReadException(exception.getMessage(), exception);
+        }
+        return listOfAllActiveMovies;
     }
 }

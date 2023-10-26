@@ -32,7 +32,7 @@ public class TicketManager {
 
     public void unregister(Ticket ticket) {
         try {
-            ticketRepository.delete(ticket);
+            ticketRepository.expire(ticket);
         } catch (RepositoryDeleteException exception) {
             exception.printStackTrace();
         }
@@ -52,6 +52,16 @@ public class TicketManager {
         List<Ticket> listOfTickets = null;
         try {
             listOfTickets = ticketRepository.findAll();
+        } catch (RepositoryReadException exception) {
+            exception.printStackTrace();
+        }
+        return listOfTickets;
+    }
+
+    public List<Ticket> getAllActive() {
+        List<Ticket> listOfTickets = null;
+        try {
+            listOfTickets = ticketRepository.findAllActive();
         } catch (RepositoryReadException exception) {
             exception.printStackTrace();
         }

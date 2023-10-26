@@ -69,6 +69,20 @@ public class TicketRepository extends Repository<Ticket> {
     }
 
     @Override
+    public void expire(Ticket ticket) {
+        try {
+            getEntityManager().getTransaction().begin();
+            getEntityManager().lock(ticket, LockModeType.PESSIMISTIC_WRITE);
+            ticket.setTicketStatusActive(false);
+            getEntityManager().merge(ticket);
+            getEntityManager().getTransaction().commit();
+        } catch (PersistenceException | IllegalArgumentException exception) {
+            getEntityManager().getTransaction().rollback();
+            throw new TicketRepositoryDeleteException(exception.getMessage(), exception);
+        }
+    }
+
+    @Override
     public Ticket findByUUID(UUID identifier) {
         Ticket ticketToBeRead = null;
         try {
@@ -98,5 +112,22 @@ public class TicketRepository extends Repository<Ticket> {
             throw new TicketRepositoryReadException(exception.getMessage(), exception);
         }
         return listOfAllTickets;
+    }
+
+    @Override
+    public List<Ticket> findAllActive() {
+        List<Ticket> listOfAllActiveTickets = null;
+        try {
+            getEntityManager().getTransaction().begin();
+            CriteriaQuery<Ticket> findAllActiveTickets = getEntityManager().getCriteriaBuilder().createQuery(Ticket.class);
+            Root<Ticket> ticketRoot = findAllActiveTickets.from(Ticket.class);
+            findAllActiveTickets.select(ticketRoot).where(getEntityManager().getCriteriaBuilder().equal(ticketRoot.get("ticketStatusActive"), true));
+            listOfAllActiveTickets = getEntityManager().createQuery(findAllActiveTickets).setLockMode(LockModeType.PESSIMISTIC_READ).getResultList();
+            getEntityManager().getTransaction().commit();
+        } catch (IllegalStateException | IllegalArgumentException exception) {
+            getEntityManager().getTransaction().rollback();
+            throw new TicketRepositoryReadException(exception.getMessage(), exception);
+        }
+        return listOfAllActiveTickets;
     }
 }
