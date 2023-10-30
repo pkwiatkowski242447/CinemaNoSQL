@@ -1,16 +1,17 @@
 package model.ticket_types;
 
-import jakarta.persistence.Entity;
+import org.bson.codecs.pojo.annotations.BsonCreator;
+import org.bson.codecs.pojo.annotations.BsonProperty;
 
 import java.util.UUID;
 
-@Entity
 public class Reduced extends TypeOfTicket {
 
     public Reduced() {
     }
 
-    public Reduced(UUID ticketTypeID) {
+    @BsonCreator
+    public Reduced(@BsonProperty("_id") UUID ticketTypeID) {
         super(ticketTypeID);
     }
 

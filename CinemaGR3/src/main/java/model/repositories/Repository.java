@@ -1,6 +1,6 @@
 package model.repositories;
 
-import jakarta.persistence.*;
+import com.mongodb.client.MongoClient;
 import model.exceptions.repository_exceptions.RepositoryDeleteException;
 import model.exceptions.repository_exceptions.RepositoryUpdateException;
 
@@ -9,7 +9,8 @@ import java.util.UUID;
 
 public abstract class Repository<Type> {
 
-    private final EntityManager entityManager;
+    MongoClient mongoClient = new MongoClient(new MongoClientURI("mongodb://cinemadbuser:2KL9Xxn7sp93LqZsaO6SlKMP7kw9izkBHADUckvr1IripSleDDvpOQnS8wRKwHez0snlKRikZGeTACDbwAnP1A==@cinemadbuser.mongo.cosmos.azure.com:10255/?ssl=true&retrywrites=false&replicaSet=globaldb&maxIdleTimeMS=120000&appName=@cinemadbuser@"));
+
 
     // Constructor
 

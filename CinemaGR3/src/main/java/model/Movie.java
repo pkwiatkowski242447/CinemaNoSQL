@@ -1,41 +1,39 @@
 package model;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
-import org.hibernate.validator.constraints.Length;
+import org.bson.codecs.pojo.annotations.BsonCreator;
+import org.bson.codecs.pojo.annotations.BsonProperty;
 
 import java.util.UUID;
 
-@Entity
-@Table(name = "movie")
 public class Movie {
 
-    @Id
-    @Column(name = "movie_id", nullable = false, unique = true)
-    private UUID movieID;
+    @BsonCreator
+    public Movie(@BsonProperty("_id") UUID movieID,
+                 @BsonProperty("movie_title") String movieTitle,
+                 @BsonProperty("movie_status_active") boolean movieStatusActive,
+                 @BsonProperty("movie_base_price") double movieBasePrice) {
+        this.movieID = movieID;
+        this.movieTitle = movieTitle;
+        this.movieStatusActive = movieStatusActive;
+        this.movieBasePrice = movieBasePrice;
+    }
 
-    @Column(name = "movie_title", nullable = false)
-    @Length(min = 1, max = 150)
+    @BsonProperty("_id")
+    private final UUID movieID;
+
+    @BsonProperty("movie_title")
     private String movieTitle;
 
-    @Column(name = "movie_status_active", nullable = false)
+    @BsonProperty("movie_status_active")
     private boolean movieStatusActive;
 
-    @Column(name = "movie_base_price")
-    @Min(0)
-    @Max(100)
+    @BsonProperty("movie_base_price")
     private double movieBasePrice;
 
-    @ManyToOne
-    @NotNull
+    @BsonProperty("screening_room_ref")
     private ScreeningRoom screeningRoom;
 
     // Constructors
-
-    public Movie() {
-    }
 
     public Movie(UUID movieID, String movieTitle, double movieBasePrice, ScreeningRoom screeningRoom) {
         this.movieID = movieID;

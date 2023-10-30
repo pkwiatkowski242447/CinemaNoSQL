@@ -1,41 +1,41 @@
 package model;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
+import org.bson.codecs.pojo.annotations.BsonCreator;
+import org.bson.codecs.pojo.annotations.BsonProperty;
 
 import java.util.*;
 
-@Entity
-@Table(name = "screening_room")
 public class ScreeningRoom {
 
-    @Id
-    @Column(name = "screening_room_id", nullable = false, unique = true)
-    private UUID screeningRoomID;
+    @BsonCreator
+    public ScreeningRoom(@BsonProperty("_id") UUID screeningRoomID,
+                         @BsonProperty("screening_room_floor") int screeningRoomFloor,
+                         @BsonProperty("screening_room_number") int screeningRoomNumber,
+                         @BsonProperty("number_of_available_seats") int numberOfAvailableSeats,
+                         @BsonProperty("screening_room_status_active") boolean screeningRoomStatusActive) {
+        this.screeningRoomID = screeningRoomID;
+        this.screeningRoomFloor = screeningRoomFloor;
+        this.screeningRoomNumber = screeningRoomNumber;
+        this.numberOfAvailableSeats = numberOfAvailableSeats;
+        this.screeningRoomStatusActive = screeningRoomStatusActive;
+    }
 
-    @Column(name = "screening_room_floor", nullable = false)
-    @Min(0)
-    @Max(3)
-    private int screeningRoomFloor;
+    @BsonProperty("_id")
+    private final UUID screeningRoomID;
 
-    @Column(name = "screening_room_number", nullable = false)
-    @Min(1)
-    @Max(20)
-    private int screeningRoomNumber;
+    @BsonProperty("screening_room_floor")
+    private final int screeningRoomFloor;
 
-    @Column(name = "number_of_avail_seats", nullable = false)
-    @Min(0)
-    @Max(150)
+    @BsonProperty("screening_room_number")
+    private final int screeningRoomNumber;
+
+    @BsonProperty("number_of_available_seats")
     private int numberOfAvailableSeats;
 
-    @Column(name = "screening_room_status_active", nullable = false)
+    @BsonProperty("screening_room_status_active")
     private boolean screeningRoomStatusActive;
 
     // Constructors
-
-    public ScreeningRoom() {
-    }
 
     public ScreeningRoom(UUID screeningRoomID, int screeningRoomFloor, int screeningRoomNumber, int numberOfSeats) {
         this.screeningRoomID = screeningRoomID;

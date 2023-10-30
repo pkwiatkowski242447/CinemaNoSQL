@@ -1,16 +1,17 @@
 package model.ticket_types;
 
-import jakarta.persistence.Entity;
+import org.bson.codecs.pojo.annotations.BsonCreator;
+import org.bson.codecs.pojo.annotations.BsonProperty;
 
 import java.util.UUID;
 
-@Entity
 public class Normal extends TypeOfTicket {
 
     public Normal() {
     }
 
-    public Normal(UUID ticketTypeID) {
+    @BsonCreator
+    public Normal(@BsonProperty("_id") UUID ticketTypeID) {
         super(ticketTypeID);
     }
 

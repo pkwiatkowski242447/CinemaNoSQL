@@ -1,41 +1,41 @@
 package model;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import org.hibernate.validator.constraints.Length;
+import org.bson.codecs.pojo.annotations.BsonCreator;
+import org.bson.codecs.pojo.annotations.BsonProperty;
 
-import java.io.Serializable;
 import java.util.UUID;
 
-@Entity
-@Table(name = "client")
-public class Client implements Serializable {
+public class Client {
 
-    @Id
-    @Column(name = "client_id", nullable = false, unique = true)
-    private UUID clientID;
+    @BsonCreator
+    public Client(@BsonProperty("_id") UUID clientID,
+                  @BsonProperty("client_name") String clientName,
+                  @BsonProperty("client_surname") String clientSurname,
+                  @BsonProperty("client_age") int clientAge,
+                  @BsonProperty("client_status_active") boolean clientStatusActive) {
+        this.clientID = clientID;
+        this.clientName = clientName;
+        this.clientSurname = clientSurname;
+        this.clientAge = clientAge;
+        this.clientStatusActive = clientStatusActive;
+    }
 
-    @Column(name = "client_name", nullable = false)
-    @Length(min = 1, max = 50)
+    @BsonProperty("_id")
+    private final UUID clientID;
+
+    @BsonProperty("client_name")
     private String clientName;
 
-    @Column(name = "client_surname", nullable = false)
-    @Length(min = 2, max = 100)
+    @BsonProperty("client_surname")
     private String clientSurname;
 
-    @Column(name = "client_age", nullable = false)
-    @Min(18)
-    @Max(120)
+    @BsonProperty("client_surname")
     private int clientAge;
 
-    @Column(name = "client_status_active", nullable = false)
+    @BsonProperty("client_status_active")
     private boolean clientStatusActive;
 
     // Constructors
-
-    public Client() {
-    }
 
     public Client(UUID clientID, String clientName, String clientSurname, int clientAge) {
         this.clientID = clientID;

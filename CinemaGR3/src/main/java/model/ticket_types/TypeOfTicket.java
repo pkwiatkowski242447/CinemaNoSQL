@@ -1,25 +1,23 @@
 package model.ticket_types;
 
-import jakarta.persistence.*;
+import org.bson.codecs.pojo.annotations.BsonCreator;
+import org.bson.codecs.pojo.annotations.BsonProperty;
 
 import java.util.UUID;
 
-@Entity
-@Table(name = "ticket_type")
-@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 public abstract class TypeOfTicket {
 
-    @Id
-    @Column(name = "ticket_type_id", nullable = false, unique = true)
+    @BsonCreator
+    public TypeOfTicket(@BsonProperty("_id") UUID ticketTypeID) {
+        this.ticketTypeID = ticketTypeID;
+    }
+
+    @BsonProperty("_id")
     private UUID ticketTypeID;
 
     // Constructors
 
     public TypeOfTicket() {
-    }
-
-    public TypeOfTicket(UUID ticketTypeID) {
-        this.ticketTypeID = ticketTypeID;
     }
 
     // Other methods
