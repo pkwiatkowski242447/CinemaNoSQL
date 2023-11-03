@@ -1,8 +1,5 @@
 package model.ticket_types;
 
-import org.bson.codecs.pojo.annotations.BsonCreator;
-import org.bson.codecs.pojo.annotations.BsonProperty;
-
 import java.util.UUID;
 
 public class Normal extends TypeOfTicket {
@@ -10,8 +7,7 @@ public class Normal extends TypeOfTicket {
     public Normal() {
     }
 
-    @BsonCreator
-    public Normal(@BsonProperty("_id") UUID ticketTypeID) {
+    public Normal(UUID ticketTypeID) {
         super(ticketTypeID);
     }
 

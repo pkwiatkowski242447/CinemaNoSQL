@@ -1,8 +1,5 @@
 package manager_tests;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import model.ScreeningRoom;
 import model.managers.ScreeningRoomManager;
 import model.repositories.ScreeningRoomRepository;
@@ -15,24 +12,18 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ScreeningRoomManagerTest {
 
-    private static EntityManagerFactory entityManagerFactory;
-    private static EntityManager entityManager;
     private static ScreeningRoomRepository screeningRoomRepositoryForTests;
     private static ScreeningRoomManager screeningRoomManagerForTests;
 
     @BeforeAll
     public static void init() {
-        entityManagerFactory = Persistence.createEntityManagerFactory("test");
-        entityManager = entityManagerFactory.createEntityManager();
-        screeningRoomRepositoryForTests = new ScreeningRoomRepository(entityManager);
+        screeningRoomRepositoryForTests = new ScreeningRoomRepository();
         screeningRoomManagerForTests = new ScreeningRoomManager(screeningRoomRepositoryForTests);
     }
 
     @AfterAll
     public static void destroy() {
-        if (entityManagerFactory != null) {
-            entityManagerFactory.close();
-        }
+
     }
 
     @BeforeEach
@@ -62,7 +53,7 @@ public class ScreeningRoomManagerTest {
 
     @Test
     public void createScreeningRoomManagerTest() {
-        ScreeningRoomRepository screeningRoomRepository = new ScreeningRoomRepository(entityManager);
+        ScreeningRoomRepository screeningRoomRepository = new ScreeningRoomRepository();
         assertNotNull(screeningRoomRepository);
         ScreeningRoomManager screeningRoomManager = new ScreeningRoomManager(screeningRoomRepository);
         assertNotNull(screeningRoomManager);
@@ -70,9 +61,9 @@ public class ScreeningRoomManagerTest {
 
     @Test
     public void setScreeningRoomRepositoryForScreeningRoomManagerTest() {
-        ScreeningRoomRepository screeningRoomRepositoryNo1 = new ScreeningRoomRepository(entityManager);
+        ScreeningRoomRepository screeningRoomRepositoryNo1 = new ScreeningRoomRepository();
         assertNotNull(screeningRoomRepositoryNo1);
-        ScreeningRoomRepository screeningRoomRepositoryNo2 = new ScreeningRoomRepository(entityManager);
+        ScreeningRoomRepository screeningRoomRepositoryNo2 = new ScreeningRoomRepository();
         assertNotNull(screeningRoomRepositoryNo2);
         ScreeningRoomManager screeningRoomManager = new ScreeningRoomManager(screeningRoomRepositoryNo1);
         assertNotNull(screeningRoomManager);

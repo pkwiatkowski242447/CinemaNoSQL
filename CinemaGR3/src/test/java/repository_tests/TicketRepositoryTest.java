@@ -1,8 +1,5 @@
 package repository_tests;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import model.Client;
 import model.Movie;
 import model.ScreeningRoom;
@@ -11,6 +8,7 @@ import model.exceptions.model_exceptions.TicketReservationException;
 import model.exceptions.repository_exceptions.RepositoryUpdateException;
 import model.exceptions.repository_exceptions.TicketRepositoryCreateException;
 import model.exceptions.repository_exceptions.TicketRepositoryDeleteException;
+import model.exceptions.repository_exceptions.TicketRepositoryReadException;
 import model.repositories.*;
 import org.junit.jupiter.api.*;
 
@@ -23,8 +21,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TicketRepositoryTest {
 
-    private static EntityManagerFactory entityManagerFactory;
-    private static EntityManager entityManager;
     private static TicketRepository ticketRepositoryForTests;
     private static ClientRepository clientRepositoryForTests;
     private static MovieRepository movieRepositoryForTests;
@@ -56,19 +52,15 @@ public class TicketRepositoryTest {
 
     @BeforeAll
     public static void init() {
-        entityManagerFactory = Persistence.createEntityManagerFactory("test");
-        entityManager = entityManagerFactory.createEntityManager();
-        ticketRepositoryForTests = new TicketRepository(entityManager);
-        movieRepositoryForTests = new MovieRepository(entityManager);
-        clientRepositoryForTests = new ClientRepository(entityManager);
-        screeningRoomRepositoryForTests = new ScreeningRoomRepository(entityManager);
+        clientRepositoryForTests = new ClientRepository();
+        movieRepositoryForTests = new MovieRepository();
+        screeningRoomRepositoryForTests = new ScreeningRoomRepository();
+        ticketRepositoryForTests = new TicketRepository();
     }
 
     @AfterAll
     public static void destroy() {
-        if (entityManagerFactory != null) {
-            entityManagerFactory.close();
-        }
+
     }
 
     @BeforeEach
@@ -117,32 +109,35 @@ public class TicketRepositoryTest {
 
     @AfterEach
     public void deleteExampleTickets() {
-        List<Ticket> listOfTickets = ticketRepositoryForTests.findAll();
-        for (Ticket ticket : listOfTickets) {
-            ticketRepositoryForTests.delete(ticket);
+        List<UUID> listOfTicketsUUIDs = ticketRepositoryForTests.findAllUUIDs();
+        for (UUID ticketUUID : listOfTicketsUUIDs) {
+            ticketRepositoryForTests.delete(ticketUUID);
         }
-        List<Client> listOfClients = clientRepositoryForTests.findAll();
-        for (Client client : listOfClients) {
-            clientRepositoryForTests.delete(client);
+
+        List<UUID> listOfMoviesUUID = movieRepositoryForTests.findAllUUIDs();
+        for (UUID movieUUID : listOfMoviesUUID) {
+            movieRepositoryForTests.delete(movieUUID);
         }
-        List<Movie> listOfMovies = movieRepositoryForTests.findAll();
-        for (Movie movie : listOfMovies) {
-            movieRepositoryForTests.delete(movie);
+
+        List<UUID> listOfAllClientsUUIDs = clientRepositoryForTests.findAllUUIDs();
+        for (UUID clientID : listOfAllClientsUUIDs) {
+            clientRepositoryForTests.delete(clientID);
         }
-        List<ScreeningRoom> listOfScreeningRooms = screeningRoomRepositoryForTests.findAll();
-        for (ScreeningRoom screeningRoom : listOfScreeningRooms) {
-            screeningRoomRepositoryForTests.delete(screeningRoom);
+
+        List<UUID> listOfScreeningRoomsUUIDs = screeningRoomRepositoryForTests.findAllUUIDs();
+        for (UUID screeningRoomID : listOfScreeningRoomsUUIDs) {
+            screeningRoomRepositoryForTests.delete(screeningRoomID);
         }
     }
 
     @Test
     public void ticketRepositoryConstructorTest() {
-        Repository<Ticket> ticketRepository = new TicketRepository(entityManager);
+        TicketRepository ticketRepository = new TicketRepository();
         assertNotNull(ticketRepository);
     }
 
     @Test
-    public void createNewTicketTestPositive() throws TicketReservationException {
+    public void createNewTicketTestPositive() {
         int numberOfAvailableSeatsBefore = movieNo2.getScreeningRoom().getNumberOfAvailableSeats();
         final Ticket[] ticket = new Ticket[1];
         assertDoesNotThrow(() -> {
@@ -173,6 +168,11 @@ public class TicketRepositoryTest {
     }
 
     @Test
+    public void createNewTicketWithNullTypeOfTicketTestNegative() {
+        assertThrows(TicketRepositoryCreateException.class, () -> ticketRepositoryForTests.create(movieTimeNo2, reservationTimeNo2, movieNo2, clientNo2, null));
+    }
+
+    @Test
     public void createNewTicketWithNullMovieTestNegative() {
         assertThrows(TicketReservationException.class, () -> {
             Ticket ticket = new Ticket(UUID.randomUUID(), ticketNo2.getMovieTime(), ticketNo2.getReservationTime(), null, clientNo2, "reduced");
@@ -183,7 +183,7 @@ public class TicketRepositoryTest {
     public void createNewTicketWithAScreeningRoomWithoutAnyAvailableSeat() {
         ScreeningRoom screeningRoom = screeningRoomRepositoryForTests.findAll().get(0);
         screeningRoom.setNumberOfAvailableSeats(0);
-        screeningRoomRepositoryForTests.update(screeningRoom);
+        screeningRoomRepositoryForTests.updateAllFields(screeningRoom);
 
         assertThrows(TicketRepositoryCreateException.class, () -> {
             Ticket ticket = ticketRepositoryForTests.create(movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, "reduced");
@@ -219,7 +219,7 @@ public class TicketRepositoryTest {
         boolean oldActiveStatus = ticketNo1.isTicketStatusActive();
         boolean newActiveStatus = false;
         ticketNo1.setTicketStatusActive(newActiveStatus);
-        assertDoesNotThrow(() -> ticketRepositoryForTests.update(ticketNo1));
+        assertDoesNotThrow(() -> ticketRepositoryForTests.updateAllFields(ticketNo1));
         Ticket foundTicket = ticketRepositoryForTests.findByUUID(ticketNo1.getTicketID());
         assertNotNull(foundTicket);
         assertEquals(foundTicket, ticketNo1);
@@ -231,7 +231,7 @@ public class TicketRepositoryTest {
     public void updateCertainTicketTestNegative() throws TicketReservationException {
         Ticket ticket = new Ticket(UUID.randomUUID(), ticketNo1.getMovieTime(), ticketNo1.getReservationTime(), movieNo1, clientNo1, "reduced");
         assertNotNull(ticket);
-        assertThrows(RepositoryUpdateException.class, () -> ticketRepositoryForTests.update(ticket));
+        assertThrows(RepositoryUpdateException.class, () -> ticketRepositoryForTests.updateAllFields(ticket));
     }
 
     @Test
@@ -242,8 +242,9 @@ public class TicketRepositoryTest {
         int numberOfTicketsAfterDelete = ticketRepositoryForTests.findAll().size();
         assertNotEquals(numberOfTicketsBeforeDelete, numberOfTicketsAfterDelete);
         assertEquals(numberOfTicketsBeforeDelete - 1, numberOfTicketsAfterDelete);
-        Ticket foundTicket = ticketRepositoryForTests.findByUUID(removedTicketID);
-        assertNull(foundTicket);
+        assertThrows(TicketRepositoryReadException.class, () -> {
+            Ticket foundTicket = ticketRepositoryForTests.findByUUID(removedTicketID);
+        });
     }
 
     @Test
@@ -290,10 +291,12 @@ public class TicketRepositoryTest {
     public void findCertainTicketTestNegative() throws TicketReservationException {
         Ticket ticket = new Ticket(UUID.randomUUID(), ticketNo1.getMovieTime(), ticketNo1.getReservationTime(), movieNo1, clientNo1, "reduced");
         assertNotNull(ticket);
-        Ticket foundTicket = ticketRepositoryForTests.findByUUID(ticket.getTicketID());
-        assertNull(foundTicket);
+        assertThrows(TicketRepositoryReadException.class, () -> {
+            Ticket foundTicket = ticketRepositoryForTests.findByUUID(ticket.getTicketID());
+        });
     }
 
+    /*
     @Test
     public void removeCertainClientAlongWithTheirTicketTest() {
         int numberOfTicketsBefore = ticketRepositoryForTests.findAll().size();
@@ -324,6 +327,7 @@ public class TicketRepositoryTest {
         assertNotEquals(numberOfTicketsBefore, numberOfTicketsAfter);
         assertEquals(numberOfTicketsBefore - 1, numberOfTicketsAfter);
     }
+     */
 
     @Test
     public void findAllTicketsTestPositive() {

@@ -1,41 +1,27 @@
 package model;
 
-import org.bson.codecs.pojo.annotations.BsonCreator;
-import org.bson.codecs.pojo.annotations.BsonProperty;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.UUID;
 
 public class Client {
 
-    @BsonCreator
-    public Client(@BsonProperty("_id") UUID clientID,
-                  @BsonProperty("client_name") String clientName,
-                  @BsonProperty("client_surname") String clientSurname,
-                  @BsonProperty("client_age") int clientAge,
-                  @BsonProperty("client_status_active") boolean clientStatusActive) {
+    private final UUID clientID;
+    private String clientName;
+    private String clientSurname;
+    private int clientAge;
+    private boolean clientStatusActive;
+
+    // Constructors
+
+    public Client(UUID clientID, String clientName, String clientSurname, int clientAge, boolean clientStatusActive) {
         this.clientID = clientID;
         this.clientName = clientName;
         this.clientSurname = clientSurname;
         this.clientAge = clientAge;
         this.clientStatusActive = clientStatusActive;
     }
-
-    @BsonProperty("_id")
-    private final UUID clientID;
-
-    @BsonProperty("client_name")
-    private String clientName;
-
-    @BsonProperty("client_surname")
-    private String clientSurname;
-
-    @BsonProperty("client_surname")
-    private int clientAge;
-
-    @BsonProperty("client_status_active")
-    private boolean clientStatusActive;
-
-    // Constructors
 
     public Client(UUID clientID, String clientName, String clientSurname, int clientAge) {
         this.clientID = clientID;
@@ -103,5 +89,33 @@ public class Client {
             stringBuilder.append(", client status: not active");
         }
         return stringBuilder.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Client client = (Client) o;
+
+        return new EqualsBuilder()
+                .append(clientAge, client.clientAge)
+                .append(clientStatusActive, client.clientStatusActive)
+                .append(clientID, client.clientID)
+                .append(clientName, client.clientName)
+                .append(clientSurname, client.clientSurname)
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37)
+                .append(clientID)
+                .append(clientName)
+                .append(clientSurname)
+                .append(clientAge)
+                .append(clientStatusActive)
+                .toHashCode();
     }
 }

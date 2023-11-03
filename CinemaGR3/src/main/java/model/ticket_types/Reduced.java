@@ -1,8 +1,5 @@
 package model.ticket_types;
 
-import org.bson.codecs.pojo.annotations.BsonCreator;
-import org.bson.codecs.pojo.annotations.BsonProperty;
-
 import java.util.UUID;
 
 public class Reduced extends TypeOfTicket {
@@ -10,8 +7,7 @@ public class Reduced extends TypeOfTicket {
     public Reduced() {
     }
 
-    @BsonCreator
-    public Reduced(@BsonProperty("_id") UUID ticketTypeID) {
+    public Reduced(UUID ticketTypeID) {
         super(ticketTypeID);
     }
 

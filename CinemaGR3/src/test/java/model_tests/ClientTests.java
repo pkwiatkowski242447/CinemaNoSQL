@@ -2,13 +2,28 @@ package model_tests;
 
 import model.Client;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Date;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ClientTests {
+
+    private Client testClient;
+    private Client otherTestClient;
+
+    @BeforeEach
+    public void init() {
+        testClient = new Client(UUID.randomUUID(), "Gustavo", "Fring", 40);
+        otherTestClient = new Client(testClient.getClientID(),
+                testClient.getClientName(),
+                testClient.getClientSurname(),
+                testClient.getClientAge(),
+                testClient.isClientStatusActive());
+    }
 
     @Test
     public void clientConstructorAndGettersTestPositive() {
@@ -123,5 +138,44 @@ public class ClientTests {
         assertNotNull(client);
         assertNotNull(client.getClientInfo());
         assertNotEquals("", client.getClientInfo());
+    }
+
+    @Test
+    public void clientEqualsTestWithItself() {
+        boolean result = testClient.equals(testClient);
+        assertTrue(result);
+    }
+
+    @Test
+    public void clientEqualsTestWithNull() {
+        boolean result = testClient.equals(null);
+        assertFalse(result);
+    }
+
+    @Test
+    public void clientEqualsTestWithObjectFromDifferentClass() {
+        boolean result = testClient.equals(new Date());
+        assertFalse(result);
+    }
+
+    @Test
+    public void clientEqualsTestWithTheSameObject() {
+        boolean result = testClient.equals(otherTestClient);
+        assertTrue(result);
+    }
+
+    @Test
+    public void clientHashCodeTestPositive() {
+        int hashCodeNo1 = testClient.hashCode();
+        int hashCodeNo2 = otherTestClient.hashCode();
+        assertEquals(hashCodeNo1, hashCodeNo2);
+    }
+
+    @Test
+    public void clientHashCodeTestNegative() {
+        testClient.setClientName("Scott");
+        int hashCodeNo1 = testClient.hashCode();
+        int hashCodeNo2 = otherTestClient.hashCode();
+        assertNotEquals(hashCodeNo1, hashCodeNo2);
     }
 }

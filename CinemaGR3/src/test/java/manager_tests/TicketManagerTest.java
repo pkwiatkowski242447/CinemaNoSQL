@@ -1,8 +1,5 @@
 package manager_tests;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import model.Client;
 import model.Movie;
 import model.ScreeningRoom;
@@ -45,8 +42,6 @@ public class TicketManagerTest {
     private Ticket ticketNo2;
     private Ticket ticketNo3;
 
-    private static EntityManagerFactory entityManagerFactory;
-    private static EntityManager entityManager;
     private static TicketRepository ticketRepositoryForTests;
     private static ClientRepository clientRepositoryForTests;
     private static MovieRepository movieRepositoryForTests;
@@ -58,12 +53,10 @@ public class TicketManagerTest {
 
     @BeforeAll
     public static void init() {
-        entityManagerFactory = Persistence.createEntityManagerFactory("test");
-        entityManager = entityManagerFactory.createEntityManager();
-        ticketRepositoryForTests = new TicketRepository(entityManager);
-        clientRepositoryForTests = new ClientRepository(entityManager);
-        movieRepositoryForTests = new MovieRepository(entityManager);
-        screeningRoomRepositoryForTests = new ScreeningRoomRepository(entityManager);
+        ticketRepositoryForTests = new TicketRepository();
+        clientRepositoryForTests = new ClientRepository();
+        movieRepositoryForTests = new MovieRepository();
+        screeningRoomRepositoryForTests = new ScreeningRoomRepository();
         ticketManagerForTests = new TicketManager(ticketRepositoryForTests);
         clientManagerForTests = new ClientManager(clientRepositoryForTests);
         movieManagerForTests = new MovieManager(movieRepositoryForTests);
@@ -72,9 +65,7 @@ public class TicketManagerTest {
 
     @AfterAll
     public static void destroy() {
-        if (entityManagerFactory != null) {
-            entityManagerFactory.close();
-        }
+
     }
 
     @BeforeEach
@@ -145,7 +136,7 @@ public class TicketManagerTest {
 
     @Test
     public void createTicketManagerTest() {
-        TicketRepository ticketRepository = new TicketRepository(entityManager);
+        TicketRepository ticketRepository = new TicketRepository();
         assertNotNull(ticketRepository);
         TicketManager ticketManager = new TicketManager(ticketRepository);
         assertNotNull(ticketManager);
@@ -153,9 +144,9 @@ public class TicketManagerTest {
 
     @Test
     public void setTicketRepositoryForTicketManagerTest() {
-        TicketRepository ticketRepositoryNo1 = new TicketRepository(entityManager);
+        TicketRepository ticketRepositoryNo1 = new TicketRepository();
         assertNotNull(ticketRepositoryNo1);
-        TicketRepository ticketRepositoryNo2 = new TicketRepository(entityManager);
+        TicketRepository ticketRepositoryNo2 = new TicketRepository();
         assertNotNull(ticketRepositoryNo2);
         TicketManager ticketManager = new TicketManager(ticketRepositoryNo1);
         assertNotNull(ticketManager);

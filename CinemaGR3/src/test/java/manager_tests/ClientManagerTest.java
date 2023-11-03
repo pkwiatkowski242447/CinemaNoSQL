@@ -1,8 +1,5 @@
 package manager_tests;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import model.Client;
 import model.managers.ClientManager;
 import model.repositories.ClientRepository;
@@ -15,24 +12,18 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ClientManagerTest {
 
-    private static EntityManagerFactory entityManagerFactory;
-    private static EntityManager entityManager;
     private static ClientRepository clientRepositoryForTests;
     private static ClientManager clientManagerForTests;
 
     @BeforeAll
     public static void init() {
-        entityManagerFactory = Persistence.createEntityManagerFactory("test");
-        entityManager = entityManagerFactory.createEntityManager();
-        clientRepositoryForTests = new ClientRepository(entityManager);
+        clientRepositoryForTests = new ClientRepository();
         clientManagerForTests = new ClientManager(clientRepositoryForTests);
     }
 
     @AfterAll
     public static void destroy() {
-        if (entityManagerFactory != null) {
-            entityManagerFactory.close();
-        }
+
     }
 
     @BeforeEach
@@ -62,7 +53,7 @@ public class ClientManagerTest {
 
     @Test
     public void createClientManagerTest() {
-        ClientRepository clientRepository = new ClientRepository(entityManager);
+        ClientRepository clientRepository = new ClientRepository();
         assertNotNull(clientRepository);
         ClientManager clientManager = new ClientManager(clientRepository);
         assertNotNull(clientManager);
@@ -70,9 +61,9 @@ public class ClientManagerTest {
 
     @Test
     public void setClientRepositoryForClientManagerTest() {
-        ClientRepository clientRepositoryNo1 = new ClientRepository(entityManager);
+        ClientRepository clientRepositoryNo1 = new ClientRepository();
         assertNotNull(clientRepositoryNo1);
-        ClientRepository clientRepositoryNo2 = new ClientRepository(entityManager);
+        ClientRepository clientRepositoryNo2 = new ClientRepository();
         assertNotNull(clientRepositoryNo2);
         ClientManager clientManager = new ClientManager(clientRepositoryNo1);
         assertNotNull(clientManager);

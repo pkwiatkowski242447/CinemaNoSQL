@@ -1,39 +1,26 @@
 package model;
 
-import org.bson.codecs.pojo.annotations.BsonCreator;
-import org.bson.codecs.pojo.annotations.BsonProperty;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.UUID;
 
 public class Movie {
+    private final UUID movieID;
+    private String movieTitle;
+    private boolean movieStatusActive;
+    private double movieBasePrice;
+    private final ScreeningRoom screeningRoom;
 
-    @BsonCreator
-    public Movie(@BsonProperty("_id") UUID movieID,
-                 @BsonProperty("movie_title") String movieTitle,
-                 @BsonProperty("movie_status_active") boolean movieStatusActive,
-                 @BsonProperty("movie_base_price") double movieBasePrice) {
+    // Constructors
+
+    public Movie(UUID movieID, String movieTitle, boolean movieStatusActive, double movieBasePrice, ScreeningRoom screeningRoom) {
         this.movieID = movieID;
         this.movieTitle = movieTitle;
         this.movieStatusActive = movieStatusActive;
         this.movieBasePrice = movieBasePrice;
+        this.screeningRoom = screeningRoom;
     }
-
-    @BsonProperty("_id")
-    private final UUID movieID;
-
-    @BsonProperty("movie_title")
-    private String movieTitle;
-
-    @BsonProperty("movie_status_active")
-    private boolean movieStatusActive;
-
-    @BsonProperty("movie_base_price")
-    private double movieBasePrice;
-
-    @BsonProperty("screening_room_ref")
-    private ScreeningRoom screeningRoom;
-
-    // Constructors
 
     public Movie(UUID movieID, String movieTitle, double movieBasePrice, ScreeningRoom screeningRoom) {
         this.movieID = movieID;
@@ -83,11 +70,40 @@ public class Movie {
 
     public String getMovieInfo() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Movie title: ")
+        stringBuilder.append("Movie id: ")
+                .append(this.movieID)
+                .append(", movie title: ")
                 .append(this.movieTitle)
-                .append(", ")
-                .append(" location of the spectacle: ")
-                .append(this.screeningRoom.getScreeningRoomInfo());
+                .append(", location of the spectacle: ")
+                .append(" ; " + this.screeningRoom.getScreeningRoomInfo());
         return stringBuilder.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Movie movie = (Movie) o;
+
+        return new EqualsBuilder()
+                .append(movieID, movie.movieID)
+                .append(movieTitle, movie.movieTitle)
+                .append(movieBasePrice, movie.movieBasePrice)
+                .append(movieStatusActive, movie.movieStatusActive)
+                .append(screeningRoom, movie.screeningRoom)
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37)
+                .append(movieID)
+                .append(movieTitle)
+                .append(movieStatusActive)
+                .append(movieBasePrice)
+                .append(screeningRoom)
+                .toHashCode();
     }
 }

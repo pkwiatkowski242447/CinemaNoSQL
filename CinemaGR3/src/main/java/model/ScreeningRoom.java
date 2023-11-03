@@ -1,41 +1,27 @@
 package model;
 
-import org.bson.codecs.pojo.annotations.BsonCreator;
-import org.bson.codecs.pojo.annotations.BsonProperty;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.*;
 
 public class ScreeningRoom {
 
-    @BsonCreator
-    public ScreeningRoom(@BsonProperty("_id") UUID screeningRoomID,
-                         @BsonProperty("screening_room_floor") int screeningRoomFloor,
-                         @BsonProperty("screening_room_number") int screeningRoomNumber,
-                         @BsonProperty("number_of_available_seats") int numberOfAvailableSeats,
-                         @BsonProperty("screening_room_status_active") boolean screeningRoomStatusActive) {
+    private final UUID screeningRoomID;
+    private final int screeningRoomFloor;
+    private final int screeningRoomNumber;
+    private int numberOfAvailableSeats;
+    private boolean screeningRoomStatusActive;
+
+    // Constructors
+
+    public ScreeningRoom(UUID screeningRoomID, int screeningRoomFloor, int screeningRoomNumber, int numberOfAvailableSeats, boolean screeningRoomStatusActive) {
         this.screeningRoomID = screeningRoomID;
         this.screeningRoomFloor = screeningRoomFloor;
         this.screeningRoomNumber = screeningRoomNumber;
         this.numberOfAvailableSeats = numberOfAvailableSeats;
         this.screeningRoomStatusActive = screeningRoomStatusActive;
     }
-
-    @BsonProperty("_id")
-    private final UUID screeningRoomID;
-
-    @BsonProperty("screening_room_floor")
-    private final int screeningRoomFloor;
-
-    @BsonProperty("screening_room_number")
-    private final int screeningRoomNumber;
-
-    @BsonProperty("number_of_available_seats")
-    private int numberOfAvailableSeats;
-
-    @BsonProperty("screening_room_status_active")
-    private boolean screeningRoomStatusActive;
-
-    // Constructors
 
     public ScreeningRoom(UUID screeningRoomID, int screeningRoomFloor, int screeningRoomNumber, int numberOfSeats) {
         this.screeningRoomID = screeningRoomID;
@@ -44,7 +30,6 @@ public class ScreeningRoom {
         this.numberOfAvailableSeats = numberOfSeats;
         this.screeningRoomStatusActive = true;
     }
-
 
     // Getters
 
@@ -82,7 +67,9 @@ public class ScreeningRoom {
 
     public String getScreeningRoomInfo() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(" Number of the screening room: ")
+        stringBuilder.append("Screening room ID: ")
+                .append(this.screeningRoomID)
+                .append(", number: ")
                 .append(this.screeningRoomNumber)
                 .append(", floor: ")
                 .append(this.screeningRoomFloor)
@@ -94,5 +81,33 @@ public class ScreeningRoom {
             stringBuilder.append(", screening room status: not active");
         }
         return stringBuilder.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ScreeningRoom that = (ScreeningRoom) o;
+
+        return new EqualsBuilder()
+                .append(screeningRoomID, that.screeningRoomID)
+                .append(screeningRoomFloor, that.screeningRoomFloor)
+                .append(screeningRoomNumber, that.screeningRoomNumber)
+                .append(numberOfAvailableSeats, that.numberOfAvailableSeats)
+                .append(screeningRoomStatusActive, that.screeningRoomStatusActive)
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37)
+                .append(screeningRoomID)
+                .append(screeningRoomFloor)
+                .append(screeningRoomNumber)
+                .append(numberOfAvailableSeats)
+                .append(screeningRoomStatusActive)
+                .toHashCode();
     }
 }

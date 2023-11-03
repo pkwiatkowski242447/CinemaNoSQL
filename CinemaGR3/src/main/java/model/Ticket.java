@@ -4,55 +4,21 @@ import model.exceptions.model_exceptions.TicketReservationException;
 import model.ticket_types.Normal;
 import model.ticket_types.Reduced;
 import model.ticket_types.TypeOfTicket;
-import org.bson.codecs.pojo.annotations.BsonCreator;
-import org.bson.codecs.pojo.annotations.BsonProperty;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.Date;
 import java.util.UUID;
 
 public class Ticket {
 
-    @BsonCreator
-    public Ticket(@BsonProperty("_id") UUID ticketID,
-                  @BsonProperty("movie_time") Date movieTime,
-                  @BsonProperty("reservation_time") Date reservationTime,
-                  @BsonProperty("ticket_status_active") boolean ticketStatusActive,
-                  @BsonProperty("ticket_final_price") double ticketFinalPrice,
-                  @BsonProperty("movie_ref") Movie movie,
-                  @BsonProperty("client_ref") Client client,
-                  @BsonProperty("type_of_ticket_ref") TypeOfTicket typeOfTicket) {
-        this.ticketID = ticketID;
-        this.movieTime = movieTime;
-        this.reservationTime = reservationTime;
-        this.ticketStatusActive = ticketStatusActive;
-        this.ticketFinalPrice = ticketFinalPrice;
-        this.movie = movie;
-        this.client = client;
-        this.typeOfTicket = typeOfTicket;
-    }
-
-    @BsonProperty("_id")
     private final UUID ticketID;
-
-    @BsonProperty("movie_time")
     private final Date movieTime;
-
-    @BsonProperty("reservation_time")
     private final Date reservationTime;
-
-    @BsonProperty("ticket_status_active")
     private boolean ticketStatusActive;
-
-    @BsonProperty("ticket_final_price")
     private final double ticketFinalPrice;
-
-    @BsonProperty("movie_ref")
     private final Movie movie;
-
-    @BsonProperty("client_ref")
     private final Client client;
-
-    @BsonProperty("ticket_type_ref")
     private TypeOfTicket typeOfTicket;
 
     // Constructors
@@ -85,6 +51,17 @@ public class Ticket {
         this.typeOfTicket = ticketType;
         this.ticketFinalPrice = ticketType.applyDiscount(movie.getMovieBasePrice());
         this.ticketStatusActive = true;
+    }
+
+    public Ticket(UUID ticketID, Date movieTime, Date reservationTime, boolean ticketStatusActive, double ticketFinalPrice, Movie movie, Client client, TypeOfTicket typeOfTicket) {
+        this.ticketID = ticketID;
+        this.movieTime = movieTime;
+        this.reservationTime = reservationTime;
+        this.ticketStatusActive = ticketStatusActive;
+        this.ticketFinalPrice = ticketFinalPrice;
+        this.movie = movie;
+        this.client = client;
+        this.typeOfTicket = typeOfTicket;
     }
 
     // Getters
@@ -123,13 +100,12 @@ public class Ticket {
 
     // Setters
 
+    public void setTicketStatusActive(boolean ticketStatusActive) {
+        this.ticketStatusActive = ticketStatusActive;
+    }
 
     public void setTypeOfTicket(TypeOfTicket typeOfTicket) {
         this.typeOfTicket = typeOfTicket;
-    }
-
-    public void setTicketStatusActive(boolean ticketStatusActive) {
-        this.ticketStatusActive = ticketStatusActive;
     }
 
     // Other methods
@@ -150,5 +126,40 @@ public class Ticket {
         stringBuilder.append(" Final price of the ticket: ").append(this.ticketFinalPrice);
         stringBuilder.append(this.typeOfTicket.getTicketTypeInfo());
         return stringBuilder.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Ticket ticket = (Ticket) o;
+
+        return new EqualsBuilder()
+                .append(ticketID, ticket.ticketID)
+                .append(movieTime, ticket.movieTime)
+                .append(reservationTime, ticket.reservationTime)
+                .append(ticketStatusActive, ticket.ticketStatusActive)
+                .append(ticketFinalPrice, ticket.ticketFinalPrice)
+                .append(movie.getMovieID(), ticket.movie.getMovieID())
+                .append(movie.getScreeningRoom().getNumberOfAvailableSeats(), ticket.movie.getScreeningRoom().getNumberOfAvailableSeats())
+                .append(client, ticket.client)
+                .append(typeOfTicket, ticket.typeOfTicket)
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37)
+                .append(ticketID)
+                .append(movieTime)
+                .append(reservationTime)
+                .append(ticketStatusActive)
+                .append(ticketFinalPrice)
+                .append(movie)
+                .append(client)
+                .append(typeOfTicket.getClass())
+                .toHashCode();
     }
 }
