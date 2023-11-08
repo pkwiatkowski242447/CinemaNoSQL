@@ -23,8 +23,8 @@ import java.util.UUID;
 
 public class ClientRepository extends MongoRepository<Client> {
 
-    public ClientRepository() {
-        super.initDatabaseConnection();
+    public ClientRepository(String databaseName) {
+        super.initDatabaseConnection(databaseName);
 
         // Checking if collection "clients" exists.
         boolean collectionExists = false;

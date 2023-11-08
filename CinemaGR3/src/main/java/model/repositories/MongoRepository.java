@@ -4,7 +4,6 @@ import com.mongodb.*;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
-import mapping_layer.codec_providers.UUIDCodecProvider;
 import mapping_layer.model_docs.ClientDoc;
 import mapping_layer.model_docs.MovieDoc;
 import mapping_layer.model_docs.ScreeningRoomDoc;
@@ -19,13 +18,14 @@ import org.bson.codecs.pojo.ClassModel;
 import org.bson.codecs.pojo.Conventions;
 import org.bson.codecs.pojo.PojoCodecProvider;
 
+import java.io.Closeable;
 import java.util.List;
 import java.util.UUID;
 
-public abstract class MongoRepository<Type> {
+public abstract class MongoRepository<Type> implements Closeable {
 
     // Database connection required information.
-    private final ConnectionString connectionString = new ConnectionString("mongodb://127.0.0.1:27017,127.0.0.1:27018,127.0.0.1:27019");
+    private final ConnectionString connectionString = new ConnectionString("mongodb://mongonode1:27020,mongonode2:27021,mongonode3:27022");
     private final MongoCredential mongoCredential = MongoCredential.createCredential("admin", "admin", "adminpassword".toCharArray());
 
     // Collection names
@@ -60,11 +60,11 @@ public abstract class MongoRepository<Type> {
             pojoCodecProvider, PojoCodecProvider.builder().automatic(true).conventions(List.of(Conventions.ANNOTATION_CONVENTION)).build());
 
     // MongoClient & MongoDatabase variables
-    protected static MongoClient mongoClient;
-    protected static MongoDatabase mongoDatabase;
+    protected MongoClient mongoClient;
+    protected MongoDatabase mongoDatabase;
 
 
-    protected void initDatabaseConnection() {
+    protected void initDatabaseConnection(String databaseName) {
         MongoClientSettings mongoClientSettings = MongoClientSettings.builder()
                 .credential(mongoCredential)
                 .readConcern(ReadConcern.MAJORITY)
@@ -73,26 +73,35 @@ public abstract class MongoRepository<Type> {
                 .applyConnectionString(connectionString)
                 .uuidRepresentation(UuidRepresentation.STANDARD)
                 .codecRegistry(CodecRegistries.fromRegistries(
-                        CodecRegistries.fromProviders(new UUIDCodecProvider()),
                         MongoClientSettings.getDefaultCodecRegistry(),
                         pojoCodecRegistry
                 )).build();
 
         mongoClient = MongoClients.create(mongoClientSettings);
-        mongoDatabase = mongoClient.getDatabase("cinema");
+        mongoDatabase = mongoClient.getDatabase(databaseName);
     }
 
     // Defining methods that later will be overwritten in other repositories.
 
     // R - Methods for finding object representation in the DB
+
     public abstract Type findByUUID(UUID elementUUID);
     public abstract List<Type> findAll();
     public abstract List<Type> findAllActive();
     public abstract List<UUID> findAllUUIDs();
+
     // U - Methods for updating object representation in the DB
+
     public abstract void updateAllFields(Type element);
+
     // D - Methods for deleting object representation from DB
+
     public abstract void delete(Type element);
     public abstract void delete(UUID elementID);
     public abstract void expire(Type element);
+
+    @Override
+    public void close() {
+        mongoClient.close();
+    }
 }

@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ScreeningRoomRepositoryTest {
 
+    private final static String databaseName = "test";
     private static ScreeningRoomRepository screeningRoomRepositoryForTests;
     private ScreeningRoom screeningRoomNo1;
     private ScreeningRoom screeningRoomNo2;
@@ -19,7 +20,7 @@ public class ScreeningRoomRepositoryTest {
 
     @BeforeAll
     public static void init() {
-        screeningRoomRepositoryForTests = new ScreeningRoomRepository();
+        screeningRoomRepositoryForTests = new ScreeningRoomRepository(databaseName);
     }
 
     @BeforeEach
@@ -46,9 +47,14 @@ public class ScreeningRoomRepositoryTest {
         }
     }
 
+    @AfterAll
+    public static void destroy() {
+        screeningRoomRepositoryForTests.close();
+    }
+
     @Test
     public void screeningRoomRepositoryConstructorTest() {
-        ScreeningRoomRepository screeningRoomRepository = new ScreeningRoomRepository();
+        ScreeningRoomRepository screeningRoomRepository = new ScreeningRoomRepository(databaseName);
         assertNotNull(screeningRoomRepository);
     }
 

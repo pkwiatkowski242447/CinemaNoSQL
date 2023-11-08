@@ -23,8 +23,8 @@ import java.util.UUID;
 
 public class ScreeningRoomRepository extends MongoRepository<ScreeningRoom> {
 
-    public ScreeningRoomRepository() {
-        super.initDatabaseConnection();
+    public ScreeningRoomRepository(String databaseName) {
+        super.initDatabaseConnection(databaseName);
 
         // Checking if collection "screeningRooms" exist.
         boolean collectionExists = false;

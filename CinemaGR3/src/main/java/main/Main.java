@@ -14,10 +14,11 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) {
-        ClientRepository clientRepository = new ClientRepository();
-        ScreeningRoomRepository screeningRoomRepository = new ScreeningRoomRepository();
-        MovieRepository movieRepository = new MovieRepository();
-        TicketRepository ticketRepository = new TicketRepository();
+        String databaseName = "cinema";
+        ClientRepository clientRepository = new ClientRepository(databaseName);
+        ScreeningRoomRepository screeningRoomRepository = new ScreeningRoomRepository(databaseName);
+        MovieRepository movieRepository = new MovieRepository(databaseName);
+        TicketRepository ticketRepository = new TicketRepository(databaseName);
 
         ClientManager clientManager = new ClientManager(clientRepository);
         ScreeningRoomManager screeningRoomManager = new ScreeningRoomManager(screeningRoomRepository);
@@ -102,5 +103,10 @@ public class Main {
         for (ScreeningRoom screeningRoom : listOfScreeningRooms) {
             System.out.println(screeningRoom.getScreeningRoomInfo());
         }
+
+        ticketRepository.close();
+        clientRepository.close();
+        movieRepository.close();
+        screeningRoomRepository.close();
     }
 }

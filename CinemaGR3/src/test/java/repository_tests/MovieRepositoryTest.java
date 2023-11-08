@@ -15,6 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class MovieRepositoryTest {
 
+    private final static String databaseName = "test";
     private static MovieRepository movieRepositoryForTests;
     private static ScreeningRoomRepository screeningRoomRepositoryForTests;
 
@@ -30,8 +31,8 @@ public class MovieRepositoryTest {
 
     @BeforeAll
     public static void init() {
-        screeningRoomRepositoryForTests = new ScreeningRoomRepository();
-        movieRepositoryForTests = new MovieRepository();
+        screeningRoomRepositoryForTests = new ScreeningRoomRepository(databaseName);
+        movieRepositoryForTests = new MovieRepository(databaseName);
     }
 
     @BeforeEach
@@ -82,9 +83,15 @@ public class MovieRepositoryTest {
         }
     }
 
+    @AfterAll
+    public static void destroy() {
+        screeningRoomRepositoryForTests.close();
+        movieRepositoryForTests.close();
+    }
+
     @Test
     public void movieRepositoryConstructorTest() {
-        MovieRepository movieRepository = new MovieRepository();
+        MovieRepository movieRepository = new MovieRepository(databaseName);
         assertNotNull(movieRepository);
     }
 

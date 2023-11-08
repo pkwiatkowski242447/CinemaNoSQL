@@ -39,8 +39,8 @@ import java.util.UUID;
 
 public class TicketRepository extends MongoRepository<Ticket> {
 
-    public TicketRepository() {
-        super.initDatabaseConnection();
+    public TicketRepository(String databaseName) {
+        super.initDatabaseConnection(databaseName);
 
         // Checking if collection "tickets" exists.
         boolean collectionExists = false;

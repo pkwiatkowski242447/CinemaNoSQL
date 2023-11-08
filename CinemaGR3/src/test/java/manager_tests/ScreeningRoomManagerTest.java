@@ -12,18 +12,19 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ScreeningRoomManagerTest {
 
+    private final static String databaseName = "test";
     private static ScreeningRoomRepository screeningRoomRepositoryForTests;
     private static ScreeningRoomManager screeningRoomManagerForTests;
 
     @BeforeAll
     public static void init() {
-        screeningRoomRepositoryForTests = new ScreeningRoomRepository();
+        screeningRoomRepositoryForTests = new ScreeningRoomRepository(databaseName);
         screeningRoomManagerForTests = new ScreeningRoomManager(screeningRoomRepositoryForTests);
     }
 
     @AfterAll
     public static void destroy() {
-
+        screeningRoomRepositoryForTests.close();
     }
 
     @BeforeEach
@@ -53,23 +54,26 @@ public class ScreeningRoomManagerTest {
 
     @Test
     public void createScreeningRoomManagerTest() {
-        ScreeningRoomRepository screeningRoomRepository = new ScreeningRoomRepository();
+        ScreeningRoomRepository screeningRoomRepository = new ScreeningRoomRepository(databaseName);
         assertNotNull(screeningRoomRepository);
         ScreeningRoomManager screeningRoomManager = new ScreeningRoomManager(screeningRoomRepository);
         assertNotNull(screeningRoomManager);
+        screeningRoomRepository.close();
     }
 
     @Test
     public void setScreeningRoomRepositoryForScreeningRoomManagerTest() {
-        ScreeningRoomRepository screeningRoomRepositoryNo1 = new ScreeningRoomRepository();
+        ScreeningRoomRepository screeningRoomRepositoryNo1 = new ScreeningRoomRepository(databaseName);
         assertNotNull(screeningRoomRepositoryNo1);
-        ScreeningRoomRepository screeningRoomRepositoryNo2 = new ScreeningRoomRepository();
+        ScreeningRoomRepository screeningRoomRepositoryNo2 = new ScreeningRoomRepository(databaseName);
         assertNotNull(screeningRoomRepositoryNo2);
         ScreeningRoomManager screeningRoomManager = new ScreeningRoomManager(screeningRoomRepositoryNo1);
         assertNotNull(screeningRoomManager);
         screeningRoomManager.setScreeningRoomRepository(screeningRoomRepositoryNo2);
         assertNotEquals(screeningRoomRepositoryNo1, screeningRoomManager.getScreeningRoomRepository());
         assertEquals(screeningRoomRepositoryNo2, screeningRoomManager.getScreeningRoomRepository());
+        screeningRoomRepositoryNo1.close();
+        screeningRoomRepositoryNo2.close();
     }
 
     @Test

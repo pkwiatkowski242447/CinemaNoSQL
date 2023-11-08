@@ -4,64 +4,64 @@ services:
 
   mongo_1:
     build: .
-    image: mongocustom:6.0.2
-    container_name: mongodbnode1
-    hostname: mongodbnode1
+    image: mongoimg0:6.0.2
+    container_name: mongonode1
+    hostname: mongonode1
     networks:
       - mongonet
     ports:
-      - "27017:27017"
+      - "27020:27020"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=adminpassword
-    command: --config /etc/mongod.conf --port 27017
+    command: --config /etc/mongod.conf --port 27020
     healthcheck:
-      test: ["CMD", "mongosh", "--port", "27017", "--eval", "db.adminCommand('ping')"]
+      test: ["CMD", "mongosh", "--port", "27020", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 2s
       retries: 5
 
   mongo_2:
     build: .
-    image: mongocustom:6.0.2
-    container_name: mongodbnode2
-    hostname: mongodbnode2
+    image: mongoimg0:6.0.2
+    container_name: mongonode2
+    hostname: mongonode2
     networks:
       - mongonet
     ports:
-      - "27018:27018"
+      - "27021:27021"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=adminpassword
-    command: --config /etc/mongod.conf --port 27018
+    command: --config /etc/mongod.conf --port 27021
     healthcheck:
-      test: [ "CMD", "mongosh", "--port", "27018", "--eval", "db.adminCommand('ping')" ]
+      test: [ "CMD", "mongosh", "--port", "27021", "--eval", "db.adminCommand('ping')" ]
       interval: 10s
       timeout: 2s
       retries: 5
 
   mongo_3:
     build: .
-    image: mongocustom:6.0.2
-    container_name: mongodbnode3
-    hostname: mongodbnode3
+    image: mongoimg0:6.0.2
+    container_name: mongonode3
+    hostname: mongonode3
     networks:
       - mongonet
     ports:
-      - "27019:27019"
+      - "27022:27022"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=adminpassword
-    command: --config /etc/mongod.conf --port 27019
+    command: --config /etc/mongod.conf --port 27022
     healthcheck:
-      test: [ "CMD", "mongosh", "--port", "27019", "--eval", "db.adminCommand('ping')" ]
+      test: [ "CMD", "mongosh", "--port", "27022", "--eval", "db.adminCommand('ping')" ]
       interval: 10s
       timeout: 2s
       retries: 5
 
   mongoinit:
     build: .
-    image: mongocustom:6.0.2
+    image: mongoimg0:6.0.2
     hostname: mongodbinit
     container_name: mongodbinit
     networks:
@@ -74,15 +74,15 @@ services:
       mongo_3:
         condition: service_healthy
     command: >
-      mongosh --host mongodb_node1:27017 --username admin --password adminpassword --authenticationDatabase admin --eval
+      mongosh --host mongonode1:27020 --username admin --password adminpassword --authenticationDatabase admin --eval
       '
       rs.initiate(
         {
-          "_id": "replica_set_single",
+          "_id": "replicaSet0",
           "members": [
-            { _id: 0, host : "mongodbnode1:27017" },
-            { _id: 1, host : "mongodbnode2:27018" },
-            { _id: 2, host : "mongodbnode3:27019" }
+            { _id: 0, host : "mongonode1:27020" },
+            { _id: 1, host : "mongonode2:27021" },
+            { _id: 2, host : "mongonode3:27022" }
           ]
         }
       );

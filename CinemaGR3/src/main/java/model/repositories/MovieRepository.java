@@ -32,8 +32,8 @@ public class MovieRepository extends MongoRepository<Movie> {
 
     private final static Logger logger = LoggerFactory.getLogger(MovieRepository.class);
 
-    public MovieRepository() {
-        super.initDatabaseConnection();
+    public MovieRepository(String databaseName) {
+        super.initDatabaseConnection(databaseName);
 
         // Checking if collection "movies" exists.
         boolean collectionExists = false;

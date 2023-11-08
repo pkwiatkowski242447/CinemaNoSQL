@@ -12,18 +12,19 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ClientManagerTest {
 
+    private final static String databaseName = "test";
     private static ClientRepository clientRepositoryForTests;
     private static ClientManager clientManagerForTests;
 
     @BeforeAll
     public static void init() {
-        clientRepositoryForTests = new ClientRepository();
+        clientRepositoryForTests = new ClientRepository(databaseName);
         clientManagerForTests = new ClientManager(clientRepositoryForTests);
     }
 
     @AfterAll
     public static void destroy() {
-
+        clientRepositoryForTests.close();
     }
 
     @BeforeEach
@@ -53,23 +54,26 @@ public class ClientManagerTest {
 
     @Test
     public void createClientManagerTest() {
-        ClientRepository clientRepository = new ClientRepository();
+        ClientRepository clientRepository = new ClientRepository(databaseName);
         assertNotNull(clientRepository);
         ClientManager clientManager = new ClientManager(clientRepository);
         assertNotNull(clientManager);
+        clientRepository.close();
     }
 
     @Test
     public void setClientRepositoryForClientManagerTest() {
-        ClientRepository clientRepositoryNo1 = new ClientRepository();
+        ClientRepository clientRepositoryNo1 = new ClientRepository(databaseName);
         assertNotNull(clientRepositoryNo1);
-        ClientRepository clientRepositoryNo2 = new ClientRepository();
+        ClientRepository clientRepositoryNo2 = new ClientRepository(databaseName);
         assertNotNull(clientRepositoryNo2);
         ClientManager clientManager = new ClientManager(clientRepositoryNo1);
         assertNotNull(clientManager);
         clientManager.setClientRepository(clientRepositoryNo2);
         assertNotEquals(clientRepositoryNo1, clientManager.getClientRepository());
         assertEquals(clientRepositoryNo2, clientManager.getClientRepository());
+        clientRepositoryNo1.close();
+        clientRepositoryNo2.close();
     }
 
     @Test

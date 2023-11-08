@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TicketManagerTest {
 
+    private final static String databaseName = "test";
     private final Date movieTimeNo1 = new Calendar.Builder().setDate(2023, 10, 1).setTimeOfDay(10, 15, 0).build().getTime();
     private final Date movieTimeNo2 = new Calendar.Builder().setDate(2023, 10, 8).setTimeOfDay(16, 13, 0).build().getTime();
     private final Date movieTimeNo3 = new Calendar.Builder().setDate(2023, 10, 16).setTimeOfDay(20, 5, 0).build().getTime();
@@ -53,10 +54,10 @@ public class TicketManagerTest {
 
     @BeforeAll
     public static void init() {
-        ticketRepositoryForTests = new TicketRepository();
-        clientRepositoryForTests = new ClientRepository();
-        movieRepositoryForTests = new MovieRepository();
-        screeningRoomRepositoryForTests = new ScreeningRoomRepository();
+        ticketRepositoryForTests = new TicketRepository(databaseName);
+        clientRepositoryForTests = new ClientRepository(databaseName);
+        movieRepositoryForTests = new MovieRepository(databaseName);
+        screeningRoomRepositoryForTests = new ScreeningRoomRepository(databaseName);
         ticketManagerForTests = new TicketManager(ticketRepositoryForTests);
         clientManagerForTests = new ClientManager(clientRepositoryForTests);
         movieManagerForTests = new MovieManager(movieRepositoryForTests);
@@ -65,7 +66,10 @@ public class TicketManagerTest {
 
     @AfterAll
     public static void destroy() {
-
+        ticketRepositoryForTests.close();
+        clientRepositoryForTests.close();
+        movieRepositoryForTests.close();
+        screeningRoomRepositoryForTests.close();
     }
 
     @BeforeEach
@@ -136,23 +140,26 @@ public class TicketManagerTest {
 
     @Test
     public void createTicketManagerTest() {
-        TicketRepository ticketRepository = new TicketRepository();
+        TicketRepository ticketRepository = new TicketRepository(databaseName);
         assertNotNull(ticketRepository);
         TicketManager ticketManager = new TicketManager(ticketRepository);
         assertNotNull(ticketManager);
+        ticketRepository.close();
     }
 
     @Test
     public void setTicketRepositoryForTicketManagerTest() {
-        TicketRepository ticketRepositoryNo1 = new TicketRepository();
+        TicketRepository ticketRepositoryNo1 = new TicketRepository(databaseName);
         assertNotNull(ticketRepositoryNo1);
-        TicketRepository ticketRepositoryNo2 = new TicketRepository();
+        TicketRepository ticketRepositoryNo2 = new TicketRepository(databaseName);
         assertNotNull(ticketRepositoryNo2);
         TicketManager ticketManager = new TicketManager(ticketRepositoryNo1);
         assertNotNull(ticketManager);
         ticketManager.setTicketRepository(ticketRepositoryNo2);
         assertNotEquals(ticketRepositoryNo1, ticketManager.getTicketRepository());
         assertEquals(ticketRepositoryNo2, ticketManager.getTicketRepository());
+        ticketRepositoryNo1.close();
+        ticketRepositoryNo2.close();
     }
 
     @Test

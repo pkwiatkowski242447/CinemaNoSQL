@@ -12,6 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ClientRepositoryTest {
 
+    private final static String databaseName = "test";
     private Client clientNo1;
     private Client clientNo2;
     private Client clientNo3;
@@ -19,7 +20,7 @@ public class ClientRepositoryTest {
 
     @BeforeAll
     public static void init() {
-        clientRepositoryForTests = new ClientRepository();
+        clientRepositoryForTests = new ClientRepository(databaseName);
     }
 
     @BeforeEach
@@ -46,9 +47,14 @@ public class ClientRepositoryTest {
         }
     }
 
+    @AfterAll
+    public static void destroy() {
+        clientRepositoryForTests.close();
+    }
+
     @Test
     public void clientRepositoryConstructorTest() {
-        ClientRepository clientRepository = new ClientRepository();
+        ClientRepository clientRepository = new ClientRepository(databaseName);
         assertNotNull(clientRepository);
     }
 

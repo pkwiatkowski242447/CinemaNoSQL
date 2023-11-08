@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TicketRepositoryTest {
 
+    private final static String databaseName = "test";
     private static TicketRepository ticketRepositoryForTests;
     private static ClientRepository clientRepositoryForTests;
     private static MovieRepository movieRepositoryForTests;
@@ -52,15 +53,18 @@ public class TicketRepositoryTest {
 
     @BeforeAll
     public static void init() {
-        clientRepositoryForTests = new ClientRepository();
-        movieRepositoryForTests = new MovieRepository();
-        screeningRoomRepositoryForTests = new ScreeningRoomRepository();
-        ticketRepositoryForTests = new TicketRepository();
+        clientRepositoryForTests = new ClientRepository(databaseName);
+        movieRepositoryForTests = new MovieRepository(databaseName);
+        screeningRoomRepositoryForTests = new ScreeningRoomRepository(databaseName);
+        ticketRepositoryForTests = new TicketRepository(databaseName);
     }
 
     @AfterAll
     public static void destroy() {
-
+        ticketRepositoryForTests.close();
+        clientRepositoryForTests.close();
+        movieRepositoryForTests.close();
+        screeningRoomRepositoryForTests.close();
     }
 
     @BeforeEach
@@ -132,22 +136,19 @@ public class TicketRepositoryTest {
 
     @Test
     public void ticketRepositoryConstructorTest() {
-        TicketRepository ticketRepository = new TicketRepository();
+        TicketRepository ticketRepository = new TicketRepository(databaseName);
         assertNotNull(ticketRepository);
     }
 
     @Test
     public void createNewTicketTestPositive() {
         int numberOfAvailableSeatsBefore = movieNo2.getScreeningRoom().getNumberOfAvailableSeats();
-        final Ticket[] ticket = new Ticket[1];
-        assertDoesNotThrow(() -> {
-            ticket[0] = ticketRepositoryForTests.create(movieTimeNo2, reservationTimeNo2, movieNo2, clientNo2, "reduced");
-        });
+        Ticket ticket = ticketRepositoryForTests.create(movieTimeNo2, reservationTimeNo2, movieNo2, clientNo2, "reduced");
         int numberOfAvailableSeatsAfter = movieNo2.getScreeningRoom().getNumberOfAvailableSeats();
-        assertNotNull(ticket[0]);
-        Ticket foundTicket = ticketRepositoryForTests.findByUUID(ticket[0].getTicketID());
+        assertNotNull(ticket);
+        Ticket foundTicket = ticketRepositoryForTests.findByUUID(ticket.getTicketID());
         assertNotNull(foundTicket);
-        assertEquals(foundTicket, ticket[0]);
+        assertEquals(foundTicket, ticket);
         assertNotEquals(numberOfAvailableSeatsBefore, numberOfAvailableSeatsAfter);
         assertEquals(numberOfAvailableSeatsBefore - 1, numberOfAvailableSeatsAfter);
     }
@@ -295,39 +296,6 @@ public class TicketRepositoryTest {
             Ticket foundTicket = ticketRepositoryForTests.findByUUID(ticket.getTicketID());
         });
     }
-
-    /*
-    @Test
-    public void removeCertainClientAlongWithTheirTicketTest() {
-        int numberOfTicketsBefore = ticketRepositoryForTests.findAll().size();
-        clientRepositoryForTests.delete(clientNo1);
-        int numberOfTicketsAfter = ticketRepositoryForTests.findAll().size();
-        assertNotEquals(numberOfTicketsBefore, numberOfTicketsAfter);
-        assertEquals(numberOfTicketsBefore - 1, numberOfTicketsAfter);
-    }
-
-    @Test
-    public void removeCertainMovieAlongWithTheirTicketTest() {
-        int numberOfTicketsBefore = ticketRepositoryForTests.findAll().size();
-        movieRepositoryForTests.delete(movieNo1);
-        int numberOfTicketsAfter = ticketRepositoryForTests.findAll().size();
-        assertNotEquals(numberOfTicketsBefore, numberOfTicketsAfter);
-        assertEquals(numberOfTicketsBefore - 1, numberOfTicketsAfter);
-    }
-
-    @Test
-    public void removeCertainScreeningRoomAlongWithTheirTicketsAndMoviesTest() {
-        int numberOfMoviesBefore = movieRepositoryForTests.findAll().size();
-        int numberOfTicketsBefore = ticketRepositoryForTests.findAll().size();
-        screeningRoomRepositoryForTests.delete(screeningRoomNo1);
-        int numberOfMoviesAfter = movieRepositoryForTests.findAll().size();
-        int numberOfTicketsAfter = ticketRepositoryForTests.findAll().size();
-        assertNotEquals(numberOfMoviesBefore, numberOfMoviesAfter);
-        assertEquals(numberOfMoviesBefore - 1, numberOfMoviesAfter);
-        assertNotEquals(numberOfTicketsBefore, numberOfTicketsAfter);
-        assertEquals(numberOfTicketsBefore - 1, numberOfTicketsAfter);
-    }
-     */
 
     @Test
     public void findAllTicketsTestPositive() {
