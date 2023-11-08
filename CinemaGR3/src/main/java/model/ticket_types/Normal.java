@@ -1,10 +1,7 @@
 package model.ticket_types;
 
-import jakarta.persistence.Entity;
-
 import java.util.UUID;
 
-@Entity
 public class Normal extends TypeOfTicket {
 
     public Normal() {

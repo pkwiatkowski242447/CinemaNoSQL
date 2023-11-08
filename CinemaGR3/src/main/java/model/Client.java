@@ -1,40 +1,26 @@
 package model;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import org.hibernate.validator.constraints.Length;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import java.io.Serializable;
 import java.util.UUID;
 
-@Entity
-@Table(name = "client")
-public class Client implements Serializable {
+public class Client {
 
-    @Id
-    @Column(name = "client_id", nullable = false, unique = true)
-    private UUID clientID;
-
-    @Column(name = "client_name", nullable = false)
-    @Length(min = 1, max = 50)
+    private final UUID clientID;
     private String clientName;
-
-    @Column(name = "client_surname", nullable = false)
-    @Length(min = 2, max = 100)
     private String clientSurname;
-
-    @Column(name = "client_age", nullable = false)
-    @Min(18)
-    @Max(120)
     private int clientAge;
-
-    @Column(name = "client_status_active", nullable = false)
     private boolean clientStatusActive;
 
     // Constructors
 
-    public Client() {
+    public Client(UUID clientID, String clientName, String clientSurname, int clientAge, boolean clientStatusActive) {
+        this.clientID = clientID;
+        this.clientName = clientName;
+        this.clientSurname = clientSurname;
+        this.clientAge = clientAge;
+        this.clientStatusActive = clientStatusActive;
     }
 
     public Client(UUID clientID, String clientName, String clientSurname, int clientAge) {
@@ -103,5 +89,33 @@ public class Client implements Serializable {
             stringBuilder.append(", client status: not active");
         }
         return stringBuilder.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Client client = (Client) o;
+
+        return new EqualsBuilder()
+                .append(clientAge, client.clientAge)
+                .append(clientStatusActive, client.clientStatusActive)
+                .append(clientID, client.clientID)
+                .append(clientName, client.clientName)
+                .append(clientSurname, client.clientSurname)
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37)
+                .append(clientID)
+                .append(clientName)
+                .append(clientSurname)
+                .append(clientAge)
+                .append(clientStatusActive)
+                .toHashCode();
     }
 }

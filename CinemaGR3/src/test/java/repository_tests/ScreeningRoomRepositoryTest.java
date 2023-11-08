@@ -1,11 +1,7 @@
 package repository_tests;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import model.ScreeningRoom;
 import model.exceptions.repository_exceptions.*;
-import model.repositories.Repository;
 import model.repositories.ScreeningRoomRepository;
 import org.junit.jupiter.api.*;
 
@@ -16,8 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ScreeningRoomRepositoryTest {
 
-    private static EntityManagerFactory entityManagerFactory;
-    private static EntityManager entityManager;
+    private final static String databaseName = "test";
     private static ScreeningRoomRepository screeningRoomRepositoryForTests;
     private ScreeningRoom screeningRoomNo1;
     private ScreeningRoom screeningRoomNo2;
@@ -25,16 +20,7 @@ public class ScreeningRoomRepositoryTest {
 
     @BeforeAll
     public static void init() {
-        entityManagerFactory = Persistence.createEntityManagerFactory("test");
-        entityManager = entityManagerFactory.createEntityManager();
-        screeningRoomRepositoryForTests = new ScreeningRoomRepository(entityManager);
-    }
-
-    @AfterAll
-    public static void destroy() {
-        if (entityManagerFactory != null) {
-            entityManagerFactory.close();
-        }
+        screeningRoomRepositoryForTests = new ScreeningRoomRepository(databaseName);
     }
 
     @BeforeEach
@@ -55,15 +41,20 @@ public class ScreeningRoomRepositoryTest {
 
     @AfterEach
     public void deleteExampleScreeningRooms() {
-        List<ScreeningRoom> listOfScreeningRooms = screeningRoomRepositoryForTests.findAll();
-        for (ScreeningRoom screeningRoom : listOfScreeningRooms) {
-            screeningRoomRepositoryForTests.delete(screeningRoom);
+        List<UUID> listOfScreeningRoomsUUIDs = screeningRoomRepositoryForTests.findAllUUIDs();
+        for (UUID screeningRoomID : listOfScreeningRoomsUUIDs) {
+            screeningRoomRepositoryForTests.delete(screeningRoomID);
         }
+    }
+
+    @AfterAll
+    public static void destroy() {
+        screeningRoomRepositoryForTests.close();
     }
 
     @Test
     public void screeningRoomRepositoryConstructorTest() {
-        Repository<ScreeningRoom> screeningRoomRepository = new ScreeningRoomRepository(entityManager);
+        ScreeningRoomRepository screeningRoomRepository = new ScreeningRoomRepository(databaseName);
         assertNotNull(screeningRoomRepository);
     }
 
@@ -112,7 +103,7 @@ public class ScreeningRoomRepositoryTest {
     public void updateCertainScreeningRoomTestPositive() {
         int numOfAvailableSeatsBefore = screeningRoomNo1.getNumberOfAvailableSeats();
         screeningRoomNo1.setNumberOfAvailableSeats(numOfAvailableSeatsBefore - 1);
-        assertDoesNotThrow(() -> screeningRoomRepositoryForTests.update(screeningRoomNo1));
+        assertDoesNotThrow(() -> screeningRoomRepositoryForTests.updateAllFields(screeningRoomNo1));
         int numOfAvailableSeatsAfter = screeningRoomRepositoryForTests.findByUUID(screeningRoomNo1.getScreeningRoomID()).getNumberOfAvailableSeats();
         assertNotEquals(numOfAvailableSeatsBefore, numOfAvailableSeatsAfter);
     }
@@ -121,7 +112,7 @@ public class ScreeningRoomRepositoryTest {
     public void updateCertainScreeningRoomTestNegative() {
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 2, 50);
         assertNotNull(screeningRoom);
-        assertThrows(RepositoryUpdateException.class, () -> screeningRoomRepositoryForTests.update(screeningRoom));
+        assertThrows(RepositoryUpdateException.class, () -> screeningRoomRepositoryForTests.updateAllFields(screeningRoom));
     }
 
     @Test
@@ -129,7 +120,7 @@ public class ScreeningRoomRepositoryTest {
         ScreeningRoom foundScreeningRoom = screeningRoomRepositoryForTests.findAll().get(0);
         assertNotNull(foundScreeningRoom);
         foundScreeningRoom.setNumberOfAvailableSeats(-1);
-        assertThrows(RepositoryUpdateException.class, () -> screeningRoomRepositoryForTests.update(foundScreeningRoom));
+        assertThrows(RepositoryUpdateException.class, () -> screeningRoomRepositoryForTests.updateAllFields(foundScreeningRoom));
     }
 
     @Test
@@ -137,7 +128,7 @@ public class ScreeningRoomRepositoryTest {
         ScreeningRoom foundScreeningRoom = screeningRoomRepositoryForTests.findAll().get(0);
         assertNotNull(foundScreeningRoom);
         foundScreeningRoom.setNumberOfAvailableSeats(151);
-        assertThrows(RepositoryUpdateException.class, () -> screeningRoomRepositoryForTests.update(foundScreeningRoom));
+        assertThrows(RepositoryUpdateException.class, () -> screeningRoomRepositoryForTests.updateAllFields(foundScreeningRoom));
     }
 
     @Test
@@ -148,8 +139,9 @@ public class ScreeningRoomRepositoryTest {
         int numOfScreeningRoomsAfterDelete = screeningRoomRepositoryForTests.findAll().size();
         assertNotEquals(numOfScreeningRoomsBeforeDelete, numOfScreeningRoomsAfterDelete);
         assertEquals(numOfScreeningRoomsBeforeDelete - 1, numOfScreeningRoomsAfterDelete);
-        ScreeningRoom foundScreeningRoom = screeningRoomRepositoryForTests.findByUUID(removedScreeningRoomID);
-        assertNull(foundScreeningRoom);
+        assertThrows(ScreeningRoomRepositoryReadException.class, () -> {
+            ScreeningRoom foundScreeningRoom = screeningRoomRepositoryForTests.findByUUID(removedScreeningRoomID);
+        });
     }
 
     @Test
@@ -196,8 +188,9 @@ public class ScreeningRoomRepositoryTest {
     public void findCertainScreeningRoomTestNegative() {
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 2, 50);
         assertNotNull(screeningRoom);
-        ScreeningRoom foundScreeningRoom = screeningRoomRepositoryForTests.findByUUID(screeningRoom.getScreeningRoomID());
-        assertNull(foundScreeningRoom);
+        assertThrows(ScreeningRoomRepositoryReadException.class, () -> {
+            ScreeningRoom foundScreeningRoom = screeningRoomRepositoryForTests.findByUUID(screeningRoom.getScreeningRoomID());
+        });
     }
 
     @Test

@@ -3,8 +3,10 @@ package model_tests;
 import model.Movie;
 import model.ScreeningRoom;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Date;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -12,6 +14,17 @@ import static org.junit.jupiter.api.Assertions.*;
 public class MovieTests {
 
     private final ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 1, 6, 90);
+    private Movie testMovie;
+    private Movie newTestMovie;
+
+    @BeforeEach
+    public void init() {
+        testMovie = new Movie(UUID.randomUUID(), "Oppenheimer", 20, screeningRoom);
+        newTestMovie = new Movie(testMovie.getMovieID(),
+                testMovie.getMovieTitle(),
+                testMovie.getMovieBasePrice(),
+                testMovie.getScreeningRoom());
+    }
 
     @Test
     public void movieConstructorAndGettersTestPositive() {
@@ -91,5 +104,44 @@ public class MovieTests {
         assertNotNull(movie);
         assertNotNull(movie.getMovieInfo());
         assertNotEquals("", movie.getMovieInfo());
+    }
+
+    @Test
+    public void movieEqualsTestWithItself() {
+        boolean result = testMovie.equals(testMovie);
+        assertTrue(result);
+    }
+
+    @Test
+    public void movieEqualsTestWithNull() {
+        boolean result = testMovie.equals(null);
+        assertFalse(result);
+    }
+
+    @Test
+    public void movieEqualsTestWithObjectFromOtherClass() {
+        boolean result = testMovie.equals(new Date());
+        assertFalse(result);
+    }
+
+    @Test
+    public void movieEqualsTestWithTheSameObject() {
+        boolean result = testMovie.equals(newTestMovie);
+        assertTrue(result);
+    }
+
+    @Test
+    public void movieHashCodeTestPositive() {
+        int hashCodeNo1 = testMovie.hashCode();
+        int hashCodeNo2 = newTestMovie.hashCode();
+        assertEquals(hashCodeNo1, hashCodeNo2);
+    }
+
+    @Test
+    public void movieHashCodeTestNegative() {
+        testMovie.setMovieTitle("Other title");
+        int hashCodeNo1 = testMovie.hashCode();
+        int hashCodeNo2 = newTestMovie.hashCode();
+        assertNotEquals(hashCodeNo1, hashCodeNo2);
     }
 }

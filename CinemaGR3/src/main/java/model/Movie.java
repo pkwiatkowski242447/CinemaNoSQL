@@ -1,40 +1,25 @@
 package model;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
-import org.hibernate.validator.constraints.Length;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.UUID;
 
-@Entity
-@Table(name = "movie")
 public class Movie {
-
-    @Id
-    @Column(name = "movie_id", nullable = false, unique = true)
-    private UUID movieID;
-
-    @Column(name = "movie_title", nullable = false)
-    @Length(min = 1, max = 150)
+    private final UUID movieID;
     private String movieTitle;
-
-    @Column(name = "movie_status_active", nullable = false)
     private boolean movieStatusActive;
-
-    @Column(name = "movie_base_price")
-    @Min(0)
-    @Max(100)
     private double movieBasePrice;
-
-    @ManyToOne
-    @NotNull
-    private ScreeningRoom screeningRoom;
+    private final ScreeningRoom screeningRoom;
 
     // Constructors
 
-    public Movie() {
+    public Movie(UUID movieID, String movieTitle, boolean movieStatusActive, double movieBasePrice, ScreeningRoom screeningRoom) {
+        this.movieID = movieID;
+        this.movieTitle = movieTitle;
+        this.movieStatusActive = movieStatusActive;
+        this.movieBasePrice = movieBasePrice;
+        this.screeningRoom = screeningRoom;
     }
 
     public Movie(UUID movieID, String movieTitle, double movieBasePrice, ScreeningRoom screeningRoom) {
@@ -85,11 +70,40 @@ public class Movie {
 
     public String getMovieInfo() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Movie title: ")
+        stringBuilder.append("Movie id: ")
+                .append(this.movieID)
+                .append(", movie title: ")
                 .append(this.movieTitle)
-                .append(", ")
-                .append(" location of the spectacle: ")
-                .append(this.screeningRoom.getScreeningRoomInfo());
+                .append(", location of the spectacle: ")
+                .append(" ; " + this.screeningRoom.getScreeningRoomInfo());
         return stringBuilder.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Movie movie = (Movie) o;
+
+        return new EqualsBuilder()
+                .append(movieID, movie.movieID)
+                .append(movieTitle, movie.movieTitle)
+                .append(movieBasePrice, movie.movieBasePrice)
+                .append(movieStatusActive, movie.movieStatusActive)
+                .append(screeningRoom, movie.screeningRoom)
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37)
+                .append(movieID)
+                .append(movieTitle)
+                .append(movieStatusActive)
+                .append(movieBasePrice)
+                .append(screeningRoom)
+                .toHashCode();
     }
 }

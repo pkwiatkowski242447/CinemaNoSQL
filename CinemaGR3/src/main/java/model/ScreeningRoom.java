@@ -1,40 +1,26 @@
 package model;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.*;
 
-@Entity
-@Table(name = "screening_room")
 public class ScreeningRoom {
 
-    @Id
-    @Column(name = "screening_room_id", nullable = false, unique = true)
-    private UUID screeningRoomID;
-
-    @Column(name = "screening_room_floor", nullable = false)
-    @Min(0)
-    @Max(3)
-    private int screeningRoomFloor;
-
-    @Column(name = "screening_room_number", nullable = false)
-    @Min(1)
-    @Max(20)
-    private int screeningRoomNumber;
-
-    @Column(name = "number_of_avail_seats", nullable = false)
-    @Min(0)
-    @Max(150)
+    private final UUID screeningRoomID;
+    private final int screeningRoomFloor;
+    private final int screeningRoomNumber;
     private int numberOfAvailableSeats;
-
-    @Column(name = "screening_room_status_active", nullable = false)
     private boolean screeningRoomStatusActive;
 
     // Constructors
 
-    public ScreeningRoom() {
+    public ScreeningRoom(UUID screeningRoomID, int screeningRoomFloor, int screeningRoomNumber, int numberOfAvailableSeats, boolean screeningRoomStatusActive) {
+        this.screeningRoomID = screeningRoomID;
+        this.screeningRoomFloor = screeningRoomFloor;
+        this.screeningRoomNumber = screeningRoomNumber;
+        this.numberOfAvailableSeats = numberOfAvailableSeats;
+        this.screeningRoomStatusActive = screeningRoomStatusActive;
     }
 
     public ScreeningRoom(UUID screeningRoomID, int screeningRoomFloor, int screeningRoomNumber, int numberOfSeats) {
@@ -44,7 +30,6 @@ public class ScreeningRoom {
         this.numberOfAvailableSeats = numberOfSeats;
         this.screeningRoomStatusActive = true;
     }
-
 
     // Getters
 
@@ -82,7 +67,9 @@ public class ScreeningRoom {
 
     public String getScreeningRoomInfo() {
         StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(" Number of the screening room: ")
+        stringBuilder.append("Screening room ID: ")
+                .append(this.screeningRoomID)
+                .append(", number: ")
                 .append(this.screeningRoomNumber)
                 .append(", floor: ")
                 .append(this.screeningRoomFloor)
@@ -94,5 +81,33 @@ public class ScreeningRoom {
             stringBuilder.append(", screening room status: not active");
         }
         return stringBuilder.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ScreeningRoom that = (ScreeningRoom) o;
+
+        return new EqualsBuilder()
+                .append(screeningRoomID, that.screeningRoomID)
+                .append(screeningRoomFloor, that.screeningRoomFloor)
+                .append(screeningRoomNumber, that.screeningRoomNumber)
+                .append(numberOfAvailableSeats, that.numberOfAvailableSeats)
+                .append(screeningRoomStatusActive, that.screeningRoomStatusActive)
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37)
+                .append(screeningRoomID)
+                .append(screeningRoomFloor)
+                .append(screeningRoomNumber)
+                .append(numberOfAvailableSeats)
+                .append(screeningRoomStatusActive)
+                .toHashCode();
     }
 }

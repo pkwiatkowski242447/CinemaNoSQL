@@ -2,13 +2,28 @@ package model_tests;
 
 import model.ScreeningRoom;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Date;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ScreeningRoomTests {
+
+    private ScreeningRoom testScreeningRoom;
+    private ScreeningRoom newTestScreeningRoom;
+
+    @BeforeEach
+    public void init() {
+        testScreeningRoom = new ScreeningRoom(UUID.randomUUID(), 1, 10, 50);
+        newTestScreeningRoom = new ScreeningRoom(testScreeningRoom.getScreeningRoomID(),
+                testScreeningRoom.getScreeningRoomFloor(),
+                testScreeningRoom.getScreeningRoomNumber(),
+                testScreeningRoom.getNumberOfAvailableSeats(),
+                testScreeningRoom.isScreeningRoomStatusActive());
+    }
 
     @Test
     public void screeningRoomConstructorTestPositive() {
@@ -105,5 +120,44 @@ public class ScreeningRoomTests {
         assertNotNull(screeningRoom);
         assertNotNull(screeningRoom.getScreeningRoomInfo());
         assertNotEquals("", screeningRoom.getScreeningRoomInfo());
+    }
+
+    @Test
+    public void screeningRoomEqualsTestWithItself() {
+        boolean result = testScreeningRoom.equals(testScreeningRoom);
+        assertTrue(result);
+    }
+
+    @Test
+    public void screeningRoomEqualsTestWithNull() {
+        boolean result = testScreeningRoom.equals(null);
+        assertFalse(result);
+    }
+
+    @Test
+    public void screeningRoomEqualsTestWithObjectFromOtherClass() {
+        boolean result = testScreeningRoom.equals(new Date());
+        assertFalse(result);
+    }
+
+    @Test
+    public void screeningRoomEqualsTestWithTheSameObject() {
+        boolean result = testScreeningRoom.equals(newTestScreeningRoom);
+        assertTrue(result);
+    }
+
+    @Test
+    public void screeningRoomHashCodeTestPositive() {
+        int hashCodeNo1 = testScreeningRoom.hashCode();
+        int hashCodeNo2 = testScreeningRoom.hashCode();
+        assertEquals(hashCodeNo1, hashCodeNo2);
+    }
+
+    @Test
+    public void screeningRoomHashCodeTestNegative() {
+        testScreeningRoom.setScreeningRoomStatusActive(false);
+        int hashCodeNo1 = testScreeningRoom.hashCode();
+        int hashCodeNo2 = testScreeningRoom.hashCode();
+        assertEquals(hashCodeNo1, hashCodeNo2);
     }
 }

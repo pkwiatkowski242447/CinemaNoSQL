@@ -1,8 +1,5 @@
 package manager_tests;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import model.Client;
 import model.Movie;
 import model.ScreeningRoom;
@@ -21,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TicketManagerTest {
 
+    private final static String databaseName = "test";
     private final Date movieTimeNo1 = new Calendar.Builder().setDate(2023, 10, 1).setTimeOfDay(10, 15, 0).build().getTime();
     private final Date movieTimeNo2 = new Calendar.Builder().setDate(2023, 10, 8).setTimeOfDay(16, 13, 0).build().getTime();
     private final Date movieTimeNo3 = new Calendar.Builder().setDate(2023, 10, 16).setTimeOfDay(20, 5, 0).build().getTime();
@@ -45,8 +43,6 @@ public class TicketManagerTest {
     private Ticket ticketNo2;
     private Ticket ticketNo3;
 
-    private static EntityManagerFactory entityManagerFactory;
-    private static EntityManager entityManager;
     private static TicketRepository ticketRepositoryForTests;
     private static ClientRepository clientRepositoryForTests;
     private static MovieRepository movieRepositoryForTests;
@@ -58,12 +54,10 @@ public class TicketManagerTest {
 
     @BeforeAll
     public static void init() {
-        entityManagerFactory = Persistence.createEntityManagerFactory("test");
-        entityManager = entityManagerFactory.createEntityManager();
-        ticketRepositoryForTests = new TicketRepository(entityManager);
-        clientRepositoryForTests = new ClientRepository(entityManager);
-        movieRepositoryForTests = new MovieRepository(entityManager);
-        screeningRoomRepositoryForTests = new ScreeningRoomRepository(entityManager);
+        ticketRepositoryForTests = new TicketRepository(databaseName);
+        clientRepositoryForTests = new ClientRepository(databaseName);
+        movieRepositoryForTests = new MovieRepository(databaseName);
+        screeningRoomRepositoryForTests = new ScreeningRoomRepository(databaseName);
         ticketManagerForTests = new TicketManager(ticketRepositoryForTests);
         clientManagerForTests = new ClientManager(clientRepositoryForTests);
         movieManagerForTests = new MovieManager(movieRepositoryForTests);
@@ -72,9 +66,10 @@ public class TicketManagerTest {
 
     @AfterAll
     public static void destroy() {
-        if (entityManagerFactory != null) {
-            entityManagerFactory.close();
-        }
+        ticketRepositoryForTests.close();
+        clientRepositoryForTests.close();
+        movieRepositoryForTests.close();
+        screeningRoomRepositoryForTests.close();
     }
 
     @BeforeEach
@@ -145,23 +140,26 @@ public class TicketManagerTest {
 
     @Test
     public void createTicketManagerTest() {
-        TicketRepository ticketRepository = new TicketRepository(entityManager);
+        TicketRepository ticketRepository = new TicketRepository(databaseName);
         assertNotNull(ticketRepository);
         TicketManager ticketManager = new TicketManager(ticketRepository);
         assertNotNull(ticketManager);
+        ticketRepository.close();
     }
 
     @Test
     public void setTicketRepositoryForTicketManagerTest() {
-        TicketRepository ticketRepositoryNo1 = new TicketRepository(entityManager);
+        TicketRepository ticketRepositoryNo1 = new TicketRepository(databaseName);
         assertNotNull(ticketRepositoryNo1);
-        TicketRepository ticketRepositoryNo2 = new TicketRepository(entityManager);
+        TicketRepository ticketRepositoryNo2 = new TicketRepository(databaseName);
         assertNotNull(ticketRepositoryNo2);
         TicketManager ticketManager = new TicketManager(ticketRepositoryNo1);
         assertNotNull(ticketManager);
         ticketManager.setTicketRepository(ticketRepositoryNo2);
         assertNotEquals(ticketRepositoryNo1, ticketManager.getTicketRepository());
         assertEquals(ticketRepositoryNo2, ticketManager.getTicketRepository());
+        ticketRepositoryNo1.close();
+        ticketRepositoryNo2.close();
     }
 
     @Test

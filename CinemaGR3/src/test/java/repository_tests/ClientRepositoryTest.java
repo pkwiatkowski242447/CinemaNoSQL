@@ -1,12 +1,8 @@
 package repository_tests;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import model.Client;
 import model.exceptions.repository_exceptions.*;
 import model.repositories.ClientRepository;
-import model.repositories.Repository;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -16,9 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ClientRepositoryTest {
 
-    private static EntityManagerFactory entityManagerFactory;
-    private static EntityManager entityManager;
-
+    private final static String databaseName = "test";
     private Client clientNo1;
     private Client clientNo2;
     private Client clientNo3;
@@ -26,16 +20,7 @@ public class ClientRepositoryTest {
 
     @BeforeAll
     public static void init() {
-        entityManagerFactory = Persistence.createEntityManagerFactory("test");
-        entityManager = entityManagerFactory.createEntityManager();
-        clientRepositoryForTests = new ClientRepository(entityManager);
-    }
-
-    @AfterAll
-    public static void destroy() {
-        if (entityManagerFactory != null) {
-            entityManagerFactory.close();
-        }
+        clientRepositoryForTests = new ClientRepository(databaseName);
     }
 
     @BeforeEach
@@ -56,15 +41,20 @@ public class ClientRepositoryTest {
 
     @AfterEach
     public void deleteExampleClients() {
-        List<Client> listOfAllClients = clientRepositoryForTests.findAll();
-        for (Client client : listOfAllClients) {
-            clientRepositoryForTests.delete(client);
+        List<UUID> listOfAllClientsUUIDs = clientRepositoryForTests.findAllUUIDs();
+        for (UUID clientID : listOfAllClientsUUIDs) {
+            clientRepositoryForTests.delete(clientID);
         }
+    }
+
+    @AfterAll
+    public static void destroy() {
+        clientRepositoryForTests.close();
     }
 
     @Test
     public void clientRepositoryConstructorTest() {
-        Repository<Client> clientRepository = new ClientRepository(entityManager);
+        ClientRepository clientRepository = new ClientRepository(databaseName);
         assertNotNull(clientRepository);
     }
 
@@ -120,7 +110,7 @@ public class ClientRepositoryTest {
         String oldSurname = clientNo1.getClientSurname();
         String newSurname = "Doe";
         clientNo1.setClientSurname(newSurname);
-        assertDoesNotThrow(() -> clientRepositoryForTests.update(clientNo1));
+        assertDoesNotThrow(() -> clientRepositoryForTests.updateAllFields(clientNo1));
         Client foundClient = clientRepositoryForTests.findByUUID(clientNo1.getClientID());
         assertNotNull(foundClient);
         assertEquals(clientNo1, foundClient);
@@ -132,7 +122,7 @@ public class ClientRepositoryTest {
     public void updateCertainClientTestNegative() {
         Client newClient = new Client(UUID.randomUUID(), "Stefania", "Czarnecka", 80);
         assertNotNull(newClient);
-        assertThrows(RepositoryUpdateException.class, () -> clientRepositoryForTests.update(newClient));
+        assertThrows(RepositoryUpdateException.class, () -> clientRepositoryForTests.updateAllFields(newClient));
     }
 
     @Test
@@ -140,7 +130,7 @@ public class ClientRepositoryTest {
         Client foundClient = clientRepositoryForTests.findAll().get(0);
         assertNotNull(foundClient);
         foundClient.setClientName(null);
-        assertThrows(RepositoryUpdateException.class, () -> clientRepositoryForTests.update(foundClient));
+        assertThrows(RepositoryUpdateException.class, () -> clientRepositoryForTests.updateAllFields(foundClient));
     }
 
     @Test
@@ -148,7 +138,7 @@ public class ClientRepositoryTest {
         Client foundClient = clientRepositoryForTests.findAll().get(0);
         assertNotNull(foundClient);
         foundClient.setClientName("");
-        assertThrows(RepositoryUpdateException.class, () -> clientRepositoryForTests.update(foundClient));
+        assertThrows(RepositoryUpdateException.class, () -> clientRepositoryForTests.updateAllFields(foundClient));
     }
 
     @Test
@@ -157,7 +147,7 @@ public class ClientRepositoryTest {
         Client foundClient = clientRepositoryForTests.findAll().get(0);
         assertNotNull(foundClient);
         foundClient.setClientName(newName);
-        assertThrows(RepositoryUpdateException.class, () -> clientRepositoryForTests.update(foundClient));
+        assertThrows(RepositoryUpdateException.class, () -> clientRepositoryForTests.updateAllFields(foundClient));
     }
 
     @Test
@@ -165,7 +155,7 @@ public class ClientRepositoryTest {
         Client foundClient = clientRepositoryForTests.findAll().get(0);
         assertNotNull(foundClient);
         foundClient.setClientSurname(null);
-        assertThrows(RepositoryUpdateException.class, () -> clientRepositoryForTests.update(foundClient));
+        assertThrows(RepositoryUpdateException.class, () -> clientRepositoryForTests.updateAllFields(foundClient));
     }
 
     @Test
@@ -173,7 +163,7 @@ public class ClientRepositoryTest {
         Client foundClient = clientRepositoryForTests.findAll().get(0);
         assertNotNull(foundClient);
         foundClient.setClientSurname("");
-        assertThrows(RepositoryUpdateException.class, () -> clientRepositoryForTests.update(foundClient));
+        assertThrows(RepositoryUpdateException.class, () -> clientRepositoryForTests.updateAllFields(foundClient));
     }
 
     @Test
@@ -182,7 +172,7 @@ public class ClientRepositoryTest {
         Client foundClient = clientRepositoryForTests.findAll().get(0);
         assertNotNull(foundClient);
         foundClient.setClientSurname(newSurname);
-        assertThrows(RepositoryUpdateException.class, () -> clientRepositoryForTests.update(foundClient));
+        assertThrows(RepositoryUpdateException.class, () -> clientRepositoryForTests.updateAllFields(foundClient));
     }
 
     @Test
@@ -190,7 +180,7 @@ public class ClientRepositoryTest {
         Client foundClient = clientRepositoryForTests.findAll().get(0);
         assertNotNull(foundClient);
         foundClient.setClientAge(17);
-        assertThrows(RepositoryUpdateException.class, () -> clientRepositoryForTests.update(foundClient));
+        assertThrows(RepositoryUpdateException.class, () -> clientRepositoryForTests.updateAllFields(foundClient));
     }
 
     @Test
@@ -198,7 +188,7 @@ public class ClientRepositoryTest {
         Client foundClient = clientRepositoryForTests.findAll().get(0);
         assertNotNull(foundClient);
         foundClient.setClientAge(121);
-        assertThrows(RepositoryUpdateException.class, () -> clientRepositoryForTests.update(foundClient));
+        assertThrows(RepositoryUpdateException.class, () -> clientRepositoryForTests.updateAllFields(foundClient));
     }
 
     @Test
@@ -209,8 +199,9 @@ public class ClientRepositoryTest {
         int numberOfClientsAfterDelete = clientRepositoryForTests.findAll().size();
         assertNotEquals(numberOfClientsBeforeDelete, numberOfClientsAfterDelete);
         assertEquals(numberOfClientsBeforeDelete - 1, numberOfClientsAfterDelete);
-        Client foundClient = clientRepositoryForTests.findByUUID(removedClientUUID);
-        assertNull(foundClient);
+        assertThrows(ClientRepositoryReadException.class, () -> {
+            Client foundClient = clientRepositoryForTests.findByUUID(removedClientUUID);
+        });
     }
 
     @Test
@@ -257,8 +248,9 @@ public class ClientRepositoryTest {
     public void findCertainClientTestNegative() {
         Client newClient = new Client(UUID.randomUUID(), "Stefania", "Czarnecka", 80);
         assertNotNull(newClient);
-        Client foundClient = clientRepositoryForTests.findByUUID(newClient.getClientID());
-        assertNull(foundClient);
+        assertThrows(ClientRepositoryReadException.class, () -> {
+            Client foundClient = clientRepositoryForTests.findByUUID(newClient.getClientID());
+        });
     }
 
     @Test

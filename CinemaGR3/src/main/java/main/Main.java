@@ -1,8 +1,5 @@
 package main;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import model.Client;
 import model.Movie;
 import model.ScreeningRoom;
@@ -15,14 +12,13 @@ import java.util.Date;
 import java.util.List;
 
 public class Main {
-    public static void main(String[] args) {
-        EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("test");
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
 
-        ClientRepository clientRepository = new ClientRepository(entityManager);
-        ScreeningRoomRepository screeningRoomRepository = new ScreeningRoomRepository(entityManager);
-        MovieRepository movieRepository = new MovieRepository(entityManager);
-        TicketRepository ticketRepository = new TicketRepository(entityManager);
+    public static void main(String[] args) {
+        String databaseName = "cinema";
+        ClientRepository clientRepository = new ClientRepository(databaseName);
+        ScreeningRoomRepository screeningRoomRepository = new ScreeningRoomRepository(databaseName);
+        MovieRepository movieRepository = new MovieRepository(databaseName);
+        TicketRepository ticketRepository = new TicketRepository(databaseName);
 
         ClientManager clientManager = new ClientManager(clientRepository);
         ScreeningRoomManager screeningRoomManager = new ScreeningRoomManager(screeningRoomRepository);
@@ -108,8 +104,9 @@ public class Main {
             System.out.println(screeningRoom.getScreeningRoomInfo());
         }
 
-        if (entityManagerFactory != null) {
-            entityManagerFactory.close();
-        }
+        ticketRepository.close();
+        clientRepository.close();
+        movieRepository.close();
+        screeningRoomRepository.close();
     }
 }

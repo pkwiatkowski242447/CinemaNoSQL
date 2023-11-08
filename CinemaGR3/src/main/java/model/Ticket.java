@@ -1,51 +1,27 @@
 package model;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import model.exceptions.model_exceptions.TicketReservationException;
 import model.ticket_types.Normal;
 import model.ticket_types.Reduced;
 import model.ticket_types.TypeOfTicket;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.Date;
 import java.util.UUID;
 
-@Entity
-@Table(name = "ticket")
 public class Ticket {
 
-    @Id
-    @Column(name = "ticket_id", nullable = false, unique = true)
-    private UUID ticketID;
-
-    @Column(name = "movie_time", nullable = false)
-    private Date movieTime;
-
-    @Column(name = "reservation_time", nullable = false)
-    private Date reservationTime;
-
-    @Column(name = "ticket_status_active", nullable = false)
+    private final UUID ticketID;
+    private final Date movieTime;
+    private final Date reservationTime;
     private boolean ticketStatusActive;
-
-    @Column(name = "ticket_final_price", nullable = false)
-    private double ticketFinalPrice;
-
-    @ManyToOne
-    @NotNull
-    private Movie movie;
-
-    @ManyToOne
-    @NotNull
-    private Client client;
-
-    @ManyToOne
-    @NotNull
+    private final double ticketFinalPrice;
+    private final Movie movie;
+    private final Client client;
     private TypeOfTicket typeOfTicket;
 
     // Constructors
-
-    public Ticket() {
-    }
 
     public Ticket(UUID ticketID, Date movieTime, Date reservationTime, Movie movie, Client client, String typeOfTicket) throws TicketReservationException, NullPointerException{
         this.movie = movie;
@@ -65,19 +41,27 @@ public class Ticket {
 
         TypeOfTicket ticketType;
         try {
-            switch (typeOfTicket) {
-                case "reduced":
-                    ticketType = new Reduced(UUID.randomUUID());
-                    break;
-                default:
-                    ticketType = new Normal(UUID.randomUUID());
-            }
+            ticketType = switch (typeOfTicket) {
+                case "reduced" -> new Reduced(UUID.randomUUID());
+                default -> new Normal(UUID.randomUUID());
+            };
         } catch (NullPointerException exception) {
             throw new TicketReservationException("Ticket type was not entered correctly.");
         }
         this.typeOfTicket = ticketType;
         this.ticketFinalPrice = ticketType.applyDiscount(movie.getMovieBasePrice());
         this.ticketStatusActive = true;
+    }
+
+    public Ticket(UUID ticketID, Date movieTime, Date reservationTime, boolean ticketStatusActive, double ticketFinalPrice, Movie movie, Client client, TypeOfTicket typeOfTicket) {
+        this.ticketID = ticketID;
+        this.movieTime = movieTime;
+        this.reservationTime = reservationTime;
+        this.ticketStatusActive = ticketStatusActive;
+        this.ticketFinalPrice = ticketFinalPrice;
+        this.movie = movie;
+        this.client = client;
+        this.typeOfTicket = typeOfTicket;
     }
 
     // Getters
@@ -116,13 +100,12 @@ public class Ticket {
 
     // Setters
 
+    public void setTicketStatusActive(boolean ticketStatusActive) {
+        this.ticketStatusActive = ticketStatusActive;
+    }
 
     public void setTypeOfTicket(TypeOfTicket typeOfTicket) {
         this.typeOfTicket = typeOfTicket;
-    }
-
-    public void setTicketStatusActive(boolean ticketStatusActive) {
-        this.ticketStatusActive = ticketStatusActive;
     }
 
     // Other methods
@@ -143,5 +126,40 @@ public class Ticket {
         stringBuilder.append(" Final price of the ticket: ").append(this.ticketFinalPrice);
         stringBuilder.append(this.typeOfTicket.getTicketTypeInfo());
         return stringBuilder.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Ticket ticket = (Ticket) o;
+
+        return new EqualsBuilder()
+                .append(ticketID, ticket.ticketID)
+                .append(movieTime, ticket.movieTime)
+                .append(reservationTime, ticket.reservationTime)
+                .append(ticketStatusActive, ticket.ticketStatusActive)
+                .append(ticketFinalPrice, ticket.ticketFinalPrice)
+                .append(movie.getMovieID(), ticket.movie.getMovieID())
+                .append(movie.getScreeningRoom().getNumberOfAvailableSeats(), ticket.movie.getScreeningRoom().getNumberOfAvailableSeats())
+                .append(client, ticket.client)
+                .append(typeOfTicket, ticket.typeOfTicket)
+                .isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37)
+                .append(ticketID)
+                .append(movieTime)
+                .append(reservationTime)
+                .append(ticketStatusActive)
+                .append(ticketFinalPrice)
+                .append(movie)
+                .append(client)
+                .append(typeOfTicket.getClass())
+                .toHashCode();
     }
 }

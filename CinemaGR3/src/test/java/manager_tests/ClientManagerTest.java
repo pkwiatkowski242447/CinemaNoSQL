@@ -1,8 +1,5 @@
 package manager_tests;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import model.Client;
 import model.managers.ClientManager;
 import model.repositories.ClientRepository;
@@ -15,24 +12,19 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ClientManagerTest {
 
-    private static EntityManagerFactory entityManagerFactory;
-    private static EntityManager entityManager;
+    private final static String databaseName = "test";
     private static ClientRepository clientRepositoryForTests;
     private static ClientManager clientManagerForTests;
 
     @BeforeAll
     public static void init() {
-        entityManagerFactory = Persistence.createEntityManagerFactory("test");
-        entityManager = entityManagerFactory.createEntityManager();
-        clientRepositoryForTests = new ClientRepository(entityManager);
+        clientRepositoryForTests = new ClientRepository(databaseName);
         clientManagerForTests = new ClientManager(clientRepositoryForTests);
     }
 
     @AfterAll
     public static void destroy() {
-        if (entityManagerFactory != null) {
-            entityManagerFactory.close();
-        }
+        clientRepositoryForTests.close();
     }
 
     @BeforeEach
@@ -62,23 +54,26 @@ public class ClientManagerTest {
 
     @Test
     public void createClientManagerTest() {
-        ClientRepository clientRepository = new ClientRepository(entityManager);
+        ClientRepository clientRepository = new ClientRepository(databaseName);
         assertNotNull(clientRepository);
         ClientManager clientManager = new ClientManager(clientRepository);
         assertNotNull(clientManager);
+        clientRepository.close();
     }
 
     @Test
     public void setClientRepositoryForClientManagerTest() {
-        ClientRepository clientRepositoryNo1 = new ClientRepository(entityManager);
+        ClientRepository clientRepositoryNo1 = new ClientRepository(databaseName);
         assertNotNull(clientRepositoryNo1);
-        ClientRepository clientRepositoryNo2 = new ClientRepository(entityManager);
+        ClientRepository clientRepositoryNo2 = new ClientRepository(databaseName);
         assertNotNull(clientRepositoryNo2);
         ClientManager clientManager = new ClientManager(clientRepositoryNo1);
         assertNotNull(clientManager);
         clientManager.setClientRepository(clientRepositoryNo2);
         assertNotEquals(clientRepositoryNo1, clientManager.getClientRepository());
         assertEquals(clientRepositoryNo2, clientManager.getClientRepository());
+        clientRepositoryNo1.close();
+        clientRepositoryNo2.close();
     }
 
     @Test

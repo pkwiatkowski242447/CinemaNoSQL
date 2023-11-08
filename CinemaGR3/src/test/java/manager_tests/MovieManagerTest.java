@@ -1,8 +1,5 @@
 package manager_tests;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
 import model.Movie;
 import model.ScreeningRoom;
 import model.managers.MovieManager;
@@ -18,8 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class MovieManagerTest {
 
-    private static EntityManagerFactory entityManagerFactory;
-    private static EntityManager entityManager;
+    private final static String databaseName = "test";
     private static MovieRepository movieRepositoryForTests;
     private static ScreeningRoomRepository screeningRoomRepositoryForTests;
     private static MovieManager movieManagerForTests;
@@ -27,19 +23,16 @@ public class MovieManagerTest {
 
     @BeforeAll
     public static void init() {
-        entityManagerFactory = Persistence.createEntityManagerFactory("test");
-        entityManager = entityManagerFactory.createEntityManager();
-        movieRepositoryForTests = new MovieRepository(entityManager);
-        screeningRoomRepositoryForTests = new ScreeningRoomRepository(entityManager);
+        movieRepositoryForTests = new MovieRepository(databaseName);
+        screeningRoomRepositoryForTests = new ScreeningRoomRepository(databaseName);
         movieManagerForTests = new MovieManager(movieRepositoryForTests);
         screeningRoomManagerForTests = new ScreeningRoomManager(screeningRoomRepositoryForTests);
     }
 
     @AfterAll
     public static void destroy() {
-        if (entityManagerFactory != null) {
-            entityManagerFactory.close();
-        }
+        movieRepositoryForTests.close();
+        screeningRoomRepositoryForTests.close();
     }
 
     @BeforeEach
@@ -84,7 +77,7 @@ public class MovieManagerTest {
 
     @Test
     public void createMovieManagerTest() {
-        MovieRepository movieRepository = new MovieRepository(entityManager);
+        MovieRepository movieRepository = new MovieRepository(databaseName);
         assertNotNull(movieRepository);
         MovieManager movieManager = new MovieManager(movieRepository);
         assertNotNull(movieManager);
@@ -92,15 +85,17 @@ public class MovieManagerTest {
 
     @Test
     public void setMovieRepositoryForMovieManagerTest() {
-        MovieRepository movieRepositoryNo1 = new MovieRepository(entityManager);
+        MovieRepository movieRepositoryNo1 = new MovieRepository(databaseName);
         assertNotNull(movieRepositoryNo1);
-        MovieRepository movieRepositoryNo2 = new MovieRepository(entityManager);
+        MovieRepository movieRepositoryNo2 = new MovieRepository(databaseName);
         assertNotNull(movieRepositoryNo2);
         MovieManager movieManager = new MovieManager(movieRepositoryNo1);
         assertNotNull(movieManager);
         movieManager.setMovieRepository(movieRepositoryNo2);
         assertNotEquals(movieRepositoryNo1, movieManager.getMovieRepository());
         assertEquals(movieRepositoryNo2, movieManager.getMovieRepository());
+        movieRepositoryNo1.close();
+        movieRepositoryNo2.close();
     }
 
     @Test
