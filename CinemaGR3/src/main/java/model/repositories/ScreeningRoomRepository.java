@@ -5,8 +5,8 @@ import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
 import com.mongodb.client.model.ValidationOptions;
+import mapping_layer.mappers.ScreeningRoomMapper;
 import mapping_layer.model_docs.ScreeningRoomDoc;
 import model.ScreeningRoom;
 import model.exceptions.model_docs_exceptions.ScreeningRoomDocNotFoundException;
@@ -84,7 +84,7 @@ public class ScreeningRoomRepository extends MongoRepository<ScreeningRoom> {
         ScreeningRoom screeningRoom;
         try {
             screeningRoom = new ScreeningRoom(UUID.randomUUID(), screeningRoomFloor, screeningRoomNumber, numberOfSeats);
-            ScreeningRoomDoc screeningRoomDoc = new ScreeningRoomDoc(screeningRoom);
+            ScreeningRoomDoc screeningRoomDoc = ScreeningRoomMapper.toScreeningRoomDoc(screeningRoom);
             MongoCollection<ScreeningRoomDoc> screeningRoomDocCollection = mongoDatabase.getCollection(this.screeningRoomCollectionName, this.screeningRoomCollectionType);
             screeningRoomDocCollection.insertOne(screeningRoomDoc);
         } catch (MongoException exception) {
@@ -96,14 +96,10 @@ public class ScreeningRoomRepository extends MongoRepository<ScreeningRoom> {
     @Override
     public void updateAllFields(ScreeningRoom screeningRoom) {
         try {
-            ScreeningRoomDoc screeningRoomDoc = new ScreeningRoomDoc(screeningRoom);
+            ScreeningRoomDoc screeningRoomDoc = ScreeningRoomMapper.toScreeningRoomDoc(screeningRoom);
             MongoCollection<ScreeningRoomDoc> screeningRoomDocCollection = mongoDatabase.getCollection(this.screeningRoomCollectionName, this.screeningRoomCollectionType);
             Bson filter =  Filters.eq("_id", screeningRoom.getScreeningRoomID());
-            Bson updateAllFields = Updates.combine(
-                    Updates.set("number_of_available_seats", screeningRoomDoc.getNumberOfAvailableSeats()),
-                    Updates.set("screening_room_active_status", screeningRoom.isScreeningRoomStatusActive())
-            );
-            ScreeningRoomDoc updatedScreeningRoomDoc = screeningRoomDocCollection.findOneAndUpdate(filter, updateAllFields);
+            ScreeningRoomDoc updatedScreeningRoomDoc = screeningRoomDocCollection.findOneAndReplace(filter, screeningRoomDoc);
             if (updatedScreeningRoomDoc == null) {
                 throw new ScreeningRoomDocNotFoundException("Document for given screening room object could not be updated, since it is not in the database.");
             }
@@ -131,7 +127,10 @@ public class ScreeningRoomRepository extends MongoRepository<ScreeningRoom> {
         try {
             MongoCollection<ScreeningRoomDoc> screeningRoomDocCollection = mongoDatabase.getCollection(this.screeningRoomCollectionName, this.screeningRoomCollectionType);
             Bson filter = Filters.eq("_id", screeningRoomID);
-            screeningRoomDocCollection.findOneAndDelete(filter);
+            ScreeningRoomDoc removedScreeningRoomDoc = screeningRoomDocCollection.findOneAndDelete(filter);
+            if (removedScreeningRoomDoc == null) {
+                throw new ScreeningRoomDocNotFoundException("Document for given screening room object could not be deleted, since it is not in the database.");
+            }
         } catch (MongoException exception) {
             throw new ScreeningRoomRepositoryDeleteException(exception.getMessage(), exception);
         }
@@ -141,16 +140,10 @@ public class ScreeningRoomRepository extends MongoRepository<ScreeningRoom> {
     public void expire(ScreeningRoom screeningRoom) {
         try {
             screeningRoom.setScreeningRoomStatusActive(false);
-            ScreeningRoomDoc screeningRoomDoc = new ScreeningRoomDoc(screeningRoom);
+            ScreeningRoomDoc screeningRoomDoc = ScreeningRoomMapper.toScreeningRoomDoc(screeningRoom);
             MongoCollection<ScreeningRoomDoc> screeningRoomDocCollection = mongoDatabase.getCollection(this.screeningRoomCollectionName, this.screeningRoomCollectionType);
             Bson filter = Filters.eq("_id", screeningRoom.getScreeningRoomID());
-            Bson updateAllFields = Updates.combine(
-                    Updates.set("screening_room_floor", screeningRoomDoc.getScreeningRoomFloor()),
-                    Updates.set("screening_room_number", screeningRoomDoc.getScreeningRoomNumber()),
-                    Updates.set("number_of_available_seats", screeningRoomDoc.getNumberOfAvailableSeats()),
-                    Updates.set("screening_room_status_active", screeningRoom.isScreeningRoomStatusActive())
-            );
-            ScreeningRoomDoc expiredScreeningRoomDoc = screeningRoomDocCollection.findOneAndUpdate(filter, updateAllFields);
+            ScreeningRoomDoc expiredScreeningRoomDoc = screeningRoomDocCollection.findOneAndReplace(filter, screeningRoomDoc);
             if (expiredScreeningRoomDoc == null) {
                 throw new ScreeningRoomDocNotFoundException("Document for given screening room object could not be expired, since it is not in the database.");
             }
@@ -167,11 +160,7 @@ public class ScreeningRoomRepository extends MongoRepository<ScreeningRoom> {
             Bson filter = Filters.eq("_id", identifier);
             ScreeningRoomDoc screeningRoomDoc = screeningRoomDocCollection.find(filter).first();
             if (screeningRoomDoc != null) {
-                screeningRoom = new ScreeningRoom(screeningRoomDoc.getScreeningRoomID(),
-                        screeningRoomDoc.getScreeningRoomFloor(),
-                        screeningRoomDoc.getScreeningRoomNumber(),
-                        screeningRoomDoc.getNumberOfAvailableSeats(),
-                        screeningRoomDoc.isScreeningRoomStatusActive());
+                screeningRoom = ScreeningRoomMapper.toScreeningRoom(screeningRoomDoc);
             } else {
                 throw new ScreeningRoomDocNotFoundException("Document for screening room object with given UUID could not be read, since it is not in the database.");
             }
@@ -190,11 +179,7 @@ public class ScreeningRoomRepository extends MongoRepository<ScreeningRoom> {
             FindIterable<ScreeningRoomDoc> foundScreeningRoomDocs = screeningRoomDocCollection.find(filter);
             listOfAllScreeningRooms = new ArrayList<>();
             for (ScreeningRoomDoc screeningRoomDoc : foundScreeningRoomDocs) {
-                ScreeningRoom screeningRoom = new ScreeningRoom(screeningRoomDoc.getScreeningRoomID(),
-                        screeningRoomDoc.getScreeningRoomFloor(),
-                        screeningRoomDoc.getScreeningRoomNumber(),
-                        screeningRoomDoc.getNumberOfAvailableSeats(),
-                        screeningRoomDoc.isScreeningRoomStatusActive());
+                ScreeningRoom screeningRoom = ScreeningRoomMapper.toScreeningRoom(screeningRoomDoc);
                 listOfAllScreeningRooms.add(screeningRoom);
             }
         } catch (MongoException exception) {
@@ -212,11 +197,7 @@ public class ScreeningRoomRepository extends MongoRepository<ScreeningRoom> {
             FindIterable<ScreeningRoomDoc> foundScreeningRoomDocs = screeningRoomDocCollection.find(filter);
             listOfAllActiveScreeningRooms = new ArrayList<>();
             for (ScreeningRoomDoc screeningRoomDoc : foundScreeningRoomDocs) {
-                ScreeningRoom screeningRoom = new ScreeningRoom(screeningRoomDoc.getScreeningRoomID(),
-                        screeningRoomDoc.getScreeningRoomFloor(),
-                        screeningRoomDoc.getScreeningRoomNumber(),
-                        screeningRoomDoc.getNumberOfAvailableSeats(),
-                        screeningRoomDoc.isScreeningRoomStatusActive());
+                ScreeningRoom screeningRoom = ScreeningRoomMapper.toScreeningRoom(screeningRoomDoc);
                 listOfAllActiveScreeningRooms.add(screeningRoom);
             }
         } catch (MongoException exception) {

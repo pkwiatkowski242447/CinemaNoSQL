@@ -1,28 +1,31 @@
 package mapping_layer.model_docs;
 
-import model.Movie;
-import model.exceptions.model_docs_exceptions.ScreeningRoomNullException;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.bson.codecs.pojo.annotations.BsonCreator;
 import org.bson.codecs.pojo.annotations.BsonProperty;
 
 import java.util.UUID;
 
+@Getter @Setter
+@NoArgsConstructor
 public class MovieDoc {
 
     @BsonProperty("_id")
-    private final UUID movieID;
+    private UUID movieID;
 
     @BsonProperty("movie_title")
-    private final String movieTitle;
+    private String movieTitle;
 
     @BsonProperty("movie_status_active")
-    private final boolean movieStatusActive;
+    private boolean movieStatusActive;
 
     @BsonProperty("movie_base_price")
-    private final double movieBasePrice;
+    private double movieBasePrice;
 
     @BsonProperty("screening_room_ref")
-    private final UUID screeningRoomID;
+    private UUID screeningRoomID;
 
     // Constructor
 
@@ -37,39 +40,5 @@ public class MovieDoc {
         this.movieStatusActive = movieStatusActive;
         this.movieBasePrice = movieBasePrice;
         this.screeningRoomID = screeningRoomID;
-    }
-
-    public MovieDoc(Movie movie) {
-        this.movieID = movie.getMovieID();
-        this.movieTitle = movie.getMovieTitle();
-        this.movieBasePrice = movie.getMovieBasePrice();
-        this.movieStatusActive = movie.isMovieStatusActive();
-        if (movie.getScreeningRoom() != null) {
-            this.screeningRoomID = movie.getScreeningRoom().getScreeningRoomID();
-        } else {
-            throw new ScreeningRoomNullException("Reference to the screening room object is null.");
-        }
-    }
-
-    // Getters
-
-    public UUID getMovieID() {
-        return movieID;
-    }
-
-    public String getMovieTitle() {
-        return movieTitle;
-    }
-
-    public boolean isMovieStatusActive() {
-        return movieStatusActive;
-    }
-
-    public double getMovieBasePrice() {
-        return movieBasePrice;
-    }
-
-    public UUID getScreeningRoomID() {
-        return screeningRoomID;
     }
 }

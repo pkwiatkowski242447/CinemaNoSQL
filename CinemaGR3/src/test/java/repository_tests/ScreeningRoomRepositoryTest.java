@@ -1,6 +1,8 @@
 package repository_tests;
 
+import mapping_layer.model_docs.ScreeningRoomDoc;
 import model.ScreeningRoom;
+import model.exceptions.model_docs_exceptions.ScreeningRoomDocNotFoundException;
 import model.exceptions.repository_exceptions.*;
 import model.repositories.ScreeningRoomRepository;
 import org.junit.jupiter.api.*;
@@ -145,10 +147,17 @@ public class ScreeningRoomRepositoryTest {
     }
 
     @Test
-    public void deleteCertainScreeningRoomTestNegative() {
+    public void deleteCertainScreeningRoomThatIsNotInTheDatabaseTestNegative() {
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0 , 6, 90);
         assertNotNull(screeningRoom);
         assertThrows(ScreeningRoomRepositoryDeleteException.class, () -> screeningRoomRepositoryForTests.delete(screeningRoom));
+    }
+
+    @Test
+    public void deleteCertainScreeningRoomWithUUIDThatIsNotInTheDatabaseTestNegative() {
+        ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0 , 6, 90);
+        assertNotNull(screeningRoom);
+        assertThrows(ScreeningRoomRepositoryDeleteException.class, () -> screeningRoomRepositoryForTests.delete(screeningRoom.getScreeningRoomID()));
     }
 
     @Test
@@ -209,5 +218,27 @@ public class ScreeningRoomRepositoryTest {
         assertNotNull(endingListOfScreeningRooms);
         assertEquals(startingListOfScreeningRooms.size(), 3);
         assertEquals(endingListOfScreeningRooms.size(), 2);
+    }
+
+    // Other
+
+    @Test
+    public void mongoRepositoryFindScreeningRoomDocTestPositive() {
+        ScreeningRoomDoc screeningRoomDoc = screeningRoomRepositoryForTests.findScreeningRoomDoc(screeningRoomNo1.getScreeningRoomID());
+        assertNotNull(screeningRoomDoc);
+        assertEquals(screeningRoomDoc.getScreeningRoomID(), screeningRoomNo1.getScreeningRoomID());
+        assertEquals(screeningRoomDoc.getScreeningRoomFloor(), screeningRoomNo1.getScreeningRoomFloor());
+        assertEquals(screeningRoomDoc.getScreeningRoomNumber(), screeningRoomNo1.getScreeningRoomNumber());
+        assertEquals(screeningRoomDoc.getNumberOfAvailableSeats(), screeningRoomNo1.getNumberOfAvailableSeats());
+        assertEquals(screeningRoomDoc.isScreeningRoomStatusActive(), screeningRoomNo1.isScreeningRoomStatusActive());
+    }
+
+    @Test
+    public void mongoRepositoryFindScreeningRoomDocTestNegative() {
+        ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 1, 2, 45);
+        assertNotNull(screeningRoom);
+        assertThrows(ScreeningRoomDocNotFoundException.class, () -> {
+            screeningRoomRepositoryForTests.findScreeningRoomDoc(screeningRoom.getScreeningRoomID());
+        });
     }
 }

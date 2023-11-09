@@ -1,6 +1,8 @@
 package repository_tests;
 
+import mapping_layer.model_docs.ClientDoc;
 import model.Client;
+import model.exceptions.model_docs_exceptions.ClientDocNotFoundException;
 import model.exceptions.repository_exceptions.*;
 import model.repositories.ClientRepository;
 import org.junit.jupiter.api.*;
@@ -205,10 +207,17 @@ public class ClientRepositoryTest {
     }
 
     @Test
-    public void deleteCertainClientTestNegative() {
+    public void deleteCertainClientThatIsNotInTheDatabaseTestNegative() {
         Client newClient = new Client(UUID.randomUUID(), "Stefania", "Czarnecka", 80);
         assertNotNull(newClient);
         assertThrows(ClientRepositoryDeleteException.class, () -> clientRepositoryForTests.delete(newClient));
+    }
+
+    @Test
+    public void deleteCertainClientWithUUIDThatIsNotInTheDatabaseTestNegative() {
+        Client newClient = new Client(UUID.randomUUID(), "Stefania", "Czarnecka", 80);
+        assertNotNull(newClient);
+        assertThrows(ClientRepositoryDeleteException.class, () -> clientRepositoryForTests.delete(newClient.getClientID()));
     }
 
     @Test
@@ -269,5 +278,27 @@ public class ClientRepositoryTest {
         assertNotNull(endingListOfClients);
         assertEquals(startingListOfClients.size(), 3);
         assertEquals(endingListOfClients.size(), 2);
+    }
+
+    // Other
+
+    @Test
+    public void mongoRepositoryFindClientDocTestPositive() {
+        ClientDoc clientDoc = clientRepositoryForTests.findClientDoc(clientNo1.getClientID());
+        assertNotNull(clientDoc);
+        assertEquals(clientDoc.getClientID(), clientNo1.getClientID());
+        assertEquals(clientDoc.getClientName(), clientNo1.getClientName());
+        assertEquals(clientDoc.getClientSurname(), clientNo1.getClientSurname());
+        assertEquals(clientDoc.getClientAge(), clientNo1.getClientAge());
+        assertEquals(clientDoc.isClientStatusActive(), clientNo1.isClientStatusActive());
+    }
+
+    @Test
+    public void mongoRepositoryFindClientDocTestNegative() {
+        Client client = new Client(UUID.randomUUID(), "SomeName", "SomeSurname", 40);
+        assertNotNull(client);
+        assertThrows(ClientDocNotFoundException.class, () -> {
+            clientRepositoryForTests.findClientDoc(client.getClientID());
+        });
     }
 }

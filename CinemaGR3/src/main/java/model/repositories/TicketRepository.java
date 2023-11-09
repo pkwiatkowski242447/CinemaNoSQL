@@ -2,22 +2,20 @@ package model.repositories;
 
 import com.mongodb.MongoException;
 import com.mongodb.client.ClientSession;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.model.ValidationOptions;
+import mapping_layer.mappers.TicketMapper;
+import mapping_layer.mappers.TypeOfTicketMapper;
 import mapping_layer.model_docs.ClientDoc;
 import mapping_layer.model_docs.MovieDoc;
 import mapping_layer.model_docs.ScreeningRoomDoc;
 import mapping_layer.model_docs.TicketDoc;
-import mapping_layer.model_docs.ticket_types.NormalDoc;
-import mapping_layer.model_docs.ticket_types.ReducedDoc;
 import mapping_layer.model_docs.ticket_types.TypeOfTicketDoc;
 import model.Client;
 import model.Movie;
-import model.ScreeningRoom;
 import model.Ticket;
 import model.exceptions.model_docs_exceptions.*;
 import model.exceptions.model_exceptions.TicketReservationException;
@@ -25,7 +23,6 @@ import model.exceptions.repository_exceptions.TicketRepositoryCreateException;
 import model.exceptions.repository_exceptions.TicketRepositoryDeleteException;
 import model.exceptions.repository_exceptions.TicketRepositoryReadException;
 import model.exceptions.repository_exceptions.TicketRepositoryUpdateException;
-import model.ticket_types.Normal;
 import model.ticket_types.Reduced;
 import model.ticket_types.TypeOfTicket;
 import org.bson.Document;
@@ -110,9 +107,8 @@ public class TicketRepository extends MongoRepository<Ticket> {
 
     public Ticket create(Date movieTime, Date reservationTime, Movie movie, Client client, String typeOfTicket) {
         Ticket ticket;
-        ClientSession session = mongoClient.startSession();
-        try {
-            session.startTransaction();
+        try(ClientSession clientSession = mongoClient.startSession()) {
+            clientSession.startTransaction();
             // Creating new ticket object.
             ticket = new Ticket(UUID.randomUUID(), movieTime, reservationTime, movie, client, typeOfTicket);
 
@@ -123,18 +119,17 @@ public class TicketRepository extends MongoRepository<Ticket> {
 
             if (ticket.getTicketType().getClass().equals(Reduced.class)) {
                 className = "reduced";
-                typeOfTicketDoc = new ReducedDoc(ticket.getTicketType().getTicketTypeID());
             } else {
                 className = "normal";
-                typeOfTicketDoc = new NormalDoc(ticket.getTicketType().getTicketTypeID());
             }
+            typeOfTicketDoc = TypeOfTicketMapper.toTypeOfTicketDoc(ticket.getTicketType());
 
             Bson filter = Filters.eq("_clazz", className);
 
             try {
                 TypeOfTicketDoc foundTypeOfTicketDoc = typeOfTicketDocCollection.find(filter).first();
                 if (foundTypeOfTicketDoc != null) {
-                    TypeOfTicket ticketType = this.findTypeOfTicket(foundTypeOfTicketDoc.getTypeOfTicketID());
+                    TypeOfTicket ticketType = TypeOfTicketMapper.toTypeOfTicket(foundTypeOfTicketDoc, this.findTypeOfTicket(foundTypeOfTicketDoc));
                     ticket.setTypeOfTicket(ticketType);
                 } else {
                     typeOfTicketDocCollection.insertOne(typeOfTicketDoc);
@@ -144,20 +139,17 @@ public class TicketRepository extends MongoRepository<Ticket> {
             }
 
             // From ticket object ticketDoc object is created (basically it represents ticket object in form of a document).
-            TicketDoc ticketDoc = new TicketDoc(ticket);
+            TicketDoc ticketDoc = TicketMapper.toTicketDoc(ticket);
             MongoCollection<TicketDoc> ticketDocCollection = mongoDatabase.getCollection(this.ticketCollectionName, this.ticketCollectionType);
             ticketDocCollection.insertOne(ticketDoc);
 
             MongoCollection<ScreeningRoomDoc> screeningRoomDocCollection = mongoDatabase.getCollection(this.screeningRoomCollectionName, this.screeningRoomCollectionType);
             filter = Filters.eq("_id", ticket.getMovie().getScreeningRoom().getScreeningRoomID());
-            Bson updateNumOfSeats = Updates.inc("number_of_available_seats", -1);
-            screeningRoomDocCollection.findOneAndUpdate(filter, updateNumOfSeats);
-            session.commitTransaction();
+            Bson update = Updates.inc("number_of_available_seats", -1);
+            screeningRoomDocCollection.findOneAndUpdate(filter, update);
+            clientSession.commitTransaction();
         } catch (MongoException | TicketReservationException | NullReferenceException exception) {
-            session.abortTransaction();
             throw new TicketRepositoryCreateException(exception.getMessage(), exception);
-        } finally {
-            session.close();
         }
         return ticket;
     }
@@ -165,11 +157,10 @@ public class TicketRepository extends MongoRepository<Ticket> {
     @Override
     public void updateAllFields(Ticket ticket) {
         try {
-            TicketDoc ticketDoc = new TicketDoc(ticket);
+            TicketDoc ticketDoc = TicketMapper.toTicketDoc(ticket);
             MongoCollection<TicketDoc> ticketDocCollection = mongoDatabase.getCollection(this.ticketCollectionName, this.ticketCollectionType);
             Bson filter = Filters.eq("_id", ticket.getTicketID());
-            Bson updateAlLFields = Updates.set("ticket_status_active", ticketDoc.isTicketStatusActive());
-            TicketDoc updatedTicketDoc = ticketDocCollection.findOneAndUpdate(filter, updateAlLFields);
+            TicketDoc updatedTicketDoc = ticketDocCollection.findOneAndReplace(filter, ticketDoc);
             if (updatedTicketDoc == null) {
                 throw new TicketDocNotFoundException("Document for given ticket object could not be updated, since it is not in the database.");
             }
@@ -180,24 +171,28 @@ public class TicketRepository extends MongoRepository<Ticket> {
 
     @Override
     public void delete(Ticket ticket) {
-        try {
-            MongoCollection<TicketDoc> ticketDocCollection = mongoDatabase.getCollection(this.ticketCollectionName, this.ticketCollectionType);
-            Bson filter = Filters.eq("_id", ticket.getTicketID());
-            TicketDoc removedTicketDoc = ticketDocCollection.findOneAndDelete(filter);
-            if (removedTicketDoc == null) {
-                throw new TicketDocNotFoundException("Document for given ticket object could not be deleted, since it is not in the database.");
-            }
-        } catch (MongoException exception) {
-            throw new TicketRepositoryDeleteException(exception.getMessage(), exception);
-        }
+        this.delete(ticket.getTicketID());
     }
 
     @Override
     public void delete(UUID ticketID) {
-        try {
+        try(ClientSession clientSession = mongoClient.startSession()) {
+            clientSession.startTransaction();
             MongoCollection<TicketDoc> ticketDocCollection = mongoDatabase.getCollection(this.ticketCollectionName, this.ticketCollectionType);
             Bson filter = Filters.eq("_id", ticketID);
-            ticketDocCollection.findOneAndDelete(filter);
+            TicketDoc removedTicketDoc = ticketDocCollection.findOneAndDelete(filter);
+            if (removedTicketDoc == null) {
+                throw new TicketDocNotFoundException("Document for given ticket object could not be deleted, since it is not in the database.");
+            }
+            MovieDoc foundMovieDoc = findMovieDoc(removedTicketDoc.getMovieID());
+            MongoCollection<ScreeningRoomDoc> screeningRoomCollection = mongoDatabase.getCollection(screeningRoomCollectionName, screeningRoomCollectionType);
+            Bson screeningRoomFilter = Filters.eq("_id", foundMovieDoc.getScreeningRoomID());
+            Bson updates = Updates.inc("number_of_available_seats", 1);
+            ScreeningRoomDoc updatedScreeningRoom = screeningRoomCollection.findOneAndUpdate(screeningRoomFilter, updates);
+            if (updatedScreeningRoom == null) {
+                throw new ScreeningRoomDocNotFoundException("Document for screening room object for given ticket object could not be found in the database.");
+            }
+            clientSession.commitTransaction();
         } catch (MongoException exception) {
             throw new TicketRepositoryDeleteException(exception.getMessage(), exception);
         }
@@ -205,16 +200,25 @@ public class TicketRepository extends MongoRepository<Ticket> {
 
     @Override
     public void expire(Ticket ticket) {
-        try {
+        try(ClientSession clientSession = mongoClient.startSession()) {
+            clientSession.startTransaction();
             ticket.setTicketStatusActive(false);
-            TicketDoc ticketDoc = new TicketDoc(ticket);
+            TicketDoc ticketDoc = TicketMapper.toTicketDoc(ticket);
             MongoCollection<TicketDoc> ticketDocCollection = mongoDatabase.getCollection(this.ticketCollectionName, this.ticketCollectionType);
             Bson filter = Filters.eq("_id", ticketDoc.getTicketID());
-            Bson updateAllFields = Updates.set("ticket_status_active", false);
-            TicketDoc expiredTicketDoc = ticketDocCollection.findOneAndUpdate(filter, updateAllFields);
+            TicketDoc expiredTicketDoc = ticketDocCollection.findOneAndReplace(filter, ticketDoc);
             if (expiredTicketDoc == null) {
                 throw new TicketDocNotFoundException("Document for given ticket object could not be expired, since it is not in the database.");
             }
+            MovieDoc foundMovieDoc = findMovieDoc(expiredTicketDoc.getMovieID());
+            MongoCollection<ScreeningRoomDoc> screeningRoomCollection = mongoDatabase.getCollection(screeningRoomCollectionName, screeningRoomCollectionType);
+            Bson screeningRoomFilter = Filters.eq("_id", foundMovieDoc.getScreeningRoomID());
+            Bson updates = Updates.inc("number_of_available_seats", 1);
+            ScreeningRoomDoc updatedScreeningRoom = screeningRoomCollection.findOneAndUpdate(screeningRoomFilter, updates);
+            if (updatedScreeningRoom == null) {
+                throw new ScreeningRoomDocNotFoundException("Document for screening room object for given ticket object could not be found in the database.");
+            }
+            clientSession.commitTransaction();
         } catch (MongoException exception) {
             throw new TicketRepositoryDeleteException(exception.getMessage(), exception);
         }
@@ -228,18 +232,7 @@ public class TicketRepository extends MongoRepository<Ticket> {
             Bson filter = Filters.eq("_id", identifier);
             TicketDoc ticketDoc = ticketDocCollection.find(filter).first();
             if (ticketDoc != null) {
-                Client foundClient = this.findClient(ticketDoc.getClientID());
-                Movie foundMovie = this.findMovie(ticketDoc.getMovieID());
-                TypeOfTicket ticketType = this.findTypeOfTicket(ticketDoc.getTypeOfTicketID());
-
-                ticket = new Ticket(ticketDoc.getTicketID(),
-                        ticketDoc.getMovieTime(),
-                        ticketDoc.getReservationTime(),
-                        ticketDoc.isTicketStatusActive(),
-                        ticketDoc.getTicketFinalPrice(),
-                        foundMovie,
-                        foundClient,
-                        ticketType);
+                ticket = this.getTicket(ticketDoc);
             } else {
                 throw new TicketDocNotFoundException("Document for given ticket object could not be read, since it is not in the database.");
             }
@@ -251,11 +244,13 @@ public class TicketRepository extends MongoRepository<Ticket> {
 
     @Override
     public List<Ticket> findAll() {
-       List<Ticket> listOfAllTickets;
+       List<Ticket> listOfAllTickets = new ArrayList<>();
        try {
            MongoCollection<TicketDoc> ticketDocCollection = mongoDatabase.getCollection(this.ticketCollectionName, this.ticketCollectionType);
            Bson filter = Filters.empty();
-           listOfAllTickets = getTickets(ticketDocCollection, filter);
+           for (TicketDoc ticketDoc : ticketDocCollection.find(filter)) {
+               listOfAllTickets.add(this.getTicket(ticketDoc));
+           }
        } catch (MongoException exception) {
            throw new TicketRepositoryReadException(exception.getMessage(), exception);
        }
@@ -264,11 +259,13 @@ public class TicketRepository extends MongoRepository<Ticket> {
 
     @Override
     public List<Ticket> findAllActive() {
-        List<Ticket> listOfAllTickets;
+        List<Ticket> listOfAllTickets = new ArrayList<>();
         try {
             MongoCollection<TicketDoc> ticketDocCollection = mongoDatabase.getCollection(this.ticketCollectionName, this.ticketCollectionType);
             Bson filter = Filters.eq("ticket_status_active", true);
-            listOfAllTickets = getTickets(ticketDocCollection, filter);
+            for (TicketDoc ticketDoc : ticketDocCollection.find(filter)) {
+                listOfAllTickets.add(this.getTicket(ticketDoc));
+            }
         } catch (MongoException exception) {
             throw new TicketRepositoryReadException(exception.getMessage(), exception);
         }
@@ -291,97 +288,18 @@ public class TicketRepository extends MongoRepository<Ticket> {
         return listOfTicketUUIDs;
     }
 
-    private List<Ticket> getTickets(MongoCollection<TicketDoc> ticketDocCollection, Bson filter) {
-        List<Ticket> listOfAllTickets;
-        FindIterable<TicketDoc> foundTicketDocs = ticketDocCollection.find(filter);
-        listOfAllTickets = new ArrayList<>();
-        for (TicketDoc ticketDoc : foundTicketDocs) {
-            Client client = this.findClient(ticketDoc.getClientID());
-            Movie movie = this.findMovie(ticketDoc.getMovieID());
-            TypeOfTicket ticketType = this.findTypeOfTicket(ticketDoc.getTypeOfTicketID());
-            Ticket ticket = new Ticket(ticketDoc.getTicketID(),
-                    ticketDoc.getMovieTime(),
-                    ticketDoc.getReservationTime(),
-                    ticketDoc.isTicketStatusActive(),
-                    ticketDoc.getTicketFinalPrice(),
-                    movie,
-                    client,
-                    ticketType);
-            listOfAllTickets.add(ticket);
-        }
-        return listOfAllTickets;
+    private Ticket getTicket(TicketDoc ticketDoc) {
+        ClientDoc clientDoc = this.findClientDoc(ticketDoc.getClientID());
+        MovieDoc movieDoc = this.findMovieDoc(ticketDoc.getMovieID());
+        ScreeningRoomDoc screeningRoomDoc = this.findScreeningRoomDoc(movieDoc.getScreeningRoomID());
+        TypeOfTicketDoc ticketTypeDoc = this.findTypeOfTicketDoc(ticketDoc.getTypeOfTicketID());
+        return TicketMapper.toTicket(ticketDoc,
+                movieDoc,
+                screeningRoomDoc,
+                clientDoc,
+                ticketTypeDoc,
+                this.findTypeOfTicket(ticketTypeDoc));
     }
 
-    private Client findClient(UUID clientUUID) throws NullPointerException {
-        MongoCollection<ClientDoc> clientDocCollection = mongoDatabase.getCollection(this.clientCollectionName, this.clientCollectionType);
-        Bson filter = Filters.eq("_id", clientUUID);
-        ClientDoc foundClientDoc = clientDocCollection.find(filter).first();
-        Client client;
-        if (foundClientDoc != null) {
-            client = new Client(foundClientDoc.getClientID(),
-                    foundClientDoc.getClientName(),
-                    foundClientDoc.getClientSurname(),
-                    foundClientDoc.getClientAge(),
-                    foundClientDoc.isClientStatusActive());
-        } else {
-            throw new ClientDocNotFoundException("Document for client object with given UUID could not be found in the database.");
-        }
-        return client;
-    }
 
-    private Movie findMovie(UUID movieUUID) throws NullPointerException {
-        MongoCollection<MovieDoc> movieDocCollection = mongoDatabase.getCollection(this.movieCollectionName, this.movieCollectionType);
-        Bson filter = Filters.eq("_id", movieUUID);
-        MovieDoc foundMovieDoc = movieDocCollection.find(filter).first();
-        Movie movie;
-        try {
-            if (foundMovieDoc != null) {
-                ScreeningRoom foundScreeningRoom = this.findScreeningRoom(foundMovieDoc.getScreeningRoomID());
-                movie = new Movie(foundMovieDoc.getMovieID(),
-                        foundMovieDoc.getMovieTitle(),
-                        foundMovieDoc.isMovieStatusActive(),
-                        foundMovieDoc.getMovieBasePrice(),
-                        foundScreeningRoom);
-            } else {
-                throw new MovieDocNotFoundException("Document for movie object with given UUID could not be found.");
-            }
-        } catch (ScreeningRoomDocNotFoundException exception) {
-            throw new MovieDocNotFoundException("Document for screening room object with UUID from foundMovieDoc could not be found in the database.");
-        }
-        return movie;
-    }
-
-    private ScreeningRoom findScreeningRoom(UUID screeningRoomUUID) throws ScreeningRoomDocNotFoundException {
-        MongoCollection<ScreeningRoomDoc> screeningRoomDocCollection = mongoDatabase.getCollection(this.screeningRoomCollectionName, this.screeningRoomCollectionType);
-        Bson filter = Filters.eq("_id", screeningRoomUUID);
-        ScreeningRoomDoc foundScreeningRoomDoc = screeningRoomDocCollection.find(filter).first();
-        ScreeningRoom screeningRoom;
-        if (foundScreeningRoomDoc != null) {
-            screeningRoom = new ScreeningRoom(foundScreeningRoomDoc.getScreeningRoomID(),
-                    foundScreeningRoomDoc.getScreeningRoomFloor(),
-                    foundScreeningRoomDoc.getScreeningRoomNumber(),
-                    foundScreeningRoomDoc.getNumberOfAvailableSeats(),
-                    foundScreeningRoomDoc.isScreeningRoomStatusActive());
-        } else {
-            throw new ScreeningRoomDocNotFoundException("Document for screening room object with given UUID could not be found.");
-        }
-        return screeningRoom;
-    }
-
-    private TypeOfTicket findTypeOfTicket(UUID typeOfTicketUUID) {
-        MongoCollection<Document> typeOfTicketDocCollection = mongoDatabase.getCollection(this.typeOfTicketCollectionName);
-        Bson filter = Filters.eq("_id", typeOfTicketUUID);
-        Document foundTypeOfTicketDoc = typeOfTicketDocCollection.find(filter).first();
-        TypeOfTicket typeOfTicket;
-        if (foundTypeOfTicketDoc != null) {
-            if (foundTypeOfTicketDoc.get("_clazz").toString().equals("reduced")) {
-                typeOfTicket = new Reduced((UUID)foundTypeOfTicketDoc.get("_id"));
-            } else {
-                typeOfTicket = new Normal((UUID)foundTypeOfTicketDoc.get("_id"));
-            }
-        } else {
-            throw new TypeOfTicketNotFoundException("Document for type of ticket object with given UUID could not be found in the database.");
-        }
-        return typeOfTicket;
-    }
 }

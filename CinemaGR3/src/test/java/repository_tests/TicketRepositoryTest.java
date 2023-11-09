@@ -1,15 +1,18 @@
 package repository_tests;
 
+import mapping_layer.model_docs.TicketDoc;
+import mapping_layer.model_docs.ticket_types.TypeOfTicketDoc;
 import model.Client;
 import model.Movie;
 import model.ScreeningRoom;
 import model.Ticket;
+import model.exceptions.model_docs_exceptions.TypeOfTicketDocNotFoundException;
+import model.exceptions.model_docs_exceptions.TypeOfTicketNotFoundException;
 import model.exceptions.model_exceptions.TicketReservationException;
-import model.exceptions.repository_exceptions.RepositoryUpdateException;
-import model.exceptions.repository_exceptions.TicketRepositoryCreateException;
-import model.exceptions.repository_exceptions.TicketRepositoryDeleteException;
-import model.exceptions.repository_exceptions.TicketRepositoryReadException;
+import model.exceptions.repository_exceptions.*;
 import model.repositories.*;
+import model.ticket_types.Normal;
+import model.ticket_types.TypeOfTicket;
 import org.junit.jupiter.api.*;
 
 import java.util.Calendar;
@@ -107,7 +110,7 @@ public class TicketRepositoryTest {
         movieNo3 = movieRepositoryForTests.create(movieNo3Title, movieNo3BasePrice, screeningRoomNo3);
 
         ticketNo1 = ticketRepositoryForTests.create(movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, "normal");
-        ticketNo2 = ticketRepositoryForTests.create(movieTimeNo2, reservationTimeNo2, movieNo2, clientNo2, "normal");
+        ticketNo2 = ticketRepositoryForTests.create(movieTimeNo2, reservationTimeNo2, movieNo2, clientNo2, "reduced");
         ticketNo3 = ticketRepositoryForTests.create(movieTimeNo3, reservationTimeNo3, movieNo3, clientNo3, "normal");
     }
 
@@ -151,6 +154,23 @@ public class TicketRepositoryTest {
         assertEquals(foundTicket, ticket);
         assertNotEquals(numberOfAvailableSeatsBefore, numberOfAvailableSeatsAfter);
         assertEquals(numberOfAvailableSeatsBefore - 1, numberOfAvailableSeatsAfter);
+    }
+
+    @Test
+    public void checkIfScreeningRoomNumOfSeatsIsUpdatedCorrectly() throws GeneralRepositoryException {
+        int numberOfAvailableSeatsBefore = screeningRoomRepositoryForTests.findByUUID(movieNo2.getScreeningRoom().getScreeningRoomID()).getNumberOfAvailableSeats();
+        Ticket ticket = ticketRepositoryForTests.create(movieTimeNo2, reservationTimeNo2, movieNo2, clientNo2, "reduced");
+        int numberOfAvailableSeatsAfter = screeningRoomRepositoryForTests.findByUUID(movieNo2.getScreeningRoom().getScreeningRoomID()).getNumberOfAvailableSeats();
+        assertNotNull(ticket);
+        Ticket foundTicket = ticketRepositoryForTests.findByUUID(ticket.getTicketID());
+        assertNotNull(foundTicket);
+        assertEquals(foundTicket, ticket);
+        assertNotEquals(numberOfAvailableSeatsBefore, numberOfAvailableSeatsAfter);
+        assertEquals(numberOfAvailableSeatsBefore - 1, numberOfAvailableSeatsAfter);
+        ticketRepositoryForTests.delete(foundTicket.getTicketID());
+        int numberOfAvailableSeatsAfterDeletion = screeningRoomRepositoryForTests.findByUUID(movieNo2.getScreeningRoom().getScreeningRoomID()).getNumberOfAvailableSeats();
+        assertNotEquals(numberOfAvailableSeatsAfter, numberOfAvailableSeatsAfterDeletion);
+        assertEquals(numberOfAvailableSeatsBefore, numberOfAvailableSeatsAfterDeletion);
     }
 
     @Test
@@ -249,10 +269,17 @@ public class TicketRepositoryTest {
     }
 
     @Test
-    public void deleteCertainTicketTestNegative() throws TicketReservationException {
+    public void deleteCertainTicketThatIsNotInTheDatabaseTestNegative() throws TicketReservationException {
         Ticket ticket = new Ticket(UUID.randomUUID(), ticketNo1.getMovieTime(), ticketNo1.getReservationTime(), movieNo1, clientNo1, "reduced");
         assertNotNull(ticket);
         assertThrows(TicketRepositoryDeleteException.class, () -> ticketRepositoryForTests.delete(ticket));
+    }
+
+    @Test
+    public void deleteCertainTicketWithUUIDThatIsNotInTheDatabaseTestNegative() throws TicketReservationException {
+        Ticket ticket = new Ticket(UUID.randomUUID(), ticketNo1.getMovieTime(), ticketNo1.getReservationTime(), movieNo1, clientNo1, "reduced");
+        assertNotNull(ticket);
+        assertThrows(TicketRepositoryDeleteException.class, () -> ticketRepositoryForTests.delete(ticket.getTicketID()));
     }
 
     @Test
@@ -313,5 +340,23 @@ public class TicketRepositoryTest {
         assertNotNull(endingListOfTickets);
         assertEquals(startingListOfTickets.size(), 3);
         assertEquals(endingListOfTickets.size(), 2);
+    }
+
+    // Other
+
+    @Test
+    public void mongoRepositoryFindTypeOfTicketDocTestPositive() {
+        TypeOfTicketDoc typeOfTicketDoc = ticketRepositoryForTests.findTypeOfTicketDoc(ticketNo1.getTicketType().getTicketTypeID());
+        assertNotNull(typeOfTicketDoc);
+        assertEquals(typeOfTicketDoc.getTypeOfTicketID(), ticketNo1.getTicketType().getTicketTypeID());
+    }
+
+    @Test
+    public void mongoRepositoryFindTypeOfTicketDocTestNegative() {
+        TypeOfTicket typeOfTicket = new Normal(UUID.randomUUID());
+        assertNotNull(typeOfTicket);
+        assertThrows(TypeOfTicketDocNotFoundException.class, () -> {
+            ticketRepositoryForTests.findTypeOfTicketDoc(typeOfTicket.getTicketTypeID());
+        });
     }
 }

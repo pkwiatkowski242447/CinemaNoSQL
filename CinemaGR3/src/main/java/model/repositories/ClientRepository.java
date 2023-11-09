@@ -1,15 +1,17 @@
 package model.repositories;
 
 import com.mongodb.MongoException;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
 import com.mongodb.client.model.ValidationOptions;
+import mapping_layer.mappers.ClientMapper;
 import mapping_layer.model_docs.ClientDoc;
 import model.Client;
 import model.exceptions.model_docs_exceptions.ClientDocNotFoundException;
+import model.exceptions.model_docs_exceptions.DocNotFoundException;
 import model.exceptions.repository_exceptions.ClientRepositoryCreateException;
 import model.exceptions.repository_exceptions.ClientRepositoryDeleteException;
 import model.exceptions.repository_exceptions.ClientRepositoryReadException;
@@ -86,7 +88,7 @@ public class ClientRepository extends MongoRepository<Client> {
         Client client;
         try {
             client = new Client(UUID.randomUUID(), clientName, clientSurname, clientAge);
-            ClientDoc clientDoc = new ClientDoc(client);
+            ClientDoc clientDoc = ClientMapper.toClientDoc(client);
             MongoCollection<ClientDoc> clientDocCollection = mongoDatabase.getCollection(this.clientCollectionName, this.clientCollectionType);
             clientDocCollection.insertOne(clientDoc);
         } catch (MongoException exception) {
@@ -98,16 +100,10 @@ public class ClientRepository extends MongoRepository<Client> {
     @Override
     public void updateAllFields(Client client) {
         try {
-            ClientDoc clientDoc = new ClientDoc(client);
+            ClientDoc clientDoc = ClientMapper.toClientDoc(client);
             MongoCollection<ClientDoc> clientDocCollection = mongoDatabase.getCollection(this.clientCollectionName, this.clientCollectionType);
             Bson filter = Filters.eq("_id", clientDoc.getClientID());
-            Bson updateAllFields = Updates.combine(
-                    Updates.set("client_name", clientDoc.getClientName()),
-                    Updates.set("client_surname", clientDoc.getClientSurname()),
-                    Updates.set("client_age", clientDoc.getClientAge()),
-                    Updates.set("client_status_active", clientDoc.isClientStatusActive())
-            );
-            ClientDoc updatedClientDoc = clientDocCollection.findOneAndUpdate(filter, updateAllFields);
+            ClientDoc updatedClientDoc = clientDocCollection.findOneAndReplace(filter, clientDoc);
             if (updatedClientDoc == null) {
                 throw new ClientDocNotFoundException("Document for given client object could not be updated, since it is not in the database.");
             }
@@ -119,7 +115,7 @@ public class ClientRepository extends MongoRepository<Client> {
     @Override
     public void delete(Client client) {
         try {
-            ClientDoc clientDoc = new ClientDoc(client);
+            ClientDoc clientDoc = ClientMapper.toClientDoc(client);
             MongoCollection<ClientDoc> clientDocCollection = mongoDatabase.getCollection(this.clientCollectionName, this.clientCollectionType);
             Bson clientDocToBeRemoved = Filters.eq("_id", clientDoc.getClientID());
             ClientDoc removedClientDoc = clientDocCollection.findOneAndDelete(clientDocToBeRemoved);
@@ -136,7 +132,10 @@ public class ClientRepository extends MongoRepository<Client> {
         try {
             MongoCollection<ClientDoc> clientDocCollection = mongoDatabase.getCollection(this.clientCollectionName, this.clientCollectionType);
             Bson filter = Filters.eq("_id", clientID);
-            clientDocCollection.findOneAndDelete(filter);
+            ClientDoc removedClientDoc = clientDocCollection.findOneAndDelete(filter);
+            if (removedClientDoc == null) {
+                throw new ClientDocNotFoundException("Document for given client object could not be deleted, since it is not in the database.");
+            }
         } catch (MongoException exception) {
             throw new ClientRepositoryDeleteException(exception.getMessage(), exception);
         }
@@ -146,16 +145,10 @@ public class ClientRepository extends MongoRepository<Client> {
     public void expire(Client client) {
         try {
             client.setClientStatusActive(false);
-            ClientDoc clientDoc = new ClientDoc(client);
+            ClientDoc clientDoc = ClientMapper.toClientDoc(client);
             MongoCollection<ClientDoc> clientDocCollection = mongoDatabase.getCollection(this.clientCollectionName, this.clientCollectionType);
             Bson clientDocToBeExpired = Filters.eq("_id", clientDoc.getClientID());
-            Bson updateAllFields = Updates.combine(
-                    Updates.set("client_name", clientDoc.getClientName()),
-                    Updates.set("client_surname", clientDoc.getClientSurname()),
-                    Updates.set("client_age", clientDoc.getClientAge()),
-                    Updates.set("client_status_active", clientDoc.isClientStatusActive())
-            );
-            ClientDoc updatedClientDoc = clientDocCollection.findOneAndUpdate(clientDocToBeExpired, updateAllFields);
+            ClientDoc updatedClientDoc = clientDocCollection.findOneAndReplace(clientDocToBeExpired, clientDoc);
             if (updatedClientDoc == null) {
                 throw new ClientDocNotFoundException("Document for given client object could not be expired, since it is not in the database.");
             }
@@ -172,7 +165,7 @@ public class ClientRepository extends MongoRepository<Client> {
             Bson filter = Filters.eq("_id", identifier);
             ClientDoc foundClientDoc = clientDocCollection.find(filter).first();
             if (foundClientDoc != null) {
-                client = this.createClientFromClientDoc(foundClientDoc);
+                client = ClientMapper.toClient(foundClientDoc);
             } else {
                 throw new ClientDocNotFoundException("Document for client object with given UUID could not be read, since it is not in the database.");
             }
@@ -191,7 +184,7 @@ public class ClientRepository extends MongoRepository<Client> {
             FindIterable<ClientDoc> foundClientDocs = clientDocCollection.find(filter);
             listOfAllClients = new ArrayList<>();
             for (ClientDoc clientDoc : foundClientDocs) {
-                Client client = this.createClientFromClientDoc(clientDoc);
+                Client client = ClientMapper.toClient(clientDoc);
                 listOfAllClients.add(client);
             }
         } catch (MongoException exception) {
@@ -209,7 +202,7 @@ public class ClientRepository extends MongoRepository<Client> {
             FindIterable<ClientDoc> foundClientDocs = clientDocCollection.find(filter);
             listOfAllActiveClients = new ArrayList<>();
             for (ClientDoc clientDoc : foundClientDocs) {
-                Client client = this.createClientFromClientDoc(clientDoc);
+                Client client = ClientMapper.toClient(clientDoc);
                 listOfAllActiveClients.add(client);
             }
         } catch (MongoException exception) {
@@ -231,13 +224,5 @@ public class ClientRepository extends MongoRepository<Client> {
             throw new ClientRepositoryReadException(exception.getMessage(), exception);
         }
         return listOfClientsUUIDs;
-    }
-
-    private Client createClientFromClientDoc(ClientDoc clientDoc) {
-            return new Client(clientDoc.getClientID(),
-                    clientDoc.getClientName(),
-                    clientDoc.getClientSurname(),
-                    clientDoc.getClientAge(),
-                    clientDoc.isClientStatusActive());
     }
 }

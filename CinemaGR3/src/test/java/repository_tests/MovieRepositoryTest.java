@@ -1,7 +1,9 @@
 package repository_tests;
 
+import mapping_layer.model_docs.MovieDoc;
 import model.Movie;
 import model.ScreeningRoom;
+import model.exceptions.model_docs_exceptions.MovieDocNotFoundException;
 import model.exceptions.repository_exceptions.*;
 import model.repositories.*;
 import org.junit.jupiter.api.*;
@@ -197,12 +199,21 @@ public class MovieRepositoryTest {
     }
 
     @Test
-    public void deleteCertainMovieTestNegative() {
+    public void deleteCertainMovieThatIsNotInTheDatabaseTestNegative() {
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
         assertNotNull(screeningRoom);
         Movie movie = new Movie(UUID.randomUUID(), "American Psycho", 45.85, screeningRoom);
         assertNotNull(movie);
         assertThrows(MovieRepositoryDeleteException.class, () -> movieRepositoryForTests.delete(movie));
+    }
+
+    @Test
+    public void deleteCertainMovieWithUUIDThatIsNotInTheDatabaseTestNegative() {
+        ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
+        assertNotNull(screeningRoom);
+        Movie movie = new Movie(UUID.randomUUID(), "American Psycho", 45.85, screeningRoom);
+        assertNotNull(movie);
+        assertThrows(MovieRepositoryDeleteException.class, () -> movieRepositoryForTests.delete(movie.getMovieID()));
     }
 
     @Test
@@ -267,5 +278,27 @@ public class MovieRepositoryTest {
         assertNotNull(startingListOfMovies);
         assertEquals(startingListOfMovies.size(), 3);
         assertEquals(endingListOfMovies.size(), 2);
+    }
+
+    // Other
+
+    @Test
+    public void mongoRepositoryFindMovieDocTestPositive () {
+        MovieDoc movieDoc = movieRepositoryForTests.findMovieDoc(movieNo1.getMovieID());
+        assertNotNull(movieDoc);
+        assertEquals(movieDoc.getMovieID(), movieNo1.getMovieID());
+        assertEquals(movieDoc.getMovieTitle(), movieNo1.getMovieTitle());
+        assertEquals(movieDoc.getMovieBasePrice(), movieNo1.getMovieBasePrice());
+        assertEquals(movieDoc.isMovieStatusActive(), movieNo1.isMovieStatusActive());
+        assertEquals(movieDoc.getScreeningRoomID(), movieNo1.getScreeningRoom().getScreeningRoomID());
+    }
+
+    @Test
+    public void mongoRepositoryFindMovieDocTestNegative () {
+        Movie movie = new Movie(UUID.randomUUID(), "SomeTitle", 40, screeningRoomNo1);
+        assertNotNull(movie);
+        assertThrows(MovieDocNotFoundException.class, () -> {
+            movieRepositoryForTests.findMovieDoc(movie.getMovieID());
+        });
     }
 }

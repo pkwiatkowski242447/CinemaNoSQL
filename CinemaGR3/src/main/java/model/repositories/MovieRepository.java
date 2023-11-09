@@ -1,19 +1,16 @@
 package model.repositories;
 
 import com.mongodb.MongoException;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
 import com.mongodb.client.model.ValidationOptions;
+import mapping_layer.mappers.MovieMapper;
 import mapping_layer.model_docs.MovieDoc;
 import mapping_layer.model_docs.ScreeningRoomDoc;
 import model.Movie;
 import model.ScreeningRoom;
-import model.exceptions.model_docs_exceptions.DocNotFoundException;
 import model.exceptions.model_docs_exceptions.MovieDocNotFoundException;
-import model.exceptions.model_docs_exceptions.ScreeningRoomDocNotFoundException;
 import model.exceptions.model_docs_exceptions.ScreeningRoomNullException;
 import model.exceptions.repository_exceptions.MovieRepositoryCreateException;
 import model.exceptions.repository_exceptions.MovieRepositoryDeleteException;
@@ -21,16 +18,12 @@ import model.exceptions.repository_exceptions.MovieRepositoryReadException;
 import model.exceptions.repository_exceptions.MovieRepositoryUpdateException;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 public class MovieRepository extends MongoRepository<Movie> {
-
-    private final static Logger logger = LoggerFactory.getLogger(MovieRepository.class);
 
     public MovieRepository(String databaseName) {
         super.initDatabaseConnection(databaseName);
@@ -92,7 +85,7 @@ public class MovieRepository extends MongoRepository<Movie> {
         Movie movie;
         try {
             movie = new Movie(UUID.randomUUID(), movieTitle, baseMoviePrice, screeningRoom);
-            MovieDoc movieDoc = new MovieDoc(movie);
+            MovieDoc movieDoc = MovieMapper.toMovieDoc(movie);
             MongoCollection<MovieDoc> movieDocCollection = mongoDatabase.getCollection(this.movieCollectionName, this.movieCollectionType);
             movieDocCollection.insertOne(movieDoc);
         } catch (MongoException | ScreeningRoomNullException exception) {
@@ -104,15 +97,10 @@ public class MovieRepository extends MongoRepository<Movie> {
     @Override
     public void updateAllFields(Movie movie) {
         try {
-            MovieDoc movieDoc = new MovieDoc(movie);
+            MovieDoc movieDoc = MovieMapper.toMovieDoc(movie);
             MongoCollection<MovieDoc> movieDocCollection = mongoDatabase.getCollection(this.movieCollectionName, this.movieCollectionType);
             Bson filter = Filters.eq("_id", movie.getMovieID());
-            Bson updateAllFields = Updates.combine(
-                    Updates.set("movie_title", movieDoc.getMovieTitle()),
-                    Updates.set("movie_base_price", movie.getMovieBasePrice()),
-                    Updates.set("movie_status_active", movie.isMovieStatusActive())
-            );
-            MovieDoc updatedMovieDoc = movieDocCollection.findOneAndUpdate(filter, updateAllFields);
+            MovieDoc updatedMovieDoc = movieDocCollection.findOneAndReplace(filter, movieDoc);
             if (updatedMovieDoc == null) {
                 throw new MovieDocNotFoundException("Document for given movie object could not be updated, since it is not in the database.");
             }
@@ -140,7 +128,10 @@ public class MovieRepository extends MongoRepository<Movie> {
         try {
             MongoCollection<MovieDoc> movieDocCollection = mongoDatabase.getCollection(this.movieCollectionName, this.movieCollectionType);
             Bson filter = Filters.eq("_id", movieID);
-            movieDocCollection.findOneAndDelete(filter);
+            MovieDoc removedMovieDoc = movieDocCollection.findOneAndDelete(filter);
+            if (removedMovieDoc == null) {
+                throw new MovieDocNotFoundException("Document for given movie object could not be deleted, since it is not in the database.");
+            }
         } catch (MongoException exception) {
             throw new MovieRepositoryDeleteException(exception.getMessage(), exception);
         }
@@ -150,15 +141,10 @@ public class MovieRepository extends MongoRepository<Movie> {
     public void expire(Movie movie) {
         try {
             movie.setMovieStatusActive(false);
-            MovieDoc movieDoc = new MovieDoc(movie);
+            MovieDoc movieDoc = MovieMapper.toMovieDoc(movie);
             MongoCollection<MovieDoc> movieDocCollection = mongoDatabase.getCollection(this.movieCollectionName, this.movieCollectionType);
             Bson filter = Filters.eq("_id", movieDoc.getMovieID());
-            Bson updateAllFields = Updates.combine(
-                    Updates.set("movie_title", movieDoc.getMovieTitle()),
-                    Updates.set("movie_base_price", movieDoc.getMovieBasePrice()),
-                    Updates.set("movie_status_active", movieDoc.isMovieStatusActive())
-            );
-            MovieDoc expiredMovieDoc = movieDocCollection.findOneAndUpdate(filter, updateAllFields);
+            MovieDoc expiredMovieDoc = movieDocCollection.findOneAndReplace(filter, movieDoc);
             if (expiredMovieDoc == null) {
                 throw new MovieDocNotFoundException("Document for given movie object could not be expired, since it is not in the database.");
             }
@@ -175,8 +161,8 @@ public class MovieRepository extends MongoRepository<Movie> {
             Bson movieFilter = Filters.eq("_id", identifier);
             MovieDoc foundMovieDoc = movieDocCollection.find(movieFilter).first();
             if (foundMovieDoc != null) {
-                ScreeningRoom screeningRoom = this.findScreeningRoom(foundMovieDoc.getScreeningRoomID());
-                movie = this.getMovie(foundMovieDoc, screeningRoom);
+                ScreeningRoomDoc screeningRoomDoc = this.findScreeningRoomDoc(foundMovieDoc.getScreeningRoomID());
+                movie = MovieMapper.toMovie(foundMovieDoc, screeningRoomDoc);
             } else {
                 throw new MovieDocNotFoundException("Document for movie object with given UUID could not be read, since it is not in the database.");
             }
@@ -188,11 +174,14 @@ public class MovieRepository extends MongoRepository<Movie> {
 
     @Override
     public List<Movie> findAll() {
-        List<Movie> listOfAllMovies;
+        List<Movie> listOfAllMovies = new ArrayList<>();
         try {
             MongoCollection<MovieDoc> movieDocCollection = mongoDatabase.getCollection(this.movieCollectionName, this.movieCollectionType);
             Bson movieFilter = Filters.empty();
-            listOfAllMovies = this.getMovies(movieDocCollection, movieFilter);
+            for (MovieDoc movieDoc : movieDocCollection.find(movieFilter)) {
+                ScreeningRoomDoc screeningRoomDoc = this.findScreeningRoomDoc(movieDoc.getScreeningRoomID());
+                listOfAllMovies.add(MovieMapper.toMovie(movieDoc, screeningRoomDoc));
+            }
         } catch (MongoException exception) {
             throw new MovieRepositoryReadException(exception.getMessage(), exception);
         }
@@ -201,11 +190,14 @@ public class MovieRepository extends MongoRepository<Movie> {
 
     @Override
     public List<Movie> findAllActive() {
-        List<Movie> listOfAllActiveMovies;
+        List<Movie> listOfAllActiveMovies = new ArrayList<>();
         try {
             MongoCollection<MovieDoc> movieDocCollection = mongoDatabase.getCollection(this.movieCollectionName, this.movieCollectionType);
             Bson movieFilter = Filters.eq("movie_status_active", true);
-            listOfAllActiveMovies = getMovies(movieDocCollection, movieFilter);
+            for (MovieDoc movieDoc : movieDocCollection.find(movieFilter)) {
+                ScreeningRoomDoc screeningRoomDoc = this.findScreeningRoomDoc(movieDoc.getScreeningRoomID());
+                listOfAllActiveMovies.add(MovieMapper.toMovie(movieDoc, screeningRoomDoc));
+            }
         } catch (MongoException exception) {
             throw new MovieRepositoryReadException(exception.getMessage(), exception);
         }
@@ -226,48 +218,5 @@ public class MovieRepository extends MongoRepository<Movie> {
             throw new MovieRepositoryReadException(exception.getMessage(), exception);
         }
         return listOfUUIDs;
-    }
-    
-    private List<Movie> getMovies(MongoCollection<MovieDoc> movieDocCollection, Bson movieFilter) {
-        List<Movie> listOfMovies = new ArrayList<>();
-        FindIterable<MovieDoc> foundMovieDocs = movieDocCollection.find(movieFilter);
-        try {
-            for (MovieDoc movieDoc : foundMovieDocs) {
-                logger.debug("MovieDod ID: " + movieDoc.getMovieID());
-                logger.debug("GetMovies, movieDoc scrID: " + movieDoc.getScreeningRoomID());
-                ScreeningRoom screeningRoom = this.findScreeningRoom(movieDoc.getScreeningRoomID());
-                Movie movie = getMovie(movieDoc, screeningRoom);
-                listOfMovies.add(movie);
-            }
-        } catch (ScreeningRoomDocNotFoundException exception) {
-            throw new DocNotFoundException(exception.getMessage(), exception);
-        }
-        return listOfMovies;
-    }
-
-    private Movie getMovie(MovieDoc movieDoc, ScreeningRoom screeningRoom) {
-        return new Movie(movieDoc.getMovieID(),
-                movieDoc.getMovieTitle(),
-                movieDoc.isMovieStatusActive(),
-                movieDoc.getMovieBasePrice(),
-                screeningRoom);
-    }
-
-    private ScreeningRoom findScreeningRoom(UUID screeningRoomUUID) throws ScreeningRoomDocNotFoundException {
-        MongoCollection<ScreeningRoomDoc> screeningRoomDocCollection = mongoDatabase.getCollection(this.screeningRoomCollectionName, this.screeningRoomCollectionType);
-        Bson filter = Filters.eq("_id", screeningRoomUUID);
-        ScreeningRoomDoc foundScreeningRoomDoc = screeningRoomDocCollection.find(filter).first();
-        ScreeningRoom screeningRoom;
-        logger.debug("Screening room ID: " + screeningRoomUUID);
-        if (foundScreeningRoomDoc != null) {
-            screeningRoom = new ScreeningRoom(foundScreeningRoomDoc.getScreeningRoomID(),
-                    foundScreeningRoomDoc.getScreeningRoomFloor(),
-                    foundScreeningRoomDoc.getScreeningRoomNumber(),
-                    foundScreeningRoomDoc.getNumberOfAvailableSeats(),
-                    foundScreeningRoomDoc.isScreeningRoomStatusActive());
-        } else {
-            throw new ScreeningRoomDocNotFoundException("Document for screening room object with given UUID could not be found in the database.");
-        }
-        return screeningRoom;
     }
 }

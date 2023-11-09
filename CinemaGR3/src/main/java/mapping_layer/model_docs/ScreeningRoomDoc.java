@@ -1,27 +1,31 @@
 package mapping_layer.model_docs;
 
-import model.ScreeningRoom;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.bson.codecs.pojo.annotations.BsonCreator;
 import org.bson.codecs.pojo.annotations.BsonProperty;
 
 import java.util.UUID;
 
+@Getter @Setter
+@NoArgsConstructor
 public class ScreeningRoomDoc {
 
     @BsonProperty("_id")
-    private final UUID screeningRoomID;
+    private UUID screeningRoomID;
 
     @BsonProperty("screening_room_floor")
-    private final int screeningRoomFloor;
+    private int screeningRoomFloor;
 
     @BsonProperty("screening_room_number")
-    private final int screeningRoomNumber;
+    private int screeningRoomNumber;
 
     @BsonProperty("number_of_available_seats")
-    private final int numberOfAvailableSeats;
+    private int numberOfAvailableSeats;
 
     @BsonProperty("screening_room_status_active")
-    private final boolean screeningRoomStatusActive;
+    private boolean screeningRoomStatusActive;
 
     // Constructor
 
@@ -36,35 +40,5 @@ public class ScreeningRoomDoc {
         this.screeningRoomNumber = screeningRoomNumber;
         this.numberOfAvailableSeats = numberOfAvailableSeats;
         this.screeningRoomStatusActive = screeningRoomStatusActive;
-    }
-
-    public ScreeningRoomDoc(ScreeningRoom screeningRoom) {
-        this.screeningRoomID = screeningRoom.getScreeningRoomID();
-        this.screeningRoomFloor = screeningRoom.getScreeningRoomFloor();
-        this.screeningRoomNumber = screeningRoom.getScreeningRoomNumber();
-        this.numberOfAvailableSeats = screeningRoom.getNumberOfAvailableSeats();
-        this.screeningRoomStatusActive = screeningRoom.isScreeningRoomStatusActive();
-    }
-
-    // Getters
-
-    public UUID getScreeningRoomID() {
-        return screeningRoomID;
-    }
-
-    public int getScreeningRoomFloor() {
-        return screeningRoomFloor;
-    }
-
-    public int getScreeningRoomNumber() {
-        return screeningRoomNumber;
-    }
-
-    public int getNumberOfAvailableSeats() {
-        return numberOfAvailableSeats;
-    }
-
-    public boolean isScreeningRoomStatusActive() {
-        return screeningRoomStatusActive;
     }
 }

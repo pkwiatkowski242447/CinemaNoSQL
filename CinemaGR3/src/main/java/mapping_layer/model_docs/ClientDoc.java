@@ -1,27 +1,32 @@
 package mapping_layer.model_docs;
 
-import model.Client;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.bson.codecs.pojo.annotations.BsonCreator;
 import org.bson.codecs.pojo.annotations.BsonProperty;
 
 import java.util.UUID;
 
+@Getter
+@Setter
+@NoArgsConstructor
 public class ClientDoc {
 
     @BsonProperty("_id")
-    private final UUID clientID;
+    private UUID clientID;
 
     @BsonProperty("client_name")
-    private final String clientName;
+    private String clientName;
 
     @BsonProperty("client_surname")
-    private final String clientSurname;
+    private String clientSurname;
 
     @BsonProperty("client_age")
-    private final int clientAge;
+    private int clientAge;
 
     @BsonProperty("client_status_active")
-    private final boolean clientStatusActive;
+    private boolean clientStatusActive;
 
     // Constructor
 
@@ -36,35 +41,5 @@ public class ClientDoc {
         this.clientSurname = clientSurname;
         this.clientAge = clientAge;
         this.clientStatusActive = clientStatusActive;
-    }
-
-    public ClientDoc(Client client) {
-        this.clientID = client.getClientID();
-        this.clientName = client.getClientName();
-        this.clientSurname = client.getClientSurname();
-        this.clientAge = client.getClientAge();
-        this.clientStatusActive = client.isClientStatusActive();
-    }
-
-    // Getters
-
-    public UUID getClientID() {
-        return clientID;
-    }
-
-    public String getClientName() {
-        return clientName;
-    }
-
-    public String getClientSurname() {
-        return clientSurname;
-    }
-
-    public int getClientAge() {
-        return clientAge;
-    }
-
-    public boolean isClientStatusActive() {
-        return clientStatusActive;
     }
 }
