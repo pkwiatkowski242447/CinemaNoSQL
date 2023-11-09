@@ -45,4 +45,56 @@ public class ScreeningRoomDocTest {
         assertEquals(numberOfAvailableSeats, testScreeningRoomDoc.getNumberOfAvailableSeats());
         assertEquals(screeningRoomActiveStatus, testScreeningRoomDoc.isScreeningRoomStatusActive());
     }
+
+    @Test
+    public void screeningRoomIdSetterTestPositive() {
+        UUID idBefore = screeningRoomDoc.getScreeningRoomID();
+        assertNotNull(idBefore);
+        UUID newId = UUID.randomUUID();
+        screeningRoomDoc.setScreeningRoomID(newId);
+        UUID idAfter = screeningRoomDoc.getScreeningRoomID();
+        assertNotNull(idAfter);
+        assertEquals(newId, idAfter);
+        assertNotEquals(idBefore, idAfter);
+    }
+
+    @Test
+    public void screeningRoomFloorSetterTestPositive() {
+        int screeningRoomFloorBefore = screeningRoomDoc.getScreeningRoomFloor();
+        int newScreeningRoomFloor = 3;
+        screeningRoomDoc.setScreeningRoomFloor(newScreeningRoomFloor);
+        int screeningRoomFloorAfter = screeningRoomDoc.getScreeningRoomFloor();
+        assertEquals(newScreeningRoomFloor, screeningRoomFloorAfter);
+        assertNotEquals(screeningRoomFloorBefore, screeningRoomFloorAfter);
+    }
+
+    @Test
+    public void screeningRoomNumberSetterTestPositive() {
+        int screeningRoomNumberBefore = screeningRoomDoc.getScreeningRoomNumber();
+        int newScreeningRoomNumber = 20;
+        screeningRoomDoc.setScreeningRoomNumber(newScreeningRoomNumber);
+        int screeningRoomNumberAfter = screeningRoomDoc.getScreeningRoomNumber();
+        assertEquals(newScreeningRoomNumber, screeningRoomNumberAfter);
+        assertNotEquals(screeningRoomNumberBefore, screeningRoomNumberAfter);
+    }
+
+    @Test
+    public void screeningRoomNumberOfAvailableSeatsSetterTestPositive() {
+        int screeningRoomNumOfSeatsBefore = screeningRoomDoc.getNumberOfAvailableSeats();
+        int newScreeningRoomNumOfSeats = 130;
+        screeningRoomDoc.setNumberOfAvailableSeats(newScreeningRoomNumOfSeats);
+        int screeningRoomNumOfSeatsAfter = screeningRoomDoc.getNumberOfAvailableSeats();
+        assertEquals(newScreeningRoomNumOfSeats, screeningRoomNumOfSeatsAfter);
+        assertNotEquals(screeningRoomNumOfSeatsBefore, screeningRoomNumOfSeatsAfter);
+    }
+
+    @Test
+    public void screeningRoomStatusActiveSetterTestPositive() {
+        boolean screeningRoomStatusActiveBefore = screeningRoomDoc.isScreeningRoomStatusActive();
+        boolean newScreeningRoomStatusActive = false;
+        screeningRoomDoc.setScreeningRoomStatusActive(newScreeningRoomStatusActive);
+        boolean screeningRoomStatusActiveAfter = screeningRoomDoc.isScreeningRoomStatusActive();
+        assertEquals(newScreeningRoomStatusActive, screeningRoomStatusActiveAfter);
+        assertNotEquals(screeningRoomStatusActiveBefore, screeningRoomStatusActiveAfter);
+    }
 }

@@ -12,6 +12,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class ScreeningRoomMapperTest {
 
+    @SuppressWarnings("InstantiationOfUtilityClass")
+    @Test
+    public void screeningRoomMapperConstructorTest() {
+        ScreeningRoomMapper screeningRoomMapper = new ScreeningRoomMapper();
+        assertNotNull(screeningRoomMapper);
+    }
+
     @Test
     public void screeningRoomMapperFromScreeningRoomToScreeningRoomDoc() {
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 1, 4, 40);
