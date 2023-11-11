@@ -6,6 +6,7 @@ import model.Client;
 import model.Movie;
 import model.ScreeningRoom;
 import model.Ticket;
+import model.exceptions.model_docs_exceptions.TicketDocNotFoundException;
 import model.exceptions.model_docs_exceptions.TypeOfTicketDocNotFoundException;
 import model.exceptions.model_docs_exceptions.TypeOfTicketNotFoundException;
 import model.exceptions.model_exceptions.TicketReservationException;
@@ -303,7 +304,7 @@ public class TicketRepositoryTest {
     public void expireCertainTicketTestNegative() throws TicketReservationException {
         Ticket ticket = new Ticket(UUID.randomUUID(), ticketNo1.getMovieTime(), ticketNo1.getReservationTime(), movieNo1, clientNo1, "reduced");
         assertNotNull(ticket);
-        assertThrows(TicketRepositoryDeleteException.class, () -> {
+        assertThrows(TicketRepositoryUpdateException.class, () -> {
             ticketRepositoryForTests.expire(ticket);
         });
     }
@@ -357,6 +358,28 @@ public class TicketRepositoryTest {
         assertNotNull(typeOfTicket);
         assertThrows(TypeOfTicketDocNotFoundException.class, () -> {
             ticketRepositoryForTests.findTypeOfTicketDoc(typeOfTicket.getTicketTypeID());
+        });
+    }
+
+    @Test
+    public void mongoRepositoryFindTicketDocTestPositive() {
+        TicketDoc ticketDoc = ticketRepositoryForTests.findTicketDoc(ticketNo1.getTicketID());
+        assertNotNull(ticketDoc);
+        assertEquals(ticketNo1.getTicketID(), ticketDoc.getTicketID());
+        assertEquals(ticketNo1.getMovieTime(), ticketDoc.getMovieTime());
+        assertEquals(ticketNo1.getReservationTime(), ticketDoc.getReservationTime());
+        assertEquals(ticketNo1.getTicketFinalPrice(), ticketDoc.getTicketFinalPrice());
+        assertEquals(ticketNo1.isTicketStatusActive(), ticketDoc.isTicketStatusActive());
+        assertEquals(ticketNo1.getClient().getClientID(), ticketDoc.getClientID());
+        assertEquals(ticketNo1.getMovie().getMovieID(), ticketDoc.getMovieID());
+        assertEquals(ticketNo1.getTicketType().getTicketTypeID(), ticketDoc.getTypeOfTicketID());
+    }
+
+    @Test
+    public void mongoRepositoryFindTicketDocTestNegative() throws TicketReservationException {
+        Ticket ticket = new Ticket(UUID.randomUUID(), movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, "normal");
+        assertThrows(TicketDocNotFoundException.class, () -> {
+            ticketRepositoryForTests.findTicketDoc(ticket.getTicketID());
         });
     }
 }

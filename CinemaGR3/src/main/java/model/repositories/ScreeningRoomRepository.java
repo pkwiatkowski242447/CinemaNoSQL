@@ -1,8 +1,7 @@
 package model.repositories;
 
 import com.mongodb.MongoException;
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.MongoCollection;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ValidationOptions;
@@ -85,8 +84,7 @@ public class ScreeningRoomRepository extends MongoRepository<ScreeningRoom> {
         try {
             screeningRoom = new ScreeningRoom(UUID.randomUUID(), screeningRoomFloor, screeningRoomNumber, numberOfSeats);
             ScreeningRoomDoc screeningRoomDoc = ScreeningRoomMapper.toScreeningRoomDoc(screeningRoom);
-            MongoCollection<ScreeningRoomDoc> screeningRoomDocCollection = mongoDatabase.getCollection(this.screeningRoomCollectionName, this.screeningRoomCollectionType);
-            screeningRoomDocCollection.insertOne(screeningRoomDoc);
+            getScreeningRoomCollection().insertOne(screeningRoomDoc);
         } catch (MongoException exception) {
             throw new ScreeningRoomRepositoryCreateException(exception.getMessage(), exception);
         }
@@ -97,9 +95,8 @@ public class ScreeningRoomRepository extends MongoRepository<ScreeningRoom> {
     public void updateAllFields(ScreeningRoom screeningRoom) {
         try {
             ScreeningRoomDoc screeningRoomDoc = ScreeningRoomMapper.toScreeningRoomDoc(screeningRoom);
-            MongoCollection<ScreeningRoomDoc> screeningRoomDocCollection = mongoDatabase.getCollection(this.screeningRoomCollectionName, this.screeningRoomCollectionType);
             Bson filter =  Filters.eq("_id", screeningRoom.getScreeningRoomID());
-            ScreeningRoomDoc updatedScreeningRoomDoc = screeningRoomDocCollection.findOneAndReplace(filter, screeningRoomDoc);
+            ScreeningRoomDoc updatedScreeningRoomDoc = getScreeningRoomCollection().findOneAndReplace(filter, screeningRoomDoc);
             if (updatedScreeningRoomDoc == null) {
                 throw new ScreeningRoomDocNotFoundException("Document for given screening room object could not be updated, since it is not in the database.");
             }
@@ -110,24 +107,14 @@ public class ScreeningRoomRepository extends MongoRepository<ScreeningRoom> {
 
     @Override
     public void delete(ScreeningRoom screeningRoom) {
-        try {
-            MongoCollection<ScreeningRoomDoc> screeningRoomDocCollection = mongoDatabase.getCollection(this.screeningRoomCollectionName, this.screeningRoomCollectionType);
-            Bson filter = Filters.eq("_id", screeningRoom.getScreeningRoomID());
-            ScreeningRoomDoc removedScreeningRoomDoc = screeningRoomDocCollection.findOneAndDelete(filter);
-            if (removedScreeningRoomDoc == null) {
-                throw new ScreeningRoomDocNotFoundException("Document for given screening room object could not be deleted, since it is not in the database.");
-            }
-        } catch (MongoException exception) {
-            throw new ScreeningRoomRepositoryDeleteException(exception.getMessage(), exception);
-        }
+        delete(screeningRoom.getScreeningRoomID());
     }
 
     @Override
     public void delete(UUID screeningRoomID) {
         try {
-            MongoCollection<ScreeningRoomDoc> screeningRoomDocCollection = mongoDatabase.getCollection(this.screeningRoomCollectionName, this.screeningRoomCollectionType);
             Bson filter = Filters.eq("_id", screeningRoomID);
-            ScreeningRoomDoc removedScreeningRoomDoc = screeningRoomDocCollection.findOneAndDelete(filter);
+            ScreeningRoomDoc removedScreeningRoomDoc = getScreeningRoomCollection().findOneAndDelete(filter);
             if (removedScreeningRoomDoc == null) {
                 throw new ScreeningRoomDocNotFoundException("Document for given screening room object could not be deleted, since it is not in the database.");
             }
@@ -138,27 +125,15 @@ public class ScreeningRoomRepository extends MongoRepository<ScreeningRoom> {
 
     @Override
     public void expire(ScreeningRoom screeningRoom) {
-        try {
-            screeningRoom.setScreeningRoomStatusActive(false);
-            ScreeningRoomDoc screeningRoomDoc = ScreeningRoomMapper.toScreeningRoomDoc(screeningRoom);
-            MongoCollection<ScreeningRoomDoc> screeningRoomDocCollection = mongoDatabase.getCollection(this.screeningRoomCollectionName, this.screeningRoomCollectionType);
-            Bson filter = Filters.eq("_id", screeningRoom.getScreeningRoomID());
-            ScreeningRoomDoc expiredScreeningRoomDoc = screeningRoomDocCollection.findOneAndReplace(filter, screeningRoomDoc);
-            if (expiredScreeningRoomDoc == null) {
-                throw new ScreeningRoomDocNotFoundException("Document for given screening room object could not be expired, since it is not in the database.");
-            }
-        } catch (MongoException exception) {
-            throw new ScreeningRoomRepositoryDeleteException(exception.getMessage(), exception);
-        }
+        screeningRoom.setScreeningRoomStatusActive(false);
+        updateAllFields(screeningRoom);
     }
 
     @Override
     public ScreeningRoom findByUUID(UUID identifier) {
         ScreeningRoom screeningRoom;
         try {
-            MongoCollection<ScreeningRoomDoc> screeningRoomDocCollection = mongoDatabase.getCollection(this.screeningRoomCollectionName, this.screeningRoomCollectionType);
-            Bson filter = Filters.eq("_id", identifier);
-            ScreeningRoomDoc screeningRoomDoc = screeningRoomDocCollection.find(filter).first();
+            ScreeningRoomDoc screeningRoomDoc = findScreeningRoomDoc(identifier);
             if (screeningRoomDoc != null) {
                 screeningRoom = ScreeningRoomMapper.toScreeningRoom(screeningRoomDoc);
             } else {
@@ -173,15 +148,11 @@ public class ScreeningRoomRepository extends MongoRepository<ScreeningRoom> {
     @Override
     public List<ScreeningRoom> findAll() {
         List<ScreeningRoom> listOfAllScreeningRooms;
-        try {
-            MongoCollection<ScreeningRoomDoc> screeningRoomDocCollection = mongoDatabase.getCollection(this.screeningRoomCollectionName, this.screeningRoomCollectionType);
-            Bson filter = Filters.empty();
-            FindIterable<ScreeningRoomDoc> foundScreeningRoomDocs = screeningRoomDocCollection.find(filter);
-            listOfAllScreeningRooms = new ArrayList<>();
-            for (ScreeningRoomDoc screeningRoomDoc : foundScreeningRoomDocs) {
-                ScreeningRoom screeningRoom = ScreeningRoomMapper.toScreeningRoom(screeningRoomDoc);
-                listOfAllScreeningRooms.add(screeningRoom);
-            }
+        try(ClientSession clientSession = mongoClient.startSession()) {
+            clientSession.startTransaction();
+            Bson screeningRoomFilter = Filters.empty();
+            listOfAllScreeningRooms = findScreeningRooms(screeningRoomFilter);
+            clientSession.commitTransaction();
         } catch (MongoException exception) {
             throw new ScreeningRoomRepositoryReadException(exception.getMessage(), exception);
         }
@@ -191,15 +162,11 @@ public class ScreeningRoomRepository extends MongoRepository<ScreeningRoom> {
     @Override
     public List<ScreeningRoom> findAllActive() {
         List<ScreeningRoom> listOfAllActiveScreeningRooms;
-        try {
-            MongoCollection<ScreeningRoomDoc> screeningRoomDocCollection = mongoDatabase.getCollection(this.screeningRoomCollectionName, this.screeningRoomCollectionType);
-            Bson filter = Filters.eq("screening_room_status_active", true);
-            FindIterable<ScreeningRoomDoc> foundScreeningRoomDocs = screeningRoomDocCollection.find(filter);
-            listOfAllActiveScreeningRooms = new ArrayList<>();
-            for (ScreeningRoomDoc screeningRoomDoc : foundScreeningRoomDocs) {
-                ScreeningRoom screeningRoom = ScreeningRoomMapper.toScreeningRoom(screeningRoomDoc);
-                listOfAllActiveScreeningRooms.add(screeningRoom);
-            }
+        try(ClientSession clientSession = mongoClient.startSession()) {
+            clientSession.startTransaction();
+            Bson screeningRoomFilter = Filters.eq("screening_room_status_active", true);
+            listOfAllActiveScreeningRooms = findScreeningRooms(screeningRoomFilter);
+            clientSession.commitTransaction();
         } catch (MongoException exception) {
             throw new ScreeningRoomRepositoryReadException(exception.getMessage(), exception);
         }
@@ -209,15 +176,24 @@ public class ScreeningRoomRepository extends MongoRepository<ScreeningRoom> {
     @Override
     public List<UUID> findAllUUIDs() {
         List<UUID> listOfScreeningRoomUUIDs = new ArrayList<>();
-        try {
-            MongoCollection<ScreeningRoomDoc> screeningRoomDocCollection = mongoDatabase.getCollection(this.screeningRoomCollectionName, this.screeningRoomCollectionType);
+        try(ClientSession clientSession = mongoClient.startSession()) {
+            clientSession.startTransaction();
             Bson filter = Filters.empty();
-            for (ScreeningRoomDoc screeningRoomDoc : screeningRoomDocCollection.find(filter)) {
+            for (ScreeningRoomDoc screeningRoomDoc : getScreeningRoomCollection().find(filter)) {
                 listOfScreeningRoomUUIDs.add(screeningRoomDoc.getScreeningRoomID());
             }
+            clientSession.commitTransaction();
         } catch (MongoException exception) {
             throw new ScreeningRoomRepositoryReadException(exception.getMessage(), exception);
         }
         return listOfScreeningRoomUUIDs;
+    }
+
+    private List<ScreeningRoom> findScreeningRooms(Bson screeningRoomFilter) {
+        List<ScreeningRoom> listOfFoundScreeningRooms = new ArrayList<>();
+        for (ScreeningRoomDoc screeningRoomDoc : getScreeningRoomCollection().find(screeningRoomFilter)) {
+            listOfFoundScreeningRooms.add(ScreeningRoomMapper.toScreeningRoom(screeningRoomDoc));
+        }
+        return listOfFoundScreeningRooms;
     }
 }

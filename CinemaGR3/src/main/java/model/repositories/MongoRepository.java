@@ -113,9 +113,8 @@ public abstract class MongoRepository<Type> implements Closeable {
     // Other methods
 
     public ScreeningRoomDoc findScreeningRoomDoc(UUID screeningRoomID) {
-        MongoCollection<ScreeningRoomDoc> screeningRoomDocMongoCollection = mongoDatabase.getCollection(screeningRoomCollectionName, screeningRoomCollectionType);
         Bson screeningRoomFilter = Filters.eq("_id", screeningRoomID);
-        ScreeningRoomDoc foundScreeningRoomDoc = screeningRoomDocMongoCollection.find(screeningRoomFilter).first();
+        ScreeningRoomDoc foundScreeningRoomDoc = getScreeningRoomCollection().find(screeningRoomFilter).first();
         if (foundScreeningRoomDoc != null) {
             return foundScreeningRoomDoc;
         } else {
@@ -124,9 +123,8 @@ public abstract class MongoRepository<Type> implements Closeable {
     }
 
     public MovieDoc findMovieDoc(UUID movieID) {
-        MongoCollection<MovieDoc> movieDocMongoCollection = mongoDatabase.getCollection(movieCollectionName, movieCollectionType);
         Bson movieFilter = Filters.eq("_id", movieID);
-        MovieDoc foundMovieDoc = movieDocMongoCollection.find(movieFilter).first();
+        MovieDoc foundMovieDoc = getMovieCollection().find(movieFilter).first();
         if (foundMovieDoc != null) {
             return foundMovieDoc;
         } else {
@@ -135,9 +133,8 @@ public abstract class MongoRepository<Type> implements Closeable {
     }
 
     public ClientDoc findClientDoc(UUID clientID) {
-        MongoCollection<ClientDoc> clientDocMongoCollection = mongoDatabase.getCollection(clientCollectionName, clientCollectionType);
         Bson clientFilter = Filters.eq("_id", clientID);
-        ClientDoc foundClientDoc = clientDocMongoCollection.find(clientFilter).first();
+        ClientDoc foundClientDoc = getClientCollection().find(clientFilter).first();
         if (foundClientDoc != null) {
             return foundClientDoc;
         } else {
@@ -145,10 +142,19 @@ public abstract class MongoRepository<Type> implements Closeable {
         }
     }
 
+    public TicketDoc findTicketDoc(UUID ticketID) {
+        Bson ticketFilter = Filters.eq("_id", ticketID);
+        TicketDoc foundTicketDoc = getTicketCollection().find(ticketFilter).first();
+        if (foundTicketDoc != null) {
+            return foundTicketDoc;
+        } else {
+            throw new TicketDocNotFoundException("Document for ticket object with given UUID could not be found in the database.");
+        }
+    }
+
     public TypeOfTicketDoc findTypeOfTicketDoc(UUID typeOfTicketID) {
-        MongoCollection<TypeOfTicketDoc> typeOfTicketDocMongoCollection = mongoDatabase.getCollection(typeOfTicketCollectionName, typeOfTicketCollectionType);
         Bson typeOfTicketFilter = Filters.eq("_id", typeOfTicketID);
-        TypeOfTicketDoc foundTypeOfTicketDoc = typeOfTicketDocMongoCollection.find(typeOfTicketFilter).first();
+        TypeOfTicketDoc foundTypeOfTicketDoc = getTypeOfTicketCollection().find(typeOfTicketFilter).first();
         if (foundTypeOfTicketDoc != null) {
             return foundTypeOfTicketDoc;
         } else {
@@ -165,6 +171,26 @@ public abstract class MongoRepository<Type> implements Closeable {
         } else {
             throw new TypeOfTicketNotFoundException("Type of ticket object could not be found in the database.");
         }
+    }
+
+    protected MongoCollection<ScreeningRoomDoc> getScreeningRoomCollection() {
+        return mongoDatabase.getCollection(screeningRoomCollectionName, screeningRoomCollectionType);
+    }
+
+    protected MongoCollection<ClientDoc> getClientCollection() {
+        return mongoDatabase.getCollection(clientCollectionName, clientCollectionType);
+    }
+
+    protected MongoCollection<MovieDoc> getMovieCollection() {
+        return mongoDatabase.getCollection(movieCollectionName, movieCollectionType);
+    }
+
+    protected MongoCollection<TicketDoc> getTicketCollection() {
+        return mongoDatabase.getCollection(ticketCollectionName, ticketCollectionType);
+    }
+
+    protected MongoCollection<TypeOfTicketDoc> getTypeOfTicketCollection() {
+        return mongoDatabase.getCollection(typeOfTicketCollectionName, typeOfTicketCollectionType);
     }
 
     @Override

@@ -5,6 +5,7 @@ import model.ScreeningRoom;
 import model.exceptions.repository_exceptions.RepositoryCreateException;
 import model.exceptions.repository_exceptions.RepositoryDeleteException;
 import model.exceptions.repository_exceptions.RepositoryReadException;
+import model.exceptions.repository_exceptions.RepositoryUpdateException;
 import model.repositories.MovieRepository;
 
 import java.util.List;
@@ -31,7 +32,7 @@ public class MovieManager{
     public void unregister(Movie movie) {
         try {
             movieRepository.expire(movie);
-        } catch (RepositoryDeleteException exception) {
+        } catch (RepositoryUpdateException exception) {
             exception.printStackTrace();
         }
     }

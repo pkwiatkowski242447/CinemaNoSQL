@@ -4,6 +4,7 @@ import model.ScreeningRoom;
 import model.exceptions.repository_exceptions.RepositoryCreateException;
 import model.exceptions.repository_exceptions.RepositoryDeleteException;
 import model.exceptions.repository_exceptions.RepositoryReadException;
+import model.exceptions.repository_exceptions.RepositoryUpdateException;
 import model.repositories.ScreeningRoomRepository;
 
 import java.util.List;
@@ -30,7 +31,7 @@ public class ScreeningRoomManager {
     public void unregister(ScreeningRoom screeningRoom) {
         try {
             screeningRoomRepository.expire(screeningRoom);
-        } catch (RepositoryDeleteException exception) {
+        } catch (RepositoryUpdateException exception) {
             exception.printStackTrace();
         }
     }

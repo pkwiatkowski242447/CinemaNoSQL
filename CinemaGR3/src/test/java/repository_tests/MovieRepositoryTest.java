@@ -239,7 +239,7 @@ public class MovieRepositoryTest {
         assertNotNull(screeningRoom);
         Movie movie = new Movie(UUID.randomUUID(), "American Psycho", 45.85, screeningRoom);
         assertNotNull(movie);
-        assertThrows(MovieRepositoryDeleteException.class, () -> {
+        assertThrows(MovieRepositoryUpdateException.class, () -> {
             movieRepositoryForTests.expire(movie);
         });
     }

@@ -48,8 +48,6 @@ public class TicketRepository extends MongoRepository<Ticket> {
             }
         }
 
-        mongoDatabase.getCollection(this.ticketCollectionName, this.ticketCollectionType).drop();
-
         // If it does not exit - then create it with a specific JSON Schema.
         if (!collectionExists) {
             ValidationOptions validationOptions = new ValidationOptions().validator(
@@ -112,8 +110,6 @@ public class TicketRepository extends MongoRepository<Ticket> {
             // Creating new ticket object.
             ticket = new Ticket(UUID.randomUUID(), movieTime, reservationTime, movie, client, typeOfTicket);
 
-            MongoCollection<TypeOfTicketDoc> typeOfTicketDocCollection = mongoDatabase.getCollection(this.typeOfTicketCollectionName, this.typeOfTicketCollectionType);
-
             String className;
             TypeOfTicketDoc typeOfTicketDoc;
 
@@ -127,12 +123,12 @@ public class TicketRepository extends MongoRepository<Ticket> {
             Bson filter = Filters.eq("_clazz", className);
 
             try {
-                TypeOfTicketDoc foundTypeOfTicketDoc = typeOfTicketDocCollection.find(filter).first();
+                TypeOfTicketDoc foundTypeOfTicketDoc = getTypeOfTicketCollection().find(filter).first();
                 if (foundTypeOfTicketDoc != null) {
                     TypeOfTicket ticketType = TypeOfTicketMapper.toTypeOfTicket(foundTypeOfTicketDoc, this.findTypeOfTicket(foundTypeOfTicketDoc));
                     ticket.setTypeOfTicket(ticketType);
                 } else {
-                    typeOfTicketDocCollection.insertOne(typeOfTicketDoc);
+                    getTypeOfTicketCollection().insertOne(typeOfTicketDoc);
                 }
             } catch (TypeOfTicketNotFoundException exception) {
                  throw new TypeOfTicketNotFoundException(exception.getMessage());
@@ -140,13 +136,11 @@ public class TicketRepository extends MongoRepository<Ticket> {
 
             // From ticket object ticketDoc object is created (basically it represents ticket object in form of a document).
             TicketDoc ticketDoc = TicketMapper.toTicketDoc(ticket);
-            MongoCollection<TicketDoc> ticketDocCollection = mongoDatabase.getCollection(this.ticketCollectionName, this.ticketCollectionType);
-            ticketDocCollection.insertOne(ticketDoc);
+            getTicketCollection().insertOne(ticketDoc);
 
-            MongoCollection<ScreeningRoomDoc> screeningRoomDocCollection = mongoDatabase.getCollection(this.screeningRoomCollectionName, this.screeningRoomCollectionType);
             filter = Filters.eq("_id", ticket.getMovie().getScreeningRoom().getScreeningRoomID());
             Bson update = Updates.inc("number_of_available_seats", -1);
-            screeningRoomDocCollection.findOneAndUpdate(filter, update);
+            getScreeningRoomCollection().findOneAndUpdate(filter, update);
             clientSession.commitTransaction();
         } catch (MongoException | TicketReservationException | NullReferenceException exception) {
             throw new TicketRepositoryCreateException(exception.getMessage(), exception);
@@ -158,9 +152,8 @@ public class TicketRepository extends MongoRepository<Ticket> {
     public void updateAllFields(Ticket ticket) {
         try {
             TicketDoc ticketDoc = TicketMapper.toTicketDoc(ticket);
-            MongoCollection<TicketDoc> ticketDocCollection = mongoDatabase.getCollection(this.ticketCollectionName, this.ticketCollectionType);
             Bson filter = Filters.eq("_id", ticket.getTicketID());
-            TicketDoc updatedTicketDoc = ticketDocCollection.findOneAndReplace(filter, ticketDoc);
+            TicketDoc updatedTicketDoc = getTicketCollection().findOneAndReplace(filter, ticketDoc);
             if (updatedTicketDoc == null) {
                 throw new TicketDocNotFoundException("Document for given ticket object could not be updated, since it is not in the database.");
             }
@@ -178,17 +171,15 @@ public class TicketRepository extends MongoRepository<Ticket> {
     public void delete(UUID ticketID) {
         try(ClientSession clientSession = mongoClient.startSession()) {
             clientSession.startTransaction();
-            MongoCollection<TicketDoc> ticketDocCollection = mongoDatabase.getCollection(this.ticketCollectionName, this.ticketCollectionType);
             Bson filter = Filters.eq("_id", ticketID);
-            TicketDoc removedTicketDoc = ticketDocCollection.findOneAndDelete(filter);
+            TicketDoc removedTicketDoc = getTicketCollection().findOneAndDelete(filter);
             if (removedTicketDoc == null) {
                 throw new TicketDocNotFoundException("Document for given ticket object could not be deleted, since it is not in the database.");
             }
             MovieDoc foundMovieDoc = findMovieDoc(removedTicketDoc.getMovieID());
-            MongoCollection<ScreeningRoomDoc> screeningRoomCollection = mongoDatabase.getCollection(screeningRoomCollectionName, screeningRoomCollectionType);
             Bson screeningRoomFilter = Filters.eq("_id", foundMovieDoc.getScreeningRoomID());
             Bson updates = Updates.inc("number_of_available_seats", 1);
-            ScreeningRoomDoc updatedScreeningRoom = screeningRoomCollection.findOneAndUpdate(screeningRoomFilter, updates);
+            ScreeningRoomDoc updatedScreeningRoom = getScreeningRoomCollection().findOneAndUpdate(screeningRoomFilter, updates);
             if (updatedScreeningRoom == null) {
                 throw new ScreeningRoomDocNotFoundException("Document for screening room object for given ticket object could not be found in the database.");
             }
@@ -200,42 +191,22 @@ public class TicketRepository extends MongoRepository<Ticket> {
 
     @Override
     public void expire(Ticket ticket) {
-        try(ClientSession clientSession = mongoClient.startSession()) {
-            clientSession.startTransaction();
-            ticket.setTicketStatusActive(false);
-            TicketDoc ticketDoc = TicketMapper.toTicketDoc(ticket);
-            MongoCollection<TicketDoc> ticketDocCollection = mongoDatabase.getCollection(this.ticketCollectionName, this.ticketCollectionType);
-            Bson filter = Filters.eq("_id", ticketDoc.getTicketID());
-            TicketDoc expiredTicketDoc = ticketDocCollection.findOneAndReplace(filter, ticketDoc);
-            if (expiredTicketDoc == null) {
-                throw new TicketDocNotFoundException("Document for given ticket object could not be expired, since it is not in the database.");
-            }
-            MovieDoc foundMovieDoc = findMovieDoc(expiredTicketDoc.getMovieID());
-            MongoCollection<ScreeningRoomDoc> screeningRoomCollection = mongoDatabase.getCollection(screeningRoomCollectionName, screeningRoomCollectionType);
-            Bson screeningRoomFilter = Filters.eq("_id", foundMovieDoc.getScreeningRoomID());
-            Bson updates = Updates.inc("number_of_available_seats", 1);
-            ScreeningRoomDoc updatedScreeningRoom = screeningRoomCollection.findOneAndUpdate(screeningRoomFilter, updates);
-            if (updatedScreeningRoom == null) {
-                throw new ScreeningRoomDocNotFoundException("Document for screening room object for given ticket object could not be found in the database.");
-            }
-            clientSession.commitTransaction();
-        } catch (MongoException exception) {
-            throw new TicketRepositoryDeleteException(exception.getMessage(), exception);
-        }
+        ticket.setTicketStatusActive(false);
+        updateAllFields(ticket);
     }
 
     @Override
     public Ticket findByUUID(UUID identifier) {
         Ticket ticket;
-        try {
-            MongoCollection<TicketDoc> ticketDocCollection = mongoDatabase.getCollection(this.ticketCollectionName, this.ticketCollectionType);
-            Bson filter = Filters.eq("_id", identifier);
-            TicketDoc ticketDoc = ticketDocCollection.find(filter).first();
+        try(ClientSession clientSession = mongoClient.startSession()) {
+            clientSession.startTransaction();
+            TicketDoc ticketDoc = findTicketDoc(identifier);
             if (ticketDoc != null) {
                 ticket = this.getTicket(ticketDoc);
             } else {
                 throw new TicketDocNotFoundException("Document for given ticket object could not be read, since it is not in the database.");
             }
+            clientSession.commitTransaction();
         } catch (MongoException exception) {
             throw new TicketRepositoryReadException(exception.getMessage(), exception);
         }
@@ -244,13 +215,12 @@ public class TicketRepository extends MongoRepository<Ticket> {
 
     @Override
     public List<Ticket> findAll() {
-       List<Ticket> listOfAllTickets = new ArrayList<>();
-       try {
-           MongoCollection<TicketDoc> ticketDocCollection = mongoDatabase.getCollection(this.ticketCollectionName, this.ticketCollectionType);
-           Bson filter = Filters.empty();
-           for (TicketDoc ticketDoc : ticketDocCollection.find(filter)) {
-               listOfAllTickets.add(this.getTicket(ticketDoc));
-           }
+       List<Ticket> listOfAllTickets;
+       try(ClientSession clientSession = mongoClient.startSession()) {
+           clientSession.startTransaction();
+           Bson ticketFilter = Filters.empty();
+           listOfAllTickets = findTickets(ticketFilter);
+           clientSession.commitTransaction();
        } catch (MongoException exception) {
            throw new TicketRepositoryReadException(exception.getMessage(), exception);
        }
@@ -259,33 +229,42 @@ public class TicketRepository extends MongoRepository<Ticket> {
 
     @Override
     public List<Ticket> findAllActive() {
-        List<Ticket> listOfAllTickets = new ArrayList<>();
-        try {
-            MongoCollection<TicketDoc> ticketDocCollection = mongoDatabase.getCollection(this.ticketCollectionName, this.ticketCollectionType);
-            Bson filter = Filters.eq("ticket_status_active", true);
-            for (TicketDoc ticketDoc : ticketDocCollection.find(filter)) {
-                listOfAllTickets.add(this.getTicket(ticketDoc));
-            }
+        List<Ticket> listOfAllActiveTickets;
+        try(ClientSession clientSession = mongoClient.startSession()) {
+            clientSession.startTransaction();
+            Bson ticketFilter = Filters.eq("ticket_status_active", true);
+            listOfAllActiveTickets = findTickets(ticketFilter);
+            clientSession.commitTransaction();
         } catch (MongoException exception) {
             throw new TicketRepositoryReadException(exception.getMessage(), exception);
         }
-        return listOfAllTickets;
+        return listOfAllActiveTickets;
     }
 
     @Override
     public List<UUID> findAllUUIDs() {
         List<UUID> listOfTicketUUIDs;
-        try {
+        try(ClientSession clientSession = mongoClient.startSession()) {
+            clientSession.startTransaction();
             MongoCollection<TicketDoc> ticketDocCollection = mongoDatabase.getCollection(this.ticketCollectionName, this.ticketCollectionType);
             Bson filter = Filters.empty();
             listOfTicketUUIDs = new ArrayList<>();
             for (TicketDoc ticketDoc : ticketDocCollection.find(filter)) {
                 listOfTicketUUIDs.add(ticketDoc.getTicketID());
             }
+            clientSession.commitTransaction();
         } catch (MongoException exception) {
             throw new TicketRepositoryReadException(exception.getMessage(), exception);
         }
         return listOfTicketUUIDs;
+    }
+
+    private List<Ticket> findTickets(Bson ticketFilter) {
+        List<Ticket> listOfFoundTickets = new ArrayList<>();
+        for (TicketDoc ticketDoc : getTicketCollection().find(ticketFilter)) {
+            listOfFoundTickets.add(getTicket(ticketDoc));
+        }
+        return listOfFoundTickets;
     }
 
     private Ticket getTicket(TicketDoc ticketDoc) {
@@ -300,6 +279,4 @@ public class TicketRepository extends MongoRepository<Ticket> {
                 ticketTypeDoc,
                 this.findTypeOfTicket(ticketTypeDoc));
     }
-
-
 }

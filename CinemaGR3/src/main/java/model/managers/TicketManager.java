@@ -6,6 +6,7 @@ import model.Ticket;
 import model.exceptions.repository_exceptions.RepositoryCreateException;
 import model.exceptions.repository_exceptions.RepositoryDeleteException;
 import model.exceptions.repository_exceptions.RepositoryReadException;
+import model.exceptions.repository_exceptions.RepositoryUpdateException;
 import model.repositories.TicketRepository;
 
 import java.util.Date;
@@ -33,7 +34,7 @@ public class TicketManager {
     public void unregister(Ticket ticket) {
         try {
             ticketRepository.expire(ticket);
-        } catch (RepositoryDeleteException exception) {
+        } catch (RepositoryUpdateException exception) {
             exception.printStackTrace();
         }
     }

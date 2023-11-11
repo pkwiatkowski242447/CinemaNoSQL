@@ -241,7 +241,7 @@ public class ClientRepositoryTest {
     public void expireCertainClientTestNegative() {
         Client newClient = new Client(UUID.randomUUID(), "Stefania", "Czarnecka", 80);
         assertNotNull(newClient);
-        assertThrows(ClientRepositoryDeleteException.class, () -> {
+        assertThrows(ClientRepositoryUpdateException.class, () -> {
             clientRepositoryForTests.expire(newClient);
         });
     }

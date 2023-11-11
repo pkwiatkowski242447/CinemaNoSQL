@@ -4,6 +4,7 @@ import model.Client;
 import model.exceptions.repository_exceptions.RepositoryCreateException;
 import model.exceptions.repository_exceptions.RepositoryDeleteException;
 import model.exceptions.repository_exceptions.RepositoryReadException;
+import model.exceptions.repository_exceptions.RepositoryUpdateException;
 import model.repositories.ClientRepository;
 
 import java.util.List;
@@ -30,7 +31,7 @@ public class ClientManager {
     public void unregister(Client client) {
         try {
             clientRepository.expire(client);
-        } catch (RepositoryDeleteException exception) {
+        } catch (RepositoryUpdateException exception) {
             exception.printStackTrace();
         }
     }

@@ -181,7 +181,7 @@ public class ScreeningRoomRepositoryTest {
     public void expireCertainScreeningRoomTestNegative() {
         ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0 , 6, 90);
         assertNotNull(screeningRoom);
-        assertThrows(ScreeningRoomRepositoryDeleteException.class, () -> {
+        assertThrows(ScreeningRoomRepositoryUpdateException.class, () -> {
             screeningRoomRepositoryForTests.expire(screeningRoom);
         });
     }
