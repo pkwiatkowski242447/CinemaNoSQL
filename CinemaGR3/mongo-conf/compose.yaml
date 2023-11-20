@@ -59,6 +59,23 @@ services:
       timeout: 2s
       retries: 5
 
+  redis_stack:
+    image: redis/redis-stack:latest
+    hostname: redis
+    container_name: redis
+    volumes:
+      - redis-stack-data:/bitnami/redis/data
+    ports:
+      - "8001:8001"
+      - "6379:6379"
+    networks:
+      - mongonet
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
   mongoinit:
     build: .
     image: mongoimg0:6.0.2
@@ -72,6 +89,8 @@ services:
       mongo_2:
         condition: service_healthy
       mongo_3:
+        condition: service_healthy
+      redis_stack:
         condition: service_healthy
     command: >
       mongosh --host mongonode1:27020 --username admin --password adminpassword --authenticationDatabase admin --eval
@@ -87,6 +106,10 @@ services:
         }
       );
       '
+
+volumes:
+  redis-stack-data:
+    driver: local
 
 networks:
   mongonet: {}

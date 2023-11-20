@@ -1,12 +1,11 @@
-package repository_tests;
+package repository_tests.mongo;
 
 import mapping_layer.model_docs.ScreeningRoomDoc;
 import model.ScreeningRoom;
 import model.exceptions.model_docs_exceptions.ScreeningRoomDocNotFoundException;
 import model.exceptions.repository_exceptions.*;
-import model.repositories.ScreeningRoomRepository;
+import model.repositories.implementations.ScreeningRoomRepository;
 import org.junit.jupiter.api.*;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -21,7 +20,7 @@ public class ScreeningRoomRepositoryTest {
     private ScreeningRoom screeningRoomNo3;
 
     @BeforeAll
-    public static void init() {
+    public static void init() throws RedisConfigNotFoundException {
         screeningRoomRepositoryForTests = new ScreeningRoomRepository(databaseName);
     }
 
@@ -148,14 +147,14 @@ public class ScreeningRoomRepositoryTest {
 
     @Test
     public void deleteCertainScreeningRoomThatIsNotInTheDatabaseTestNegative() {
-        ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0 , 6, 90);
+        ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 6, 90);
         assertNotNull(screeningRoom);
         assertThrows(ScreeningRoomRepositoryDeleteException.class, () -> screeningRoomRepositoryForTests.delete(screeningRoom));
     }
 
     @Test
     public void deleteCertainScreeningRoomWithUUIDThatIsNotInTheDatabaseTestNegative() {
-        ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0 , 6, 90);
+        ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 6, 90);
         assertNotNull(screeningRoom);
         assertThrows(ScreeningRoomRepositoryDeleteException.class, () -> screeningRoomRepositoryForTests.delete(screeningRoom.getScreeningRoomID()));
     }
@@ -179,7 +178,7 @@ public class ScreeningRoomRepositoryTest {
 
     @Test
     public void expireCertainScreeningRoomTestNegative() {
-        ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0 , 6, 90);
+        ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 6, 90);
         assertNotNull(screeningRoom);
         assertThrows(ScreeningRoomRepositoryUpdateException.class, () -> {
             screeningRoomRepositoryForTests.expire(screeningRoom);

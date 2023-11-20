@@ -1,4 +1,4 @@
-package model.repositories;
+package model.repositories.implementations;
 
 import com.mongodb.MongoException;
 import com.mongodb.client.ClientSession;
@@ -13,6 +13,7 @@ import model.exceptions.repository_exceptions.ScreeningRoomRepositoryCreateExcep
 import model.exceptions.repository_exceptions.ScreeningRoomRepositoryDeleteException;
 import model.exceptions.repository_exceptions.ScreeningRoomRepositoryReadException;
 import model.exceptions.repository_exceptions.ScreeningRoomRepositoryUpdateException;
+import model.repositories.interfaces.ScreeningRoomRepositoryInterface;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
@@ -20,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class ScreeningRoomRepository extends MongoRepository<ScreeningRoom> {
+public class ScreeningRoomRepository extends MongoRepository implements ScreeningRoomRepositoryInterface {
 
     public ScreeningRoomRepository(String databaseName) {
         super.initDatabaseConnection(databaseName);
@@ -79,6 +80,7 @@ public class ScreeningRoomRepository extends MongoRepository<ScreeningRoom> {
         }
     }
 
+    @Override
     public ScreeningRoom create(int screeningRoomFloor, int screeningRoomNumber, int numberOfSeats) {
         ScreeningRoom screeningRoom;
         try {

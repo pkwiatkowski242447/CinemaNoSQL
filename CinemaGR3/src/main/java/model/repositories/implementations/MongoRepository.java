@@ -1,4 +1,4 @@
-package model.repositories;
+package model.repositories.implementations;
 
 import com.mongodb.*;
 import com.mongodb.client.MongoClient;
@@ -27,7 +27,7 @@ import java.io.Closeable;
 import java.util.List;
 import java.util.UUID;
 
-public abstract class MongoRepository<Type> implements Closeable {
+public abstract class MongoRepository implements Closeable {
 
     // Database connection required information.
     private final ConnectionString connectionString = new ConnectionString("mongodb://mongonode1:27020,mongonode2:27021,mongonode3:27022/?replicaSet=replicaSet0");
@@ -85,30 +85,6 @@ public abstract class MongoRepository<Type> implements Closeable {
         mongoClient = MongoClients.create(mongoClientSettings);
         mongoDatabase = mongoClient.getDatabase(databaseName);
     }
-
-    // Defining methods that later will be overwritten in other repositories.
-
-    // R - Methods for finding object representation in the DB
-
-    public abstract Type findByUUID(UUID elementUUID);
-
-    public abstract List<Type> findAll();
-
-    public abstract List<Type> findAllActive();
-
-    public abstract List<UUID> findAllUUIDs();
-
-    // U - Methods for updating object representation in the DB
-
-    public abstract void updateAllFields(Type element);
-
-    // D - Methods for deleting object representation from DB
-
-    public abstract void delete(Type element);
-
-    public abstract void delete(UUID elementID);
-
-    public abstract void expire(Type element);
 
     // Other methods
 

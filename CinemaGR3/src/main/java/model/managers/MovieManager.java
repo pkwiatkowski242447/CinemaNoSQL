@@ -3,10 +3,9 @@ package model.managers;
 import model.Movie;
 import model.ScreeningRoom;
 import model.exceptions.repository_exceptions.RepositoryCreateException;
-import model.exceptions.repository_exceptions.RepositoryDeleteException;
 import model.exceptions.repository_exceptions.RepositoryReadException;
 import model.exceptions.repository_exceptions.RepositoryUpdateException;
-import model.repositories.MovieRepository;
+import model.repositories.implementations.MovieRepository;
 
 import java.util.List;
 import java.util.UUID;

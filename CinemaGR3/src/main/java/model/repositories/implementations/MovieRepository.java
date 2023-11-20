@@ -1,4 +1,4 @@
-package model.repositories;
+package model.repositories.implementations;
 
 import com.mongodb.MongoException;
 import com.mongodb.client.ClientSession;
@@ -16,6 +16,7 @@ import model.exceptions.repository_exceptions.MovieRepositoryCreateException;
 import model.exceptions.repository_exceptions.MovieRepositoryDeleteException;
 import model.exceptions.repository_exceptions.MovieRepositoryReadException;
 import model.exceptions.repository_exceptions.MovieRepositoryUpdateException;
+import model.repositories.interfaces.MovieRepositoryInterface;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
@@ -23,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class MovieRepository extends MongoRepository<Movie> {
+public class MovieRepository extends MongoRepository implements MovieRepositoryInterface {
 
     public MovieRepository(String databaseName) {
         super.initDatabaseConnection(databaseName);
@@ -81,6 +82,7 @@ public class MovieRepository extends MongoRepository<Movie> {
         }
     }
 
+    @Override
     public Movie create(String movieTitle, double baseMoviePrice, ScreeningRoom screeningRoom) {
         Movie movie;
         try {

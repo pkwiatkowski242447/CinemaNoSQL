@@ -1,4 +1,4 @@
-package model.repositories;
+package model.repositories.implementations;
 
 import com.mongodb.MongoException;
 import com.mongodb.client.ClientSession;
@@ -23,6 +23,7 @@ import model.exceptions.repository_exceptions.TicketRepositoryCreateException;
 import model.exceptions.repository_exceptions.TicketRepositoryDeleteException;
 import model.exceptions.repository_exceptions.TicketRepositoryReadException;
 import model.exceptions.repository_exceptions.TicketRepositoryUpdateException;
+import model.repositories.interfaces.TicketRepositoryInterface;
 import model.ticket_types.Reduced;
 import model.ticket_types.TypeOfTicket;
 import org.bson.Document;
@@ -34,7 +35,7 @@ import java.util.List;
 import java.util.UUID;
 
 
-public class TicketRepository extends MongoRepository<Ticket> {
+public class TicketRepository extends MongoRepository implements TicketRepositoryInterface {
 
     public TicketRepository(String databaseName) {
         super.initDatabaseConnection(databaseName);
@@ -103,6 +104,7 @@ public class TicketRepository extends MongoRepository<Ticket> {
     }
 
 
+    @Override
     public Ticket create(Date movieTime, Date reservationTime, Movie movie, Client client, String typeOfTicket) {
         Ticket ticket;
         try(ClientSession clientSession = mongoClient.startSession()) {

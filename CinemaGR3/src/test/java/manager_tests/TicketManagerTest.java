@@ -6,7 +6,10 @@ import model.ScreeningRoom;
 import model.Ticket;
 import model.exceptions.model_exceptions.TicketReservationException;
 import model.managers.*;
-import model.repositories.*;
+import model.repositories.implementations.ClientRepository;
+import model.repositories.implementations.MovieRepository;
+import model.repositories.implementations.ScreeningRoomRepository;
+import model.repositories.implementations.TicketRepository;
 import org.junit.jupiter.api.*;
 
 import java.util.Calendar;

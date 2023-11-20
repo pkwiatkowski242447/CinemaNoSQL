@@ -4,10 +4,9 @@ import model.Client;
 import model.Movie;
 import model.Ticket;
 import model.exceptions.repository_exceptions.RepositoryCreateException;
-import model.exceptions.repository_exceptions.RepositoryDeleteException;
 import model.exceptions.repository_exceptions.RepositoryReadException;
 import model.exceptions.repository_exceptions.RepositoryUpdateException;
-import model.repositories.TicketRepository;
+import model.repositories.implementations.TicketRepository;
 
 import java.util.Date;
 import java.util.List;

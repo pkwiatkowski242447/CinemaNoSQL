@@ -1,10 +1,10 @@
-package repository_tests;
+package repository_tests.mongo;
 
 import mapping_layer.model_docs.ClientDoc;
 import model.Client;
 import model.exceptions.model_docs_exceptions.ClientDocNotFoundException;
 import model.exceptions.repository_exceptions.*;
-import model.repositories.ClientRepository;
+import model.repositories.implementations.ClientRepository;
 import org.junit.jupiter.api.*;
 
 import java.util.List;

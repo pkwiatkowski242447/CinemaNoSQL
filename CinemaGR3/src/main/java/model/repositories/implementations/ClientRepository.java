@@ -1,4 +1,4 @@
-package model.repositories;
+package model.repositories.implementations;
 
 import com.mongodb.MongoException;
 import com.mongodb.client.ClientSession;
@@ -13,6 +13,7 @@ import model.exceptions.repository_exceptions.ClientRepositoryCreateException;
 import model.exceptions.repository_exceptions.ClientRepositoryDeleteException;
 import model.exceptions.repository_exceptions.ClientRepositoryReadException;
 import model.exceptions.repository_exceptions.ClientRepositoryUpdateException;
+import model.repositories.interfaces.ClientRepositoryInterface;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
@@ -20,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class ClientRepository extends MongoRepository<Client> {
+public class ClientRepository extends MongoRepository implements ClientRepositoryInterface {
 
     public ClientRepository(String databaseName) {
         super.initDatabaseConnection(databaseName);
@@ -81,6 +82,7 @@ public class ClientRepository extends MongoRepository<Client> {
 
     // C - Methods for creating object representation in the DB
 
+    @Override
     public Client create(String clientName, String clientSurname, int clientAge) {
         Client client;
         try {

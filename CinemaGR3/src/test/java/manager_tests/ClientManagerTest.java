@@ -2,7 +2,7 @@ package manager_tests;
 
 import model.Client;
 import model.managers.ClientManager;
-import model.repositories.ClientRepository;
+import model.repositories.implementations.ClientRepository;
 import org.junit.jupiter.api.*;
 
 import java.util.List;

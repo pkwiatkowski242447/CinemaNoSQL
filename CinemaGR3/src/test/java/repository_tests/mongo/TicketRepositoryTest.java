@@ -1,4 +1,4 @@
-package repository_tests;
+package repository_tests.mongo;
 
 import mapping_layer.model_docs.TicketDoc;
 import mapping_layer.model_docs.ticket_types.TypeOfTicketDoc;
@@ -8,10 +8,12 @@ import model.ScreeningRoom;
 import model.Ticket;
 import model.exceptions.model_docs_exceptions.TicketDocNotFoundException;
 import model.exceptions.model_docs_exceptions.TypeOfTicketDocNotFoundException;
-import model.exceptions.model_docs_exceptions.TypeOfTicketNotFoundException;
 import model.exceptions.model_exceptions.TicketReservationException;
 import model.exceptions.repository_exceptions.*;
-import model.repositories.*;
+import model.repositories.implementations.ClientRepository;
+import model.repositories.implementations.MovieRepository;
+import model.repositories.implementations.ScreeningRoomRepository;
+import model.repositories.implementations.TicketRepository;
 import model.ticket_types.Normal;
 import model.ticket_types.TypeOfTicket;
 import org.junit.jupiter.api.*;

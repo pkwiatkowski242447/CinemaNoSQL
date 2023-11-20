@@ -2,10 +2,9 @@ package model.managers;
 
 import model.ScreeningRoom;
 import model.exceptions.repository_exceptions.RepositoryCreateException;
-import model.exceptions.repository_exceptions.RepositoryDeleteException;
 import model.exceptions.repository_exceptions.RepositoryReadException;
 import model.exceptions.repository_exceptions.RepositoryUpdateException;
-import model.repositories.ScreeningRoomRepository;
+import model.repositories.implementations.ScreeningRoomRepository;
 
 import java.util.List;
 import java.util.UUID;

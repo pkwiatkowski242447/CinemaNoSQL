@@ -5,7 +5,10 @@ import model.Movie;
 import model.ScreeningRoom;
 import model.Ticket;
 import model.managers.*;
-import model.repositories.*;
+import model.repositories.implementations.ClientRepository;
+import model.repositories.implementations.MovieRepository;
+import model.repositories.implementations.ScreeningRoomRepository;
+import model.repositories.implementations.TicketRepository;
 
 import java.util.Calendar;
 import java.util.Date;

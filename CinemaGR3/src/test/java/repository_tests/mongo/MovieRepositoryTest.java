@@ -1,14 +1,13 @@
-package repository_tests;
+package repository_tests.mongo;
 
 import mapping_layer.model_docs.MovieDoc;
 import model.Movie;
 import model.ScreeningRoom;
 import model.exceptions.model_docs_exceptions.MovieDocNotFoundException;
 import model.exceptions.repository_exceptions.*;
-import model.repositories.*;
+import model.repositories.implementations.MovieRepository;
+import model.repositories.implementations.ScreeningRoomRepository;
 import org.junit.jupiter.api.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.UUID;
@@ -29,10 +28,8 @@ public class MovieRepositoryTest {
     private Movie movieNo2;
     private Movie movieNo3;
 
-    private final static Logger logger = LoggerFactory.getLogger(MovieRepositoryTest.class);
-
     @BeforeAll
-    public static void init() {
+    public static void init() throws RedisConfigNotFoundException {
         screeningRoomRepositoryForTests = new ScreeningRoomRepository(databaseName);
         movieRepositoryForTests = new MovieRepository(databaseName);
     }
@@ -59,17 +56,9 @@ public class MovieRepositoryTest {
         String movieNo3Title = "A Space Odyssey";
         double movieNo3BasePrice = 59.99;
 
-        logger.info("ScreeningRoomNo1: " + screeningRoomNo1.getScreeningRoomID());
-        logger.info("ScreeningRoomNo2: " + screeningRoomNo2.getScreeningRoomID());
-        logger.info("ScreeningRoomNo3: " + screeningRoomNo3.getScreeningRoomID());
-
         movieNo1 = movieRepositoryForTests.create(movieNo1Title, movieNo1BasePrice, screeningRoomNo1);
         movieNo2 = movieRepositoryForTests.create(movieNo2Title, movieNo2BasePrice, screeningRoomNo2);
         movieNo3 = movieRepositoryForTests.create(movieNo3Title, movieNo3BasePrice, screeningRoomNo3);
-
-        logger.debug("MovieNo1: " + movieNo1.getMovieInfo());
-        logger.debug("MovieNo2: " + movieNo2.getMovieInfo());
-        logger.debug("MovieNo3: " + movieNo3.getMovieInfo());
     }
 
     @AfterEach

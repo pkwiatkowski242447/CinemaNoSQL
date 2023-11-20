@@ -2,7 +2,7 @@ package manager_tests;
 
 import model.ScreeningRoom;
 import model.managers.ScreeningRoomManager;
-import model.repositories.ScreeningRoomRepository;
+import model.repositories.implementations.ScreeningRoomRepository;
 import org.junit.jupiter.api.*;
 
 import java.util.List;

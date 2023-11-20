@@ -16,9 +16,4 @@ public class NormalDoc extends TypeOfTicketDoc {
     public NormalDoc(@BsonProperty("_id") UUID typeOfTicketID) {
         super(typeOfTicketID);
     }
-
-    @Override
-    public UUID getTypeOfTicketID() {
-        return super.getTypeOfTicketID();
-    }
 }

@@ -4,8 +4,8 @@ import model.Movie;
 import model.ScreeningRoom;
 import model.managers.MovieManager;
 import model.managers.ScreeningRoomManager;
-import model.repositories.MovieRepository;
-import model.repositories.ScreeningRoomRepository;
+import model.repositories.implementations.MovieRepository;
+import model.repositories.implementations.ScreeningRoomRepository;
 import org.junit.jupiter.api.*;
 
 import java.util.List;

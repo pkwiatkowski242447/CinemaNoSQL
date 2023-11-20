@@ -16,9 +16,4 @@ public class ReducedDoc extends TypeOfTicketDoc {
     public ReducedDoc(@BsonProperty("_id") UUID typeOfTicketID) {
         super(typeOfTicketID);
     }
-
-    @Override
-    public UUID getTypeOfTicketID() {
-        return super.getTypeOfTicketID();
-    }
 }
