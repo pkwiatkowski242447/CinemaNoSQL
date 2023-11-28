@@ -13,6 +13,7 @@ import model.repositories.interfaces.MovieRepositoryInterface;
 import model.repositories.redis_access.RedisConnection;
 import redis.clients.jedis.*;
 import redis.clients.jedis.exceptions.JedisConnectionException;
+import redis.clients.jedis.exceptions.JedisException;
 
 import java.util.UUID;
 
@@ -70,12 +71,7 @@ public class RedisMovieRepositoryDecorator extends MovieRepositoryDecorator {
 
     @Override
     public void delete(Movie movie) {
-        try {
-            super.delete(movie);
-            this.clearFromCache(movie.getMovieID());
-        } catch (MovieRepositoryDeleteException exception) {
-            throw new MovieRepositoryDeleteException(exception.getMessage(), exception);
-        }
+        this.delete(movie.getMovieID());
     }
 
     @Override
@@ -118,10 +114,17 @@ public class RedisMovieRepositoryDecorator extends MovieRepositoryDecorator {
     public void addToCache(Movie movie) {
         try (Jsonb jsonb = JsonbBuilder.create();
              Jedis jedis = jedisPool.getResource()) {
-            String movieKey = movieHashPrefix + movie.getMovieID().toString();
-            String movieValue = jsonb.toJson(MovieMapper.toMovieDoc(movie));
-            jedis.set(movieKey, movieValue);
-            jedis.expire(movieKey, EXPIRE_TIME);
+            Transaction tx = jedis.multi();
+            try {
+                String movieKey = movieHashPrefix + movie.getMovieID().toString();
+                tx.watch(movieKey);
+                String movieValue = jsonb.toJson(MovieMapper.toMovieDoc(movie));
+                tx.set(movieKey, movieValue);
+                tx.expire(movieKey, EXPIRE_TIME);
+                tx.exec();
+            } catch (JedisException exception) {
+                tx.discard();
+            }
         } catch (JedisConnectionException ignored) {
 
         } catch (Exception exception) {
@@ -132,10 +135,17 @@ public class RedisMovieRepositoryDecorator extends MovieRepositoryDecorator {
     public void addToCache(ScreeningRoom screeningRoom) {
         try (Jsonb jsonb = JsonbBuilder.create();
              Jedis jedis = jedisPool.getResource()) {
-            String screeningRoomKey = screeningRoomHashPrefix + screeningRoom.getScreeningRoomID().toString();
-            String screeningRoomValue = jsonb.toJson(ScreeningRoomMapper.toScreeningRoomDoc(screeningRoom));
-            jedis.set(screeningRoomKey, screeningRoomValue);
-            jedis.expire(screeningRoomKey, EXPIRE_TIME);
+            Transaction tx = jedis.multi();
+            try {
+                String screeningRoomKey = screeningRoomHashPrefix + screeningRoom.getScreeningRoomID().toString();
+                tx.watch(screeningRoomKey);
+                String screeningRoomValue = jsonb.toJson(ScreeningRoomMapper.toScreeningRoomDoc(screeningRoom));
+                tx.set(screeningRoomKey, screeningRoomValue);
+                tx.expire(screeningRoomKey, EXPIRE_TIME);
+                tx.exec();
+            } catch (JedisException exception) {
+                tx.discard();
+            }
         } catch (JedisConnectionException ignored) {
 
         } catch (Exception exception) {
@@ -145,8 +155,15 @@ public class RedisMovieRepositoryDecorator extends MovieRepositoryDecorator {
 
     public void clearFromCache(UUID movieID) {
         try (Jedis jedis = jedisPool.getResource()) {
-            String movieKey = movieHashPrefix + movieID.toString();
-            jedis.del(movieKey);
+            Transaction tx = jedis.multi();
+            try {
+                String movieKey = movieHashPrefix + movieID.toString();
+                tx.watch(movieKey);
+                tx.del(movieKey);
+                tx.exec();
+            } catch (JedisException exception) {
+                tx.discard();
+            }
         } catch (JedisConnectionException ignored) {
 
         }

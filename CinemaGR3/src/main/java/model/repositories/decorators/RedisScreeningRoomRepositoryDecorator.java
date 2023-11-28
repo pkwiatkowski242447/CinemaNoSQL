@@ -10,7 +10,9 @@ import model.repositories.interfaces.ScreeningRoomRepositoryInterface;
 import model.repositories.redis_access.RedisConnection;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.Transaction;
 import redis.clients.jedis.exceptions.JedisConnectionException;
+import redis.clients.jedis.exceptions.JedisException;
 
 import java.util.UUID;
 
@@ -58,7 +60,6 @@ public class RedisScreeningRoomRepositoryDecorator extends ScreeningRoomReposito
     public void updateAllFields(ScreeningRoom screeningRoom) {
         try {
             super.updateAllFields(screeningRoom);
-            this.clearFromCache(screeningRoom.getScreeningRoomID());
             this.addToCache(screeningRoom);
         } catch (ScreeningRoomRepositoryUpdateException exception) {
             throw new ScreeningRoomRepositoryUpdateException(exception.getMessage(), exception);
@@ -67,12 +68,7 @@ public class RedisScreeningRoomRepositoryDecorator extends ScreeningRoomReposito
 
     @Override
     public void delete(ScreeningRoom screeningRoom) {
-        try {
-            this.clearFromCache(screeningRoom.getScreeningRoomID());
-            super.delete(screeningRoom);
-        } catch (ScreeningRoomRepositoryDeleteException exception) {
-            throw new ScreeningRoomRepositoryDeleteException(exception.getMessage(), exception);
-        }
+        this.delete(screeningRoom.getScreeningRoomID());
     }
 
     @Override
@@ -96,12 +92,19 @@ public class RedisScreeningRoomRepositoryDecorator extends ScreeningRoomReposito
     }
 
     public void addToCache(ScreeningRoom screeningRoom) {
-        try(Jsonb jsonb = JsonbBuilder.create();
-            Jedis jedis = jedisPool.getResource()) {
-            String screeningRoomKey = hashPrefix + screeningRoom.getScreeningRoomID().toString();
-            String screeningRoomValue = jsonb.toJson(ScreeningRoomMapper.toScreeningRoomDoc(screeningRoom));
-            jedis.set(screeningRoomKey, screeningRoomValue);
-            jedis.expire(screeningRoomKey, EXPIRE_TIME);
+        try (Jsonb jsonb = JsonbBuilder.create();
+             Jedis jedis = jedisPool.getResource()) {
+            Transaction tx = jedis.multi();
+            try {
+                String screeningRoomKey = hashPrefix + screeningRoom.getScreeningRoomID().toString();
+                tx.watch(screeningRoomKey);
+                String screeningRoomValue = jsonb.toJson(ScreeningRoomMapper.toScreeningRoomDoc(screeningRoom));
+                tx.set(screeningRoomKey, screeningRoomValue);
+                tx.expire(screeningRoomKey, EXPIRE_TIME);
+                tx.exec();
+            } catch (JedisException exception) {
+                tx.discard();
+            }
         } catch (JedisConnectionException ignored) {
 
         } catch (Exception exception) {
@@ -111,8 +114,15 @@ public class RedisScreeningRoomRepositoryDecorator extends ScreeningRoomReposito
 
     public void clearFromCache(UUID screeningRoomID) {
         try (Jedis jedis = jedisPool.getResource()) {
-            String screeningRoomKey = hashPrefix + screeningRoomID.toString();
-            jedis.del(screeningRoomKey);
+            Transaction tx = jedis.multi();
+            try {
+                String screeningRoomKey = hashPrefix + screeningRoomID.toString();
+                tx.watch(screeningRoomKey);
+                tx.del(screeningRoomKey);
+                tx.exec();
+            } catch (JedisException exception) {
+                tx.discard();
+            }
         } catch (JedisConnectionException ignored) {
 
         }
