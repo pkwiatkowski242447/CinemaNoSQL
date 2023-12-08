@@ -2,6 +2,7 @@ package manager_tests;
 
 import model.Movie;
 import model.ScreeningRoom;
+import model.exceptions.repository_exceptions.MongoConfigNotFoundException;
 import model.managers.MovieManager;
 import model.managers.ScreeningRoomManager;
 import model.repositories.implementations.MovieRepository;
@@ -22,7 +23,7 @@ public class MovieManagerTest {
     private static ScreeningRoomManager screeningRoomManagerForTests;
 
     @BeforeAll
-    public static void init() {
+    public static void init() throws MongoConfigNotFoundException {
         movieRepositoryForTests = new MovieRepository(databaseName);
         screeningRoomRepositoryForTests = new ScreeningRoomRepository(databaseName);
         movieManagerForTests = new MovieManager(movieRepositoryForTests);
@@ -76,7 +77,7 @@ public class MovieManagerTest {
     }
 
     @Test
-    public void createMovieManagerTest() {
+    public void createMovieManagerTest() throws MongoConfigNotFoundException {
         MovieRepository movieRepository = new MovieRepository(databaseName);
         assertNotNull(movieRepository);
         MovieManager movieManager = new MovieManager(movieRepository);
@@ -84,7 +85,7 @@ public class MovieManagerTest {
     }
 
     @Test
-    public void setMovieRepositoryForMovieManagerTest() {
+    public void setMovieRepositoryForMovieManagerTest() throws MongoConfigNotFoundException {
         MovieRepository movieRepositoryNo1 = new MovieRepository(databaseName);
         assertNotNull(movieRepositoryNo1);
         MovieRepository movieRepositoryNo2 = new MovieRepository(databaseName);

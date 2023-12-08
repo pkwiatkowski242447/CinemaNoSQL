@@ -1,4 +1,4 @@
-package model.repositories.redis_access;
+package model.repositories.access;
 
 import model.exceptions.repository_exceptions.RedisConfigNotFoundException;
 import model.repositories.decorators.RedisMovieRepositoryDecorator;
@@ -13,7 +13,7 @@ import java.util.Properties;
 public class RedisConnection {
 
     public static JedisPool createConnection() throws RedisConfigNotFoundException {
-        JedisPool jedisPool = null;
+        JedisPool jedisPool;
         Properties properties = new Properties();
         try (InputStream input = RedisMovieRepositoryDecorator.class.getClassLoader().getResourceAsStream("redis.properties")) {
             properties.load(input);

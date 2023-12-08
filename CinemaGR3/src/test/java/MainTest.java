@@ -1,4 +1,5 @@
 import main.Main;
+import model.exceptions.repository_exceptions.MongoConfigNotFoundException;
 import org.junit.jupiter.api.Test;
 
 public class MainTest {
@@ -10,7 +11,7 @@ public class MainTest {
     }
 
     @Test
-    public void mainTestRun() {
+    public void mainTestRun() throws MongoConfigNotFoundException {
         Main.main(null);
     }
 }

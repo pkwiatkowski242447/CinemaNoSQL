@@ -9,10 +9,7 @@ import mapping_layer.mappers.ClientMapper;
 import mapping_layer.model_docs.ClientDoc;
 import model.Client;
 import model.exceptions.model_docs_exceptions.ClientDocNotFoundException;
-import model.exceptions.repository_exceptions.ClientRepositoryCreateException;
-import model.exceptions.repository_exceptions.ClientRepositoryDeleteException;
-import model.exceptions.repository_exceptions.ClientRepositoryReadException;
-import model.exceptions.repository_exceptions.ClientRepositoryUpdateException;
+import model.exceptions.repository_exceptions.*;
 import model.repositories.interfaces.ClientRepositoryInterface;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -23,7 +20,7 @@ import java.util.UUID;
 
 public class ClientRepository extends MongoRepository implements ClientRepositoryInterface {
 
-    public ClientRepository(String databaseName) {
+    public ClientRepository(String databaseName) throws MongoConfigNotFoundException {
         super.initDatabaseConnection(databaseName);
 
         // Checking if collection "clients" exists.

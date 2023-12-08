@@ -20,7 +20,7 @@ public class ScreeningRoomRepositoryTest {
     private ScreeningRoom screeningRoomNo3;
 
     @BeforeAll
-    public static void init() throws RedisConfigNotFoundException {
+    public static void init() throws MongoConfigNotFoundException {
         screeningRoomRepositoryForTests = new ScreeningRoomRepository(databaseName);
     }
 
@@ -54,7 +54,7 @@ public class ScreeningRoomRepositoryTest {
     }
 
     @Test
-    public void screeningRoomRepositoryConstructorTest() {
+    public void screeningRoomRepositoryConstructorTest() throws MongoConfigNotFoundException {
         ScreeningRoomRepository screeningRoomRepository = new ScreeningRoomRepository(databaseName);
         assertNotNull(screeningRoomRepository);
     }

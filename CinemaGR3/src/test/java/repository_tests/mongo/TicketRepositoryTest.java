@@ -58,7 +58,7 @@ public class TicketRepositoryTest {
     private Ticket ticketNo3;
 
     @BeforeAll
-    public static void init() {
+    public static void init() throws MongoConfigNotFoundException {
         clientRepositoryForTests = new ClientRepository(databaseName);
         movieRepositoryForTests = new MovieRepository(databaseName);
         screeningRoomRepositoryForTests = new ScreeningRoomRepository(databaseName);
@@ -141,7 +141,7 @@ public class TicketRepositoryTest {
     }
 
     @Test
-    public void ticketRepositoryConstructorTest() {
+    public void ticketRepositoryConstructorTest() throws MongoConfigNotFoundException {
         TicketRepository ticketRepository = new TicketRepository(databaseName);
         assertNotNull(ticketRepository);
     }

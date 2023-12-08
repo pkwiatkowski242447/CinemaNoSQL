@@ -21,7 +21,7 @@ public class ClientRepositoryTest {
     private static ClientRepository clientRepositoryForTests;
 
     @BeforeAll
-    public static void init() {
+    public static void init() throws MongoConfigNotFoundException {
         clientRepositoryForTests = new ClientRepository(databaseName);
     }
 
@@ -55,7 +55,7 @@ public class ClientRepositoryTest {
     }
 
     @Test
-    public void clientRepositoryConstructorTest() {
+    public void clientRepositoryConstructorTest() throws MongoConfigNotFoundException {
         ClientRepository clientRepository = new ClientRepository(databaseName);
         assertNotNull(clientRepository);
     }

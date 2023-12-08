@@ -1,6 +1,7 @@
 package manager_tests;
 
 import model.ScreeningRoom;
+import model.exceptions.repository_exceptions.MongoConfigNotFoundException;
 import model.managers.ScreeningRoomManager;
 import model.repositories.implementations.ScreeningRoomRepository;
 import org.junit.jupiter.api.*;
@@ -17,7 +18,7 @@ public class ScreeningRoomManagerTest {
     private static ScreeningRoomManager screeningRoomManagerForTests;
 
     @BeforeAll
-    public static void init() {
+    public static void init() throws MongoConfigNotFoundException  {
         screeningRoomRepositoryForTests = new ScreeningRoomRepository(databaseName);
         screeningRoomManagerForTests = new ScreeningRoomManager(screeningRoomRepositoryForTests);
     }
@@ -53,7 +54,7 @@ public class ScreeningRoomManagerTest {
     }
 
     @Test
-    public void createScreeningRoomManagerTest() {
+    public void createScreeningRoomManagerTest() throws MongoConfigNotFoundException {
         ScreeningRoomRepository screeningRoomRepository = new ScreeningRoomRepository(databaseName);
         assertNotNull(screeningRoomRepository);
         ScreeningRoomManager screeningRoomManager = new ScreeningRoomManager(screeningRoomRepository);
@@ -62,7 +63,7 @@ public class ScreeningRoomManagerTest {
     }
 
     @Test
-    public void setScreeningRoomRepositoryForScreeningRoomManagerTest() {
+    public void setScreeningRoomRepositoryForScreeningRoomManagerTest() throws MongoConfigNotFoundException {
         ScreeningRoomRepository screeningRoomRepositoryNo1 = new ScreeningRoomRepository(databaseName);
         assertNotNull(screeningRoomRepositoryNo1);
         ScreeningRoomRepository screeningRoomRepositoryNo2 = new ScreeningRoomRepository(databaseName);

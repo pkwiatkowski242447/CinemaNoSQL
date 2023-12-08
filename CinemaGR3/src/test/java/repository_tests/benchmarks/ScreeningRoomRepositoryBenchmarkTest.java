@@ -1,6 +1,7 @@
 package repository_tests.benchmarks;
 
 import model.ScreeningRoom;
+import model.exceptions.repository_exceptions.MongoConfigNotFoundException;
 import model.exceptions.repository_exceptions.RedisConfigNotFoundException;
 import model.repositories.decorators.RedisScreeningRoomRepositoryDecorator;
 import model.repositories.implementations.ScreeningRoomRepository;
@@ -11,6 +12,7 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -28,28 +30,18 @@ public class ScreeningRoomRepositoryBenchmarkTest {
 
     private final static String databaseName = "test";
     private static ScreeningRoomRepository screeningRoomRepositoryForTests;
-    private ScreeningRoom screeningRoomNo1;
-    private ScreeningRoom screeningRoomNo2;
-    private ScreeningRoom screeningRoomNo3;
+
     private static RedisScreeningRoomRepositoryDecorator redisScreeningRoomRepository;
+    private List<ScreeningRoom> listOfScreeningRooms = new ArrayList<>();
 
     @Setup
-    public void init() throws RedisConfigNotFoundException {
+    public void init() throws RedisConfigNotFoundException, MongoConfigNotFoundException {
         screeningRoomRepositoryForTests = new ScreeningRoomRepository(databaseName);
         redisScreeningRoomRepository = new RedisScreeningRoomRepositoryDecorator(screeningRoomRepositoryForTests);
 
-        int screeningRoomNo1Floor = 1;
-        int screeningRoomNo1Number = 10;
-        int screeningRoomNo1NumberOfAvailSeats = 45;
-        screeningRoomNo1 = screeningRoomRepositoryForTests.create(screeningRoomNo1Floor, screeningRoomNo1Number, screeningRoomNo1NumberOfAvailSeats);
-        int screeningRoomNo2Floor = 2;
-        int screeningRoomNo2Number = 5;
-        int screeningRoomNo2NumberOfAvailSeats = 90;
-        screeningRoomNo2 = screeningRoomRepositoryForTests.create(screeningRoomNo2Floor, screeningRoomNo2Number, screeningRoomNo2NumberOfAvailSeats);
-        int screeningRoomNo3Floor = 0;
-        int screeningRoomNo3Number = 19;
-        int screeningRoomNo3NumberOfAvailSeats = 120;
-        screeningRoomNo3 = screeningRoomRepositoryForTests.create(screeningRoomNo3Floor, screeningRoomNo3Number, screeningRoomNo3NumberOfAvailSeats);
+        for (int i = 0; i < 300; i++) {
+            listOfScreeningRooms.add(screeningRoomRepositoryForTests.create((i % 3) + 1, (i % 20) + 1, ((i * 10) % 150)));
+        }
     }
 
     @TearDown
@@ -86,18 +78,22 @@ public class ScreeningRoomRepositoryBenchmarkTest {
 
     @Benchmark
     public void readScreeningRoomDataFromRedisCacheWhenItIsInCache() {
-        redisScreeningRoomRepository.addToCache(screeningRoomNo1);
-        ScreeningRoom cacheScreeningRoom = redisScreeningRoomRepository.findByUUID(screeningRoomNo1.getScreeningRoomID());
-        assertNotNull(cacheScreeningRoom);
-        assertEquals(screeningRoomNo1, cacheScreeningRoom);
+        for (int i = 0; i < 300; i++) {
+            redisScreeningRoomRepository.addToCache(listOfScreeningRooms.get(i));
+            ScreeningRoom cacheScreeningRoom = redisScreeningRoomRepository.findByUUID(listOfScreeningRooms.get(i).getScreeningRoomID());
+            assertNotNull(cacheScreeningRoom);
+            assertEquals(listOfScreeningRooms.get(i), cacheScreeningRoom);
+        }
     }
 
     @Benchmark
     public void readScreeningRoomDataFromRedisCacheWhenItIsNotInCache() {
-        redisScreeningRoomRepository.addToCache(screeningRoomNo1);
-        redisScreeningRoomRepository.clearFromCache(screeningRoomNo1.getScreeningRoomID());
-        ScreeningRoom cacheScreeningRoom = redisScreeningRoomRepository.findByUUID(screeningRoomNo1.getScreeningRoomID());
-        assertNotNull(cacheScreeningRoom);
-        assertEquals(screeningRoomNo1, cacheScreeningRoom);
+        for (int i = 0; i < 300; i++) {
+            redisScreeningRoomRepository.addToCache(listOfScreeningRooms.get(i));
+            redisScreeningRoomRepository.clearFromCache(listOfScreeningRooms.get(i).getScreeningRoomID());
+            ScreeningRoom cacheScreeningRoom = redisScreeningRoomRepository.findByUUID(listOfScreeningRooms.get(i).getScreeningRoomID());
+            assertNotNull(cacheScreeningRoom);
+            assertEquals(listOfScreeningRooms.get(i), cacheScreeningRoom);
+        }
     }
 }

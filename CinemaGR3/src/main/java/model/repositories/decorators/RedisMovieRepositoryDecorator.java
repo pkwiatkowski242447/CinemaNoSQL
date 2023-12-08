@@ -10,7 +10,7 @@ import model.Movie;
 import model.ScreeningRoom;
 import model.exceptions.repository_exceptions.*;
 import model.repositories.interfaces.MovieRepositoryInterface;
-import model.repositories.redis_access.RedisConnection;
+import model.repositories.access.RedisConnection;
 import redis.clients.jedis.*;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisException;

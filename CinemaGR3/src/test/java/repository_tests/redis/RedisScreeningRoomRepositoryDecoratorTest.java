@@ -23,7 +23,7 @@ public class RedisScreeningRoomRepositoryDecoratorTest {
     private ScreeningRoom screeningRoomNo3;
 
     @BeforeAll
-    public static void init() throws RedisConfigNotFoundException {
+    public static void init() throws RedisConfigNotFoundException, MongoConfigNotFoundException {
         screeningRoomRepositoryForTests = new ScreeningRoomRepository(databaseName);
         redisScreeningRoomRepository = new RedisScreeningRoomRepositoryDecorator(screeningRoomRepositoryForTests);
     }
@@ -60,7 +60,7 @@ public class RedisScreeningRoomRepositoryDecoratorTest {
     }
 
     @Test
-    public void redisScreeningRoomRepositoryDecoratorConstructorTest() throws RedisConfigNotFoundException {
+    public void redisScreeningRoomRepositoryDecoratorConstructorTest() throws RedisConfigNotFoundException, MongoConfigNotFoundException {
         ScreeningRoomRepository screeningRoomRepository = new ScreeningRoomRepository(databaseName);
         assertNotNull(screeningRoomRepository);
         RedisScreeningRoomRepositoryDecorator redisScreeningRoomRepository = new RedisScreeningRoomRepositoryDecorator(screeningRoomRepository);

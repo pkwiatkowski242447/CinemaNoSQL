@@ -19,10 +19,7 @@ import model.Movie;
 import model.Ticket;
 import model.exceptions.model_docs_exceptions.*;
 import model.exceptions.model_exceptions.TicketReservationException;
-import model.exceptions.repository_exceptions.TicketRepositoryCreateException;
-import model.exceptions.repository_exceptions.TicketRepositoryDeleteException;
-import model.exceptions.repository_exceptions.TicketRepositoryReadException;
-import model.exceptions.repository_exceptions.TicketRepositoryUpdateException;
+import model.exceptions.repository_exceptions.*;
 import model.repositories.interfaces.TicketRepositoryInterface;
 import model.ticket_types.Reduced;
 import model.ticket_types.TypeOfTicket;
@@ -37,7 +34,7 @@ import java.util.UUID;
 
 public class TicketRepository extends MongoRepository implements TicketRepositoryInterface {
 
-    public TicketRepository(String databaseName) {
+    public TicketRepository(String databaseName) throws MongoConfigNotFoundException {
         super.initDatabaseConnection(databaseName);
 
         // Checking if collection "tickets" exists.

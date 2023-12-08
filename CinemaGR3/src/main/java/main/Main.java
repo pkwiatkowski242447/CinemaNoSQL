@@ -4,6 +4,7 @@ import model.Client;
 import model.Movie;
 import model.ScreeningRoom;
 import model.Ticket;
+import model.exceptions.repository_exceptions.MongoConfigNotFoundException;
 import model.managers.*;
 import model.repositories.implementations.ClientRepository;
 import model.repositories.implementations.MovieRepository;
@@ -16,7 +17,7 @@ import java.util.List;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws MongoConfigNotFoundException {
         String databaseName = "cinema";
         ClientRepository clientRepository = new ClientRepository(databaseName);
         ScreeningRoomRepository screeningRoomRepository = new ScreeningRoomRepository(databaseName);

@@ -29,7 +29,7 @@ public class MovieRepositoryTest {
     private Movie movieNo3;
 
     @BeforeAll
-    public static void init() throws RedisConfigNotFoundException {
+    public static void init() throws MongoConfigNotFoundException {
         screeningRoomRepositoryForTests = new ScreeningRoomRepository(databaseName);
         movieRepositoryForTests = new MovieRepository(databaseName);
     }
@@ -81,7 +81,7 @@ public class MovieRepositoryTest {
     }
 
     @Test
-    public void movieRepositoryConstructorTest() {
+    public void movieRepositoryConstructorTest() throws MongoConfigNotFoundException {
         MovieRepository movieRepository = new MovieRepository(databaseName);
         assertNotNull(movieRepository);
     }

@@ -9,10 +9,7 @@ import mapping_layer.mappers.ScreeningRoomMapper;
 import mapping_layer.model_docs.ScreeningRoomDoc;
 import model.ScreeningRoom;
 import model.exceptions.model_docs_exceptions.ScreeningRoomDocNotFoundException;
-import model.exceptions.repository_exceptions.ScreeningRoomRepositoryCreateException;
-import model.exceptions.repository_exceptions.ScreeningRoomRepositoryDeleteException;
-import model.exceptions.repository_exceptions.ScreeningRoomRepositoryReadException;
-import model.exceptions.repository_exceptions.ScreeningRoomRepositoryUpdateException;
+import model.exceptions.repository_exceptions.*;
 import model.repositories.interfaces.ScreeningRoomRepositoryInterface;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -23,7 +20,7 @@ import java.util.UUID;
 
 public class ScreeningRoomRepository extends MongoRepository implements ScreeningRoomRepositoryInterface {
 
-    public ScreeningRoomRepository(String databaseName) {
+    public ScreeningRoomRepository(String databaseName) throws MongoConfigNotFoundException {
         super.initDatabaseConnection(databaseName);
 
         // Checking if collection "screeningRooms" exist.

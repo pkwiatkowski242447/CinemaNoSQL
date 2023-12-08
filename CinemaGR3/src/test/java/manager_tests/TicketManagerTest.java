@@ -5,6 +5,7 @@ import model.Movie;
 import model.ScreeningRoom;
 import model.Ticket;
 import model.exceptions.model_exceptions.TicketReservationException;
+import model.exceptions.repository_exceptions.MongoConfigNotFoundException;
 import model.managers.*;
 import model.repositories.implementations.ClientRepository;
 import model.repositories.implementations.MovieRepository;
@@ -56,7 +57,7 @@ public class TicketManagerTest {
     private static ScreeningRoomManager screeningRoomManagerForTests;
 
     @BeforeAll
-    public static void init() {
+    public static void init() throws MongoConfigNotFoundException  {
         ticketRepositoryForTests = new TicketRepository(databaseName);
         clientRepositoryForTests = new ClientRepository(databaseName);
         movieRepositoryForTests = new MovieRepository(databaseName);
@@ -142,7 +143,7 @@ public class TicketManagerTest {
     }
 
     @Test
-    public void createTicketManagerTest() {
+    public void createTicketManagerTest() throws MongoConfigNotFoundException {
         TicketRepository ticketRepository = new TicketRepository(databaseName);
         assertNotNull(ticketRepository);
         TicketManager ticketManager = new TicketManager(ticketRepository);
@@ -151,7 +152,7 @@ public class TicketManagerTest {
     }
 
     @Test
-    public void setTicketRepositoryForTicketManagerTest() {
+    public void setTicketRepositoryForTicketManagerTest() throws MongoConfigNotFoundException {
         TicketRepository ticketRepositoryNo1 = new TicketRepository(databaseName);
         assertNotNull(ticketRepositoryNo1);
         TicketRepository ticketRepositoryNo2 = new TicketRepository(databaseName);

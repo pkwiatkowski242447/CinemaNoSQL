@@ -12,10 +12,7 @@ import model.Movie;
 import model.ScreeningRoom;
 import model.exceptions.model_docs_exceptions.MovieDocNotFoundException;
 import model.exceptions.model_docs_exceptions.ScreeningRoomNullException;
-import model.exceptions.repository_exceptions.MovieRepositoryCreateException;
-import model.exceptions.repository_exceptions.MovieRepositoryDeleteException;
-import model.exceptions.repository_exceptions.MovieRepositoryReadException;
-import model.exceptions.repository_exceptions.MovieRepositoryUpdateException;
+import model.exceptions.repository_exceptions.*;
 import model.repositories.interfaces.MovieRepositoryInterface;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -26,7 +23,7 @@ import java.util.UUID;
 
 public class MovieRepository extends MongoRepository implements MovieRepositoryInterface {
 
-    public MovieRepository(String databaseName) {
+    public MovieRepository(String databaseName) throws MongoConfigNotFoundException {
         super.initDatabaseConnection(databaseName);
 
         // Checking if collection "movies" exists.

@@ -7,7 +7,7 @@ import mapping_layer.model_docs.ScreeningRoomDoc;
 import model.ScreeningRoom;
 import model.exceptions.repository_exceptions.*;
 import model.repositories.interfaces.ScreeningRoomRepositoryInterface;
-import model.repositories.redis_access.RedisConnection;
+import model.repositories.access.RedisConnection;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.Transaction;

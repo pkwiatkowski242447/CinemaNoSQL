@@ -35,7 +35,7 @@ public class RedisMovieRepositoryDecoratorTest {
     private Movie movieNo3;
 
     @BeforeAll
-    public static void init() throws RedisConfigNotFoundException {
+    public static void init() throws RedisConfigNotFoundException, MongoConfigNotFoundException{
         screeningRoomRepositoryForTests = new ScreeningRoomRepository(databaseName);
         movieRepositoryForTests = new MovieRepository(databaseName);
         redisScreeningRoomRepository = new RedisScreeningRoomRepositoryDecorator(screeningRoomRepositoryForTests);
@@ -92,7 +92,7 @@ public class RedisMovieRepositoryDecoratorTest {
     }
 
     @Test
-    public void movieRepositoryConstructorTest() throws RedisConfigNotFoundException {
+    public void movieRepositoryConstructorTest() throws RedisConfigNotFoundException, MongoConfigNotFoundException {
         MovieRepository movieRepository = new MovieRepository(databaseName);
         assertNotNull(movieRepository);
         RedisMovieRepositoryDecorator redisMovieRepository = new RedisMovieRepositoryDecorator(movieRepository);

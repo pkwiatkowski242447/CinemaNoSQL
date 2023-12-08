@@ -14,6 +14,8 @@ import mapping_layer.model_docs.ticket_types.NormalDoc;
 import mapping_layer.model_docs.ticket_types.ReducedDoc;
 import mapping_layer.model_docs.ticket_types.TypeOfTicketDoc;
 import model.exceptions.model_docs_exceptions.*;
+import model.exceptions.repository_exceptions.MongoConfigNotFoundException;
+import model.repositories.access.MongoConnection;
 import org.bson.Document;
 import org.bson.UuidRepresentation;
 import org.bson.codecs.configuration.CodecRegistries;
@@ -30,8 +32,8 @@ import java.util.UUID;
 public abstract class MongoRepository implements Closeable {
 
     // Database connection required information.
-    private final ConnectionString connectionString = new ConnectionString("mongodb://mongonode1:27020,mongonode2:27021,mongonode3:27022/?replicaSet=replicaSet0");
-    private final MongoCredential mongoCredential = MongoCredential.createCredential("admin", "admin", "adminpassword".toCharArray());
+    // private final ConnectionString connectionString = new ConnectionString("mongodb://mongonode1:27020,mongonode2:27021,mongonode3:27022/?replicaSet=replicaSet0");
+    // private final MongoCredential mongoCredential = MongoCredential.createCredential("admin", "admin", "adminpassword".toCharArray());
 
     // Collection names
 
@@ -69,7 +71,10 @@ public abstract class MongoRepository implements Closeable {
     protected MongoDatabase mongoDatabase;
 
 
-    protected void initDatabaseConnection(String databaseName) {
+    protected void initDatabaseConnection(String databaseName) throws MongoConfigNotFoundException  {
+        ConnectionString connectionString = MongoConnection.getMongoConnectionString();
+        MongoCredential mongoCredential = MongoConnection.getMongoCredentials();
+
         MongoClientSettings mongoClientSettings = MongoClientSettings.builder()
                 .credential(mongoCredential)
                 .readConcern(ReadConcern.MAJORITY)
