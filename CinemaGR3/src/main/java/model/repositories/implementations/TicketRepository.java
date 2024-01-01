@@ -7,17 +7,17 @@ import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Updates;
 import com.mongodb.client.model.ValidationOptions;
-import mapping_layer.mappers.TicketMapper;
-import mapping_layer.mappers.TypeOfTicketMapper;
-import mapping_layer.model_docs.ClientDoc;
-import mapping_layer.model_docs.MovieDoc;
-import mapping_layer.model_docs.ScreeningRoomDoc;
-import mapping_layer.model_docs.TicketDoc;
-import mapping_layer.model_docs.ticket_types.TypeOfTicketDoc;
+import mapping_layer.converters.TicketConverter;
+import mapping_layer.converters.TypeOfTicketConverter;
+import mapping_layer.model_docs.ClientRow;
+import mapping_layer.model_docs.MovieRow;
+import mapping_layer.model_docs.ScreeningRoomRow;
+import mapping_layer.model_docs.TicketRow;
+import mapping_layer.model_docs.ticket_types.TypeOfTicketRow;
 import model.Client;
 import model.Movie;
 import model.Ticket;
-import model.exceptions.model_docs_exceptions.*;
+import model.exceptions.model_docs_exceptions.not_found_exceptions.TypeOfTicketNotFoundException;
 import model.exceptions.model_exceptions.TicketReservationException;
 import model.exceptions.repository_exceptions.*;
 import model.repositories.interfaces.TicketRepositoryInterface;
@@ -110,32 +110,32 @@ public class TicketRepository extends MongoRepository implements TicketRepositor
             ticket = new Ticket(UUID.randomUUID(), movieTime, reservationTime, movie, client, typeOfTicket);
 
             String className;
-            TypeOfTicketDoc typeOfTicketDoc;
+            TypeOfTicketRow typeOfTicketRow;
 
             if (ticket.getTicketType().getClass().equals(Reduced.class)) {
                 className = "reduced";
             } else {
                 className = "normal";
             }
-            typeOfTicketDoc = TypeOfTicketMapper.toTypeOfTicketDoc(ticket.getTicketType());
+            typeOfTicketRow = TypeOfTicketConverter.toTypeOfTicketRow(ticket.getTicketType());
 
             Bson filter = Filters.eq("_clazz", className);
 
             try {
-                TypeOfTicketDoc foundTypeOfTicketDoc = getTypeOfTicketCollection().find(filter).first();
-                if (foundTypeOfTicketDoc != null) {
-                    TypeOfTicket ticketType = TypeOfTicketMapper.toTypeOfTicket(foundTypeOfTicketDoc, this.findTypeOfTicket(foundTypeOfTicketDoc));
+                TypeOfTicketRow foundTypeOfTicketRow = getTypeOfTicketCollection().find(filter).first();
+                if (foundTypeOfTicketRow != null) {
+                    TypeOfTicket ticketType = TypeOfTicketConverter.toTypeOfTicket(foundTypeOfTicketRow, this.findTypeOfTicket(foundTypeOfTicketRow));
                     ticket.setTypeOfTicket(ticketType);
                 } else {
-                    getTypeOfTicketCollection().insertOne(typeOfTicketDoc);
+                    getTypeOfTicketCollection().insertOne(typeOfTicketRow);
                 }
             } catch (TypeOfTicketNotFoundException exception) {
                  throw new TypeOfTicketNotFoundException(exception.getMessage());
             }
 
             // From ticket object ticketDoc object is created (basically it represents ticket object in form of a document).
-            TicketDoc ticketDoc = TicketMapper.toTicketDoc(ticket);
-            getTicketCollection().insertOne(ticketDoc);
+            TicketRow ticketRow = TicketConverter.toTicketRow(ticket);
+            getTicketCollection().insertOne(ticketRow);
 
             filter = Filters.eq("_id", ticket.getMovie().getScreeningRoom().getScreeningRoomID());
             Bson update = Updates.inc("number_of_available_seats", -1);
@@ -150,10 +150,10 @@ public class TicketRepository extends MongoRepository implements TicketRepositor
     @Override
     public void updateAllFields(Ticket ticket) {
         try {
-            TicketDoc ticketDoc = TicketMapper.toTicketDoc(ticket);
+            TicketRow ticketRow = TicketConverter.toTicketRow(ticket);
             Bson filter = Filters.eq("_id", ticket.getTicketID());
-            TicketDoc updatedTicketDoc = getTicketCollection().findOneAndReplace(filter, ticketDoc);
-            if (updatedTicketDoc == null) {
+            TicketRow updatedTicketRow = getTicketCollection().findOneAndReplace(filter, ticketRow);
+            if (updatedTicketRow == null) {
                 throw new TicketDocNotFoundException("Document for given ticket object could not be updated, since it is not in the database.");
             }
         } catch (MongoException exception) {
@@ -171,14 +171,14 @@ public class TicketRepository extends MongoRepository implements TicketRepositor
         try(ClientSession clientSession = mongoClient.startSession()) {
             clientSession.startTransaction();
             Bson filter = Filters.eq("_id", ticketID);
-            TicketDoc removedTicketDoc = getTicketCollection().findOneAndDelete(filter);
-            if (removedTicketDoc == null) {
+            TicketRow removedTicketRow = getTicketCollection().findOneAndDelete(filter);
+            if (removedTicketRow == null) {
                 throw new TicketDocNotFoundException("Document for given ticket object could not be deleted, since it is not in the database.");
             }
-            MovieDoc foundMovieDoc = findMovieDoc(removedTicketDoc.getMovieID());
-            Bson screeningRoomFilter = Filters.eq("_id", foundMovieDoc.getScreeningRoomID());
+            MovieRow foundMovieRow = findMovieDoc(removedTicketRow.getMovieID());
+            Bson screeningRoomFilter = Filters.eq("_id", foundMovieRow.getScreeningRoomID());
             Bson updates = Updates.inc("number_of_available_seats", 1);
-            ScreeningRoomDoc updatedScreeningRoom = getScreeningRoomCollection().findOneAndUpdate(screeningRoomFilter, updates);
+            ScreeningRoomRow updatedScreeningRoom = getScreeningRoomCollection().findOneAndUpdate(screeningRoomFilter, updates);
             if (updatedScreeningRoom == null) {
                 throw new ScreeningRoomDocNotFoundException("Document for screening room object for given ticket object could not be found in the database.");
             }
@@ -199,9 +199,9 @@ public class TicketRepository extends MongoRepository implements TicketRepositor
         Ticket ticket;
         try(ClientSession clientSession = mongoClient.startSession()) {
             clientSession.startTransaction();
-            TicketDoc ticketDoc = findTicketDoc(identifier);
-            if (ticketDoc != null) {
-                ticket = this.getTicket(ticketDoc);
+            TicketRow ticketRow = findTicketDoc(identifier);
+            if (ticketRow != null) {
+                ticket = this.getTicket(ticketRow);
             } else {
                 throw new TicketDocNotFoundException("Document for given ticket object could not be read, since it is not in the database.");
             }
@@ -245,11 +245,11 @@ public class TicketRepository extends MongoRepository implements TicketRepositor
         List<UUID> listOfTicketUUIDs;
         try(ClientSession clientSession = mongoClient.startSession()) {
             clientSession.startTransaction();
-            MongoCollection<TicketDoc> ticketDocCollection = mongoDatabase.getCollection(this.ticketCollectionName, this.ticketCollectionType);
+            MongoCollection<TicketRow> ticketDocCollection = mongoDatabase.getCollection(this.ticketCollectionName, this.ticketCollectionType);
             Bson filter = Filters.empty();
             listOfTicketUUIDs = new ArrayList<>();
-            for (TicketDoc ticketDoc : ticketDocCollection.find(filter)) {
-                listOfTicketUUIDs.add(ticketDoc.getTicketID());
+            for (TicketRow ticketRow : ticketDocCollection.find(filter)) {
+                listOfTicketUUIDs.add(ticketRow.getTicketID());
             }
             clientSession.commitTransaction();
         } catch (MongoException exception) {
@@ -260,21 +260,21 @@ public class TicketRepository extends MongoRepository implements TicketRepositor
 
     private List<Ticket> findTickets(Bson ticketFilter) {
         List<Ticket> listOfFoundTickets = new ArrayList<>();
-        for (TicketDoc ticketDoc : getTicketCollection().find(ticketFilter)) {
-            listOfFoundTickets.add(getTicket(ticketDoc));
+        for (TicketRow ticketRow : getTicketCollection().find(ticketFilter)) {
+            listOfFoundTickets.add(getTicket(ticketRow));
         }
         return listOfFoundTickets;
     }
 
-    private Ticket getTicket(TicketDoc ticketDoc) {
-        ClientDoc clientDoc = this.findClientDoc(ticketDoc.getClientID());
-        MovieDoc movieDoc = this.findMovieDoc(ticketDoc.getMovieID());
-        ScreeningRoomDoc screeningRoomDoc = this.findScreeningRoomDoc(movieDoc.getScreeningRoomID());
-        TypeOfTicketDoc ticketTypeDoc = this.findTypeOfTicketDoc(ticketDoc.getTypeOfTicketID());
-        return TicketMapper.toTicket(ticketDoc,
-                movieDoc,
-                screeningRoomDoc,
-                clientDoc,
+    private Ticket getTicket(TicketRow ticketRow) {
+        ClientRow clientRow = this.findClientDoc(ticketRow.getClientID());
+        MovieRow movieRow = this.findMovieDoc(ticketRow.getMovieID());
+        ScreeningRoomRow screeningRoomRow = this.findScreeningRoomDoc(movieRow.getScreeningRoomID());
+        TypeOfTicketRow ticketTypeDoc = this.findTypeOfTicketDoc(ticketRow.getTypeOfTicketID());
+        return TicketConverter.toTicket(ticketRow,
+                movieRow,
+                screeningRoomRow,
+                clientRow,
                 ticketTypeDoc,
                 this.findTypeOfTicket(ticketTypeDoc));
     }

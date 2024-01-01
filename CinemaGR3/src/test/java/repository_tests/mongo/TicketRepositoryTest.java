@@ -1,13 +1,11 @@
 package repository_tests.mongo;
 
-import mapping_layer.model_docs.TicketDoc;
-import mapping_layer.model_docs.ticket_types.TypeOfTicketDoc;
+import mapping_layer.model_docs.TicketRow;
+import mapping_layer.model_docs.ticket_types.TypeOfTicketRow;
 import model.Client;
 import model.Movie;
 import model.ScreeningRoom;
 import model.Ticket;
-import model.exceptions.model_docs_exceptions.TicketDocNotFoundException;
-import model.exceptions.model_docs_exceptions.TypeOfTicketDocNotFoundException;
 import model.exceptions.model_exceptions.TicketReservationException;
 import model.exceptions.repository_exceptions.*;
 import model.repositories.implementations.ClientRepository;
@@ -349,9 +347,9 @@ public class TicketRepositoryTest {
 
     @Test
     public void mongoRepositoryFindTypeOfTicketDocTestPositive() {
-        TypeOfTicketDoc typeOfTicketDoc = ticketRepositoryForTests.findTypeOfTicketDoc(ticketNo1.getTicketType().getTicketTypeID());
-        assertNotNull(typeOfTicketDoc);
-        assertEquals(typeOfTicketDoc.getTypeOfTicketID(), ticketNo1.getTicketType().getTicketTypeID());
+        TypeOfTicketRow typeOfTicketRow = ticketRepositoryForTests.findTypeOfTicketDoc(ticketNo1.getTicketType().getTicketTypeID());
+        assertNotNull(typeOfTicketRow);
+        assertEquals(typeOfTicketRow.getTypeOfTicketID(), ticketNo1.getTicketType().getTicketTypeID());
     }
 
     @Test
@@ -365,16 +363,16 @@ public class TicketRepositoryTest {
 
     @Test
     public void mongoRepositoryFindTicketDocTestPositive() {
-        TicketDoc ticketDoc = ticketRepositoryForTests.findTicketDoc(ticketNo1.getTicketID());
-        assertNotNull(ticketDoc);
-        assertEquals(ticketNo1.getTicketID(), ticketDoc.getTicketID());
-        assertEquals(ticketNo1.getMovieTime(), ticketDoc.getMovieTime());
-        assertEquals(ticketNo1.getReservationTime(), ticketDoc.getReservationTime());
-        assertEquals(ticketNo1.getTicketFinalPrice(), ticketDoc.getTicketFinalPrice());
-        assertEquals(ticketNo1.isTicketStatusActive(), ticketDoc.isTicketStatusActive());
-        assertEquals(ticketNo1.getClient().getClientID(), ticketDoc.getClientID());
-        assertEquals(ticketNo1.getMovie().getMovieID(), ticketDoc.getMovieID());
-        assertEquals(ticketNo1.getTicketType().getTicketTypeID(), ticketDoc.getTypeOfTicketID());
+        TicketRow ticketRow = ticketRepositoryForTests.findTicketDoc(ticketNo1.getTicketID());
+        assertNotNull(ticketRow);
+        assertEquals(ticketNo1.getTicketID(), ticketRow.getTicketID());
+        assertEquals(ticketNo1.getMovieTime(), ticketRow.getMovieTime());
+        assertEquals(ticketNo1.getReservationTime(), ticketRow.getReservationTime());
+        assertEquals(ticketNo1.getTicketFinalPrice(), ticketRow.getTicketFinalPrice());
+        assertEquals(ticketNo1.isTicketStatusActive(), ticketRow.isTicketStatusActive());
+        assertEquals(ticketNo1.getClient().getClientID(), ticketRow.getClientID());
+        assertEquals(ticketNo1.getMovie().getMovieID(), ticketRow.getMovieID());
+        assertEquals(ticketNo1.getTicketType().getTicketTypeID(), ticketRow.getTypeOfTicketID());
     }
 
     @Test

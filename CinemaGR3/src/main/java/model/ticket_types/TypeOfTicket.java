@@ -2,21 +2,15 @@ package model.ticket_types;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.bson.codecs.pojo.annotations.BsonCreator;
-import org.bson.codecs.pojo.annotations.BsonDiscriminator;
-import org.bson.codecs.pojo.annotations.BsonProperty;
 
 import java.util.UUID;
 
-@BsonDiscriminator(key = "_clazz")
 public abstract class TypeOfTicket {
 
-    @BsonCreator
-    public TypeOfTicket(@BsonProperty("_id") UUID ticketTypeID) {
+    public TypeOfTicket(UUID ticketTypeID) {
         this.ticketTypeID = ticketTypeID;
     }
 
-    @BsonProperty("_id")
     private UUID ticketTypeID;
 
     // Constructors

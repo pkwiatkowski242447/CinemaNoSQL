@@ -6,16 +6,15 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import mapping_layer.model_docs.ClientDoc;
-import mapping_layer.model_docs.MovieDoc;
-import mapping_layer.model_docs.ScreeningRoomDoc;
-import mapping_layer.model_docs.TicketDoc;
-import mapping_layer.model_docs.ticket_types.NormalDoc;
-import mapping_layer.model_docs.ticket_types.ReducedDoc;
-import mapping_layer.model_docs.ticket_types.TypeOfTicketDoc;
-import model.exceptions.model_docs_exceptions.*;
+import mapping_layer.model_docs.ClientRow;
+import mapping_layer.model_docs.MovieRow;
+import mapping_layer.model_docs.ScreeningRoomRow;
+import mapping_layer.model_docs.TicketRow;
+import mapping_layer.model_docs.ticket_types.NormalRow;
+import mapping_layer.model_docs.ticket_types.ReducedRow;
+import mapping_layer.model_docs.ticket_types.TypeOfTicketRow;
+import model.exceptions.model_docs_exceptions.not_found_exceptions.TypeOfTicketNotFoundException;
 import model.exceptions.repository_exceptions.MongoConfigNotFoundException;
-import model.repositories.access.MongoConnection;
 import org.bson.Document;
 import org.bson.UuidRepresentation;
 import org.bson.codecs.configuration.CodecRegistries;
@@ -45,20 +44,20 @@ public abstract class MongoRepository implements Closeable {
 
     // Collection types
 
-    protected final Class<ClientDoc> clientCollectionType = ClientDoc.class;
-    protected final Class<ScreeningRoomDoc> screeningRoomCollectionType = ScreeningRoomDoc.class;
-    protected final Class<MovieDoc> movieCollectionType = MovieDoc.class;
-    protected final Class<TicketDoc> ticketCollectionType = TicketDoc.class;
-    protected final Class<TypeOfTicketDoc> typeOfTicketCollectionType = TypeOfTicketDoc.class;
+    protected final Class<ClientRow> clientCollectionType = ClientRow.class;
+    protected final Class<ScreeningRoomRow> screeningRoomCollectionType = ScreeningRoomRow.class;
+    protected final Class<MovieRow> movieCollectionType = MovieRow.class;
+    protected final Class<TicketRow> ticketCollectionType = TicketRow.class;
+    protected final Class<TypeOfTicketRow> typeOfTicketCollectionType = TypeOfTicketRow.class;
 
     // Mapping Java classes to Bson documents.
-    private final ClassModel<ClientDoc> clientDocClassModel = ClassModel.builder(ClientDoc.class).build();
-    private final ClassModel<MovieDoc> movieDocClassModel = ClassModel.builder(MovieDoc.class).build();
-    private final ClassModel<ScreeningRoomDoc> screeningRoomDocClassModel = ClassModel.builder(ScreeningRoomDoc.class).build();
-    private final ClassModel<TicketDoc> ticketDocClassModel = ClassModel.builder(TicketDoc.class).build();
-    private final ClassModel<TypeOfTicketDoc> typeOfTicketDocClassModel = ClassModel.builder(TypeOfTicketDoc.class).enableDiscriminator(true).build();
-    private final ClassModel<NormalDoc> normalDocClassModel = ClassModel.builder(NormalDoc.class).enableDiscriminator(true).build();
-    private final ClassModel<ReducedDoc> reducedDocClassModel = ClassModel.builder(ReducedDoc.class).enableDiscriminator(true).build();
+    private final ClassModel<ClientRow> clientDocClassModel = ClassModel.builder(ClientRow.class).build();
+    private final ClassModel<MovieRow> movieDocClassModel = ClassModel.builder(MovieRow.class).build();
+    private final ClassModel<ScreeningRoomRow> screeningRoomDocClassModel = ClassModel.builder(ScreeningRoomRow.class).build();
+    private final ClassModel<TicketRow> ticketDocClassModel = ClassModel.builder(TicketRow.class).build();
+    private final ClassModel<TypeOfTicketRow> typeOfTicketDocClassModel = ClassModel.builder(TypeOfTicketRow.class).enableDiscriminator(true).build();
+    private final ClassModel<NormalRow> normalDocClassModel = ClassModel.builder(NormalRow.class).enableDiscriminator(true).build();
+    private final ClassModel<ReducedRow> reducedDocClassModel = ClassModel.builder(ReducedRow.class).enableDiscriminator(true).build();
 
     private final PojoCodecProvider pojoCodecProvider = PojoCodecProvider.builder().register(
             clientDocClassModel, movieDocClassModel, screeningRoomDocClassModel, ticketDocClassModel, typeOfTicketDocClassModel, normalDocClassModel, reducedDocClassModel
@@ -93,59 +92,59 @@ public abstract class MongoRepository implements Closeable {
 
     // Other methods
 
-    public ScreeningRoomDoc findScreeningRoomDoc(UUID screeningRoomID) {
+    public ScreeningRoomRow findScreeningRoomDoc(UUID screeningRoomID) {
         Bson screeningRoomFilter = Filters.eq("_id", screeningRoomID);
-        ScreeningRoomDoc foundScreeningRoomDoc = getScreeningRoomCollection().find(screeningRoomFilter).first();
-        if (foundScreeningRoomDoc != null) {
-            return foundScreeningRoomDoc;
+        ScreeningRoomRow foundScreeningRoomRow = getScreeningRoomCollection().find(screeningRoomFilter).first();
+        if (foundScreeningRoomRow != null) {
+            return foundScreeningRoomRow;
         } else {
             throw new ScreeningRoomDocNotFoundException("Document for screening room object with given UUID could not be found in the database.");
         }
     }
 
-    public MovieDoc findMovieDoc(UUID movieID) {
+    public MovieRow findMovieDoc(UUID movieID) {
         Bson movieFilter = Filters.eq("_id", movieID);
-        MovieDoc foundMovieDoc = getMovieCollection().find(movieFilter).first();
-        if (foundMovieDoc != null) {
-            return foundMovieDoc;
+        MovieRow foundMovieRow = getMovieCollection().find(movieFilter).first();
+        if (foundMovieRow != null) {
+            return foundMovieRow;
         } else {
             throw new MovieDocNotFoundException("Document for movie object with given UUID could not be found in the database.");
         }
     }
 
-    public ClientDoc findClientDoc(UUID clientID) {
+    public ClientRow findClientDoc(UUID clientID) {
         Bson clientFilter = Filters.eq("_id", clientID);
-        ClientDoc foundClientDoc = getClientCollection().find(clientFilter).first();
-        if (foundClientDoc != null) {
-            return foundClientDoc;
+        ClientRow foundClientRow = getClientCollection().find(clientFilter).first();
+        if (foundClientRow != null) {
+            return foundClientRow;
         } else {
             throw new ClientDocNotFoundException("Document for client object with given UUID could not be found in the database.");
         }
     }
 
-    public TicketDoc findTicketDoc(UUID ticketID) {
+    public TicketRow findTicketDoc(UUID ticketID) {
         Bson ticketFilter = Filters.eq("_id", ticketID);
-        TicketDoc foundTicketDoc = getTicketCollection().find(ticketFilter).first();
-        if (foundTicketDoc != null) {
-            return foundTicketDoc;
+        TicketRow foundTicketRow = getTicketCollection().find(ticketFilter).first();
+        if (foundTicketRow != null) {
+            return foundTicketRow;
         } else {
             throw new TicketDocNotFoundException("Document for ticket object with given UUID could not be found in the database.");
         }
     }
 
-    public TypeOfTicketDoc findTypeOfTicketDoc(UUID typeOfTicketID) {
+    public TypeOfTicketRow findTypeOfTicketDoc(UUID typeOfTicketID) {
         Bson typeOfTicketFilter = Filters.eq("_id", typeOfTicketID);
-        TypeOfTicketDoc foundTypeOfTicketDoc = getTypeOfTicketCollection().find(typeOfTicketFilter).first();
-        if (foundTypeOfTicketDoc != null) {
-            return foundTypeOfTicketDoc;
+        TypeOfTicketRow foundTypeOfTicketRow = getTypeOfTicketCollection().find(typeOfTicketFilter).first();
+        if (foundTypeOfTicketRow != null) {
+            return foundTypeOfTicketRow;
         } else {
             throw new TypeOfTicketDocNotFoundException("Document for type of ticket object with given UUID could not be found in the database.");
         }
     }
 
-    public String findTypeOfTicket(TypeOfTicketDoc typeOfTicketDoc) {
+    public String findTypeOfTicket(TypeOfTicketRow typeOfTicketRow) {
         MongoCollection<Document> documentMongoCollection = mongoDatabase.getCollection(typeOfTicketCollectionName);
-        Bson filter = Filters.eq("_id", typeOfTicketDoc.getTypeOfTicketID());
+        Bson filter = Filters.eq("_id", typeOfTicketRow.getTypeOfTicketID());
         Document foundTypeOfTicket = documentMongoCollection.find(filter).first();
         if (foundTypeOfTicket != null) {
             return (String) foundTypeOfTicket.get("_clazz");
@@ -154,23 +153,23 @@ public abstract class MongoRepository implements Closeable {
         }
     }
 
-    protected MongoCollection<ScreeningRoomDoc> getScreeningRoomCollection() {
+    protected MongoCollection<ScreeningRoomRow> getScreeningRoomCollection() {
         return mongoDatabase.getCollection(screeningRoomCollectionName, screeningRoomCollectionType);
     }
 
-    protected MongoCollection<ClientDoc> getClientCollection() {
+    protected MongoCollection<ClientRow> getClientCollection() {
         return mongoDatabase.getCollection(clientCollectionName, clientCollectionType);
     }
 
-    protected MongoCollection<MovieDoc> getMovieCollection() {
+    protected MongoCollection<MovieRow> getMovieCollection() {
         return mongoDatabase.getCollection(movieCollectionName, movieCollectionType);
     }
 
-    protected MongoCollection<TicketDoc> getTicketCollection() {
+    protected MongoCollection<TicketRow> getTicketCollection() {
         return mongoDatabase.getCollection(ticketCollectionName, ticketCollectionType);
     }
 
-    protected MongoCollection<TypeOfTicketDoc> getTypeOfTicketCollection() {
+    protected MongoCollection<TypeOfTicketRow> getTypeOfTicketCollection() {
         return mongoDatabase.getCollection(typeOfTicketCollectionName, typeOfTicketCollectionType);
     }
 

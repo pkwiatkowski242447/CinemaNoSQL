@@ -5,10 +5,9 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ValidationOptions;
-import mapping_layer.mappers.ScreeningRoomMapper;
-import mapping_layer.model_docs.ScreeningRoomDoc;
+import mapping_layer.converters.ScreeningRoomConverter;
+import mapping_layer.model_docs.ScreeningRoomRow;
 import model.ScreeningRoom;
-import model.exceptions.model_docs_exceptions.ScreeningRoomDocNotFoundException;
 import model.exceptions.repository_exceptions.*;
 import model.repositories.interfaces.ScreeningRoomRepositoryInterface;
 import org.bson.Document;
@@ -82,8 +81,8 @@ public class ScreeningRoomRepository extends MongoRepository implements Screenin
         ScreeningRoom screeningRoom;
         try {
             screeningRoom = new ScreeningRoom(UUID.randomUUID(), screeningRoomFloor, screeningRoomNumber, numberOfSeats);
-            ScreeningRoomDoc screeningRoomDoc = ScreeningRoomMapper.toScreeningRoomDoc(screeningRoom);
-            getScreeningRoomCollection().insertOne(screeningRoomDoc);
+            ScreeningRoomRow screeningRoomRow = ScreeningRoomConverter.toScreeningRoomRow(screeningRoom);
+            getScreeningRoomCollection().insertOne(screeningRoomRow);
         } catch (MongoException exception) {
             throw new ScreeningRoomRepositoryCreateException(exception.getMessage(), exception);
         }
@@ -93,10 +92,10 @@ public class ScreeningRoomRepository extends MongoRepository implements Screenin
     @Override
     public void updateAllFields(ScreeningRoom screeningRoom) {
         try {
-            ScreeningRoomDoc screeningRoomDoc = ScreeningRoomMapper.toScreeningRoomDoc(screeningRoom);
+            ScreeningRoomRow screeningRoomRow = ScreeningRoomConverter.toScreeningRoomRow(screeningRoom);
             Bson filter =  Filters.eq("_id", screeningRoom.getScreeningRoomID());
-            ScreeningRoomDoc updatedScreeningRoomDoc = getScreeningRoomCollection().findOneAndReplace(filter, screeningRoomDoc);
-            if (updatedScreeningRoomDoc == null) {
+            ScreeningRoomRow updatedScreeningRoomRow = getScreeningRoomCollection().findOneAndReplace(filter, screeningRoomRow);
+            if (updatedScreeningRoomRow == null) {
                 throw new ScreeningRoomDocNotFoundException("Document for given screening room object could not be updated, since it is not in the database.");
             }
         } catch (MongoException exception) {
@@ -113,8 +112,8 @@ public class ScreeningRoomRepository extends MongoRepository implements Screenin
     public void delete(UUID screeningRoomID) {
         try {
             Bson filter = Filters.eq("_id", screeningRoomID);
-            ScreeningRoomDoc removedScreeningRoomDoc = getScreeningRoomCollection().findOneAndDelete(filter);
-            if (removedScreeningRoomDoc == null) {
+            ScreeningRoomRow removedScreeningRoomRow = getScreeningRoomCollection().findOneAndDelete(filter);
+            if (removedScreeningRoomRow == null) {
                 throw new ScreeningRoomDocNotFoundException("Document for given screening room object could not be deleted, since it is not in the database.");
             }
         } catch (MongoException exception) {
@@ -132,9 +131,9 @@ public class ScreeningRoomRepository extends MongoRepository implements Screenin
     public ScreeningRoom findByUUID(UUID identifier) {
         ScreeningRoom screeningRoom;
         try {
-            ScreeningRoomDoc screeningRoomDoc = findScreeningRoomDoc(identifier);
-            if (screeningRoomDoc != null) {
-                screeningRoom = ScreeningRoomMapper.toScreeningRoom(screeningRoomDoc);
+            ScreeningRoomRow screeningRoomRow = findScreeningRoomDoc(identifier);
+            if (screeningRoomRow != null) {
+                screeningRoom = ScreeningRoomConverter.toScreeningRoom(screeningRoomRow);
             } else {
                 throw new ScreeningRoomDocNotFoundException("Document for screening room object with given UUID could not be read, since it is not in the database.");
             }
@@ -178,8 +177,8 @@ public class ScreeningRoomRepository extends MongoRepository implements Screenin
         try(ClientSession clientSession = mongoClient.startSession()) {
             clientSession.startTransaction();
             Bson filter = Filters.empty();
-            for (ScreeningRoomDoc screeningRoomDoc : getScreeningRoomCollection().find(filter)) {
-                listOfScreeningRoomUUIDs.add(screeningRoomDoc.getScreeningRoomID());
+            for (ScreeningRoomRow screeningRoomRow : getScreeningRoomCollection().find(filter)) {
+                listOfScreeningRoomUUIDs.add(screeningRoomRow.getScreeningRoomID());
             }
             clientSession.commitTransaction();
         } catch (MongoException exception) {
@@ -190,8 +189,8 @@ public class ScreeningRoomRepository extends MongoRepository implements Screenin
 
     private List<ScreeningRoom> findScreeningRooms(Bson screeningRoomFilter) {
         List<ScreeningRoom> listOfFoundScreeningRooms = new ArrayList<>();
-        for (ScreeningRoomDoc screeningRoomDoc : getScreeningRoomCollection().find(screeningRoomFilter)) {
-            listOfFoundScreeningRooms.add(ScreeningRoomMapper.toScreeningRoom(screeningRoomDoc));
+        for (ScreeningRoomRow screeningRoomRow : getScreeningRoomCollection().find(screeningRoomFilter)) {
+            listOfFoundScreeningRooms.add(ScreeningRoomConverter.toScreeningRoom(screeningRoomRow));
         }
         return listOfFoundScreeningRooms;
     }

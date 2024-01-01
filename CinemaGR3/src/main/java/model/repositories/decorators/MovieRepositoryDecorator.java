@@ -1,7 +1,7 @@
 package model.repositories.decorators;
 
-import mapping_layer.model_docs.MovieDoc;
-import mapping_layer.model_docs.ScreeningRoomDoc;
+import mapping_layer.model_docs.MovieRow;
+import mapping_layer.model_docs.ScreeningRoomRow;
 import model.Movie;
 import model.ScreeningRoom;
 import model.repositories.interfaces.MovieRepositoryInterface;
@@ -63,12 +63,12 @@ public class MovieRepositoryDecorator implements MovieRepositoryInterface {
     }
 
     @Override
-    public ScreeningRoomDoc findScreeningRoomDoc(UUID screeningRoomDocId) {
+    public ScreeningRoomRow findScreeningRoomDoc(UUID screeningRoomDocId) {
         return wrappedObject.findScreeningRoomDoc(screeningRoomDocId);
     }
 
     @Override
-    public MovieDoc findMovieDoc(UUID movieDocId) {
+    public MovieRow findMovieDoc(UUID movieDocId) {
         return wrappedObject.findMovieDoc(movieDocId);
     }
 

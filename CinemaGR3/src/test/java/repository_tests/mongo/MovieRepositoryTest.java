@@ -1,9 +1,8 @@
 package repository_tests.mongo;
 
-import mapping_layer.model_docs.MovieDoc;
+import mapping_layer.model_docs.MovieRow;
 import model.Movie;
 import model.ScreeningRoom;
-import model.exceptions.model_docs_exceptions.MovieDocNotFoundException;
 import model.exceptions.repository_exceptions.*;
 import model.repositories.implementations.MovieRepository;
 import model.repositories.implementations.ScreeningRoomRepository;
@@ -273,13 +272,13 @@ public class MovieRepositoryTest {
 
     @Test
     public void mongoRepositoryFindMovieDocTestPositive () {
-        MovieDoc movieDoc = movieRepositoryForTests.findMovieDoc(movieNo1.getMovieID());
-        assertNotNull(movieDoc);
-        assertEquals(movieDoc.getMovieID(), movieNo1.getMovieID());
-        assertEquals(movieDoc.getMovieTitle(), movieNo1.getMovieTitle());
-        assertEquals(movieDoc.getMovieBasePrice(), movieNo1.getMovieBasePrice());
-        assertEquals(movieDoc.isMovieStatusActive(), movieNo1.isMovieStatusActive());
-        assertEquals(movieDoc.getScreeningRoomID(), movieNo1.getScreeningRoom().getScreeningRoomID());
+        MovieRow movieRow = movieRepositoryForTests.findMovieDoc(movieNo1.getMovieID());
+        assertNotNull(movieRow);
+        assertEquals(movieRow.getMovieID(), movieNo1.getMovieID());
+        assertEquals(movieRow.getMovieTitle(), movieNo1.getMovieTitle());
+        assertEquals(movieRow.getMovieBasePrice(), movieNo1.getMovieBasePrice());
+        assertEquals(movieRow.isMovieStatusActive(), movieNo1.isMovieStatusActive());
+        assertEquals(movieRow.getScreeningRoomID(), movieNo1.getScreeningRoom().getScreeningRoomID());
     }
 
     @Test

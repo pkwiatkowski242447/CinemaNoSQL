@@ -6,6 +6,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import java.util.UUID;
 
 public class Movie {
+
     private final UUID movieID;
     private String movieTitle;
     private boolean movieStatusActive;

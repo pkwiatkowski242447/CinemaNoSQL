@@ -3,7 +3,6 @@ package repository_tests.benchmarks;
 import model.ScreeningRoom;
 import model.exceptions.repository_exceptions.MongoConfigNotFoundException;
 import model.exceptions.repository_exceptions.RedisConfigNotFoundException;
-import model.repositories.decorators.RedisScreeningRoomRepositoryDecorator;
 import model.repositories.implementations.ScreeningRoomRepository;
 import org.junit.jupiter.api.*;
 import org.openjdk.jmh.annotations.*;

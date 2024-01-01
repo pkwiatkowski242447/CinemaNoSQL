@@ -1,8 +1,7 @@
 package repository_tests.mongo;
 
-import mapping_layer.model_docs.ScreeningRoomDoc;
+import mapping_layer.model_docs.ScreeningRoomRow;
 import model.ScreeningRoom;
-import model.exceptions.model_docs_exceptions.ScreeningRoomDocNotFoundException;
 import model.exceptions.repository_exceptions.*;
 import model.repositories.implementations.ScreeningRoomRepository;
 import org.junit.jupiter.api.*;
@@ -223,13 +222,13 @@ public class ScreeningRoomRepositoryTest {
 
     @Test
     public void mongoRepositoryFindScreeningRoomDocTestPositive() {
-        ScreeningRoomDoc screeningRoomDoc = screeningRoomRepositoryForTests.findScreeningRoomDoc(screeningRoomNo1.getScreeningRoomID());
-        assertNotNull(screeningRoomDoc);
-        assertEquals(screeningRoomDoc.getScreeningRoomID(), screeningRoomNo1.getScreeningRoomID());
-        assertEquals(screeningRoomDoc.getScreeningRoomFloor(), screeningRoomNo1.getScreeningRoomFloor());
-        assertEquals(screeningRoomDoc.getScreeningRoomNumber(), screeningRoomNo1.getScreeningRoomNumber());
-        assertEquals(screeningRoomDoc.getNumberOfAvailableSeats(), screeningRoomNo1.getNumberOfAvailableSeats());
-        assertEquals(screeningRoomDoc.isScreeningRoomStatusActive(), screeningRoomNo1.isScreeningRoomStatusActive());
+        ScreeningRoomRow screeningRoomRow = screeningRoomRepositoryForTests.findScreeningRoomDoc(screeningRoomNo1.getScreeningRoomID());
+        assertNotNull(screeningRoomRow);
+        assertEquals(screeningRoomRow.getScreeningRoomID(), screeningRoomNo1.getScreeningRoomID());
+        assertEquals(screeningRoomRow.getScreeningRoomFloor(), screeningRoomNo1.getScreeningRoomFloor());
+        assertEquals(screeningRoomRow.getScreeningRoomNumber(), screeningRoomNo1.getScreeningRoomNumber());
+        assertEquals(screeningRoomRow.getNumberOfAvailableSeats(), screeningRoomNo1.getNumberOfAvailableSeats());
+        assertEquals(screeningRoomRow.isScreeningRoomStatusActive(), screeningRoomNo1.isScreeningRoomStatusActive());
     }
 
     @Test

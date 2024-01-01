@@ -17,6 +17,7 @@ public class Ticket {
     private final Date reservationTime;
     private boolean ticketStatusActive;
     private final double ticketFinalPrice;
+
     private final Movie movie;
     private final Client client;
     private TypeOfTicket typeOfTicket;

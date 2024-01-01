@@ -1,6 +1,6 @@
 package model.repositories.decorators;
 
-import mapping_layer.model_docs.ScreeningRoomDoc;
+import mapping_layer.model_docs.ScreeningRoomRow;
 import model.ScreeningRoom;
 import model.repositories.interfaces.ScreeningRoomRepositoryInterface;
 
@@ -61,7 +61,7 @@ public class ScreeningRoomRepositoryDecorator implements ScreeningRoomRepository
     }
 
     @Override
-    public ScreeningRoomDoc findScreeningRoomDoc(UUID screeningRoomDocId) {
+    public ScreeningRoomRow findScreeningRoomDoc(UUID screeningRoomDocId) {
         return wrappedObject.findScreeningRoomDoc(screeningRoomDocId);
     }
 
