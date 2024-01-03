@@ -1,9 +1,9 @@
 package model.managers;
 
 import model.Client;
-import model.exceptions.repository_exceptions.RepositoryCreateException;
-import model.exceptions.repository_exceptions.RepositoryReadException;
-import model.exceptions.repository_exceptions.RepositoryUpdateException;
+import model.exceptions.repository_exceptions.create_exceptions.RepositoryCreateException;
+import model.exceptions.repository_exceptions.read_exceptions.RepositoryReadException;
+import model.exceptions.repository_exceptions.update_exceptions.RepositoryUpdateException;
 import model.repositories.implementations.ClientRepository;
 
 import java.util.List;

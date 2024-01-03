@@ -2,18 +2,16 @@ package model_tests;
 
 import model.Client;
 import model.Movie;
-import model.ScreeningRoom;
 import model.Ticket;
 import model.exceptions.model_exceptions.TicketReservationException;
 import model.ticket_types.Normal;
 import model.ticket_types.Reduced;
-import model.ticket_types.TypeOfTicket;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.UUID;
 
@@ -32,11 +30,9 @@ public class TicketTests {
 
     @BeforeEach
     public void init() throws ParseException, TicketReservationException {
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        String exampleDateNo1 = "2023-09-30 12:12";
-        String exampleDateNo2 = "2023-10-02 20:15";
-        Date reservationTime = df.parse(exampleDateNo1);
-        Date movieTime = df.parse(exampleDateNo2);
+        Instant reservationTime = new Calendar.Builder().setDate(2023, 9, 30).setTimeOfDay(12, 12, 0).build().getTime().toInstant();
+        Instant movieTime = new Calendar.Builder().setDate(2023, 10, 2).setTimeOfDay(20, 15, 0).build().getTime().toInstant();
+
         testTicket = new Ticket(UUID.randomUUID(), movieTime, reservationTime, movieNo1, clientNo1, "normal");
         newTestTicket = new Ticket(testTicket.getTicketID(),
                 testTicket.getMovieTime(),
@@ -49,11 +45,8 @@ public class TicketTests {
 
     @Test
     public void ticketConstructorAndGettersTestPositive() throws ParseException, TicketReservationException {
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        String exampleDateNo1 = "2023-09-30 12:12";
-        String exampleDateNo2 = "2023-10-02 20:15";
-        Date reservationTime = df.parse(exampleDateNo1);
-        Date movieTime = df.parse(exampleDateNo2);
+        Instant reservationTime = new Calendar.Builder().setDate(2023, 9, 30).setTimeOfDay(12, 12, 0).build().getTime().toInstant();
+        Instant movieTime = new Calendar.Builder().setDate(2023, 10, 2).setTimeOfDay(20, 15, 0).build().getTime().toInstant();
 
         UUID ticketIDNo1 = UUID.randomUUID();
 
@@ -88,11 +81,8 @@ public class TicketTests {
 
     @Test
     public void ticketSetterTicketStatusActiveTest() throws ParseException, TicketReservationException {
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        String exampleDateNo1 = "2023-09-30 12:12";
-        String exampleDateNo2 = "2023-10-02 20:15";
-        Date reservationTime = df.parse(exampleDateNo1);
-        Date movieTime = df.parse(exampleDateNo2);
+        Instant reservationTime = new Calendar.Builder().setDate(2023, 9, 30).setTimeOfDay(12, 12, 0).build().getTime().toInstant();
+        Instant movieTime = new Calendar.Builder().setDate(2023, 10, 2).setTimeOfDay(20, 15, 0).build().getTime().toInstant();
 
         UUID ticketID = UUID.randomUUID();
         boolean ticketStatusActive = false;
@@ -110,11 +100,8 @@ public class TicketTests {
 
     @Test
     public void getTicketInfoTestStatusActive() throws ParseException, TicketReservationException {
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        String exampleDateNo1 = "2023-09-30 12:12";
-        String exampleDateNo2 = "2023-10-02 20:15";
-        Date reservationTime = df.parse(exampleDateNo1);
-        Date movieTime = df.parse(exampleDateNo2);
+        Instant reservationTime = new Calendar.Builder().setDate(2023, 9, 30).setTimeOfDay(12, 12, 0).build().getTime().toInstant();
+        Instant movieTime = new Calendar.Builder().setDate(2023, 10, 2).setTimeOfDay(20, 15, 0).build().getTime().toInstant();
 
         UUID ticketID = UUID.randomUUID();
 
@@ -127,11 +114,8 @@ public class TicketTests {
 
     @Test
     public void getTicketInfoTestStatusNotActive() throws ParseException, TicketReservationException {
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        String exampleDateNo1 = "2023-09-30 12:12";
-        String exampleDateNo2 = "2023-10-02 20:15";
-        Date reservationTime = df.parse(exampleDateNo1);
-        Date movieTime = df.parse(exampleDateNo2);
+        Instant reservationTime = new Calendar.Builder().setDate(2023, 9, 30).setTimeOfDay(12, 12, 0).build().getTime().toInstant();
+        Instant movieTime = new Calendar.Builder().setDate(2023, 10, 2).setTimeOfDay(20, 15, 0).build().getTime().toInstant();
 
         UUID ticketID = UUID.randomUUID();
 

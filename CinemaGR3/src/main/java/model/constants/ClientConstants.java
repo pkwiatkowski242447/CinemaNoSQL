@@ -1,12 +1,11 @@
 package model.constants;
 
-import com.datastax.oss.driver.api.core.CqlIdentifier;
-
 public class ClientConstants {
 
-    public static final CqlIdentifier CLIENT_ID = CqlIdentifier.fromCql("client_id");
-    public static final CqlIdentifier CLIENT_NAME = CqlIdentifier.fromCql("client_name");
-    public static final CqlIdentifier CLIENT_SURNAME = CqlIdentifier.fromCql("client_surname");
-    public static final CqlIdentifier CLIENT_AGE = CqlIdentifier.fromCql("client_age");
-    public static final CqlIdentifier CLIENT_STATUS_ACTIVE = CqlIdentifier.fromCql("client_status_active");
+    public static final String CLIENTS_TABLE_NAME = "clients";
+    public static final String CLIENT_ID = "client_id";
+    public static final String CLIENT_NAME = "client_name";
+    public static final String CLIENT_SURNAME = "client_surname";
+    public static final String CLIENT_AGE = "client_age";
+    public static final String CLIENT_STATUS_ACTIVE = "client_status_active";
 }

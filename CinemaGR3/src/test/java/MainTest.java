@@ -1,5 +1,4 @@
 import main.Main;
-import model.exceptions.repository_exceptions.MongoConfigNotFoundException;
 import org.junit.jupiter.api.Test;
 
 public class MainTest {

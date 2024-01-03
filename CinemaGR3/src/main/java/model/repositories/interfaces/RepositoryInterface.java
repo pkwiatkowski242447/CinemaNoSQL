@@ -11,17 +11,19 @@ public interface RepositoryInterface<Type> extends Closeable {
     Type findByUUID(UUID elementID);
     List<Type> findAll();
     List<Type> findAllActive();
-    List<UUID> findAllUUIDs();
 
     // U - update methods of repository interface
 
-    void updateAllFields(Type element);
+    void update(Type element);
 
     // D - delete methods of repository interface
 
     void delete(Type element);
     void delete(UUID elementID);
     void expire(Type element);
+
+    // Close method
+
 
     @Override
     void close();

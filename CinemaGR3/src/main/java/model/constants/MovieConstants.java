@@ -1,12 +1,11 @@
 package model.constants;
 
-import com.datastax.oss.driver.api.core.CqlIdentifier;
-
 public class MovieConstants {
 
-    public static final CqlIdentifier MOVIE_ID = CqlIdentifier.fromCql("movie_id");
-    public static final CqlIdentifier MOVIE_TITLE = CqlIdentifier.fromCql("movie_title");
-    public static final CqlIdentifier MOVIE_STATUS_ACTIVE = CqlIdentifier.fromCql("movie_status_active");
-    public static final CqlIdentifier MOVIE_BASE_PRICE = CqlIdentifier.fromCql("movie_base_price");
-    public static final CqlIdentifier SCREENING_ROOM_ID = CqlIdentifier.fromCql("screening_room_id");
+    public static final String MOVIES_TABLE_NAME = "movies";
+    public static final String MOVIE_ID = "movie_id";
+    public static final String MOVIE_TITLE = "movie_title";
+    public static final String MOVIE_BASE_PRICE = "movie_base_price";
+    public static final String NUMBER_OF_AVAILABLE_SEATS = "number_of_available_seats";
+    public static final String SCREENING_ROOM_NUMBER = "screening_room_number";
 }

@@ -1,34 +1,48 @@
 package model;
 
+import com.datastax.oss.driver.api.mapper.annotations.*;
+import com.datastax.oss.driver.api.mapper.entity.naming.NamingConvention;
+import model.constants.GeneralConstants;
+import model.constants.MovieConstants;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.UUID;
 
+@Entity(defaultKeyspace = GeneralConstants.KEY_SPACE)
+@CqlName(value = MovieConstants.MOVIES_TABLE_NAME)
+@PropertyStrategy(mutable = false)
+@NamingStrategy(convention = NamingConvention.SNAKE_CASE_INSENSITIVE)
 public class Movie {
 
-    private final UUID movieID;
+    @PartitionKey
+    @CqlName(value = MovieConstants.MOVIE_ID)
+    private UUID movieID;
+
+    @CqlName(value = MovieConstants.MOVIE_TITLE)
     private String movieTitle;
-    private boolean movieStatusActive;
+
+    @CqlName(value = MovieConstants.MOVIE_BASE_PRICE)
     private double movieBasePrice;
-    private final ScreeningRoom screeningRoom;
+
+    @CqlName(value = MovieConstants.NUMBER_OF_AVAILABLE_SEATS)
+    private int numberOfAvailableSeats;
+
+    @CqlName(value = MovieConstants.SCREENING_ROOM_NUMBER)
+    private int screeningRoomNumber;
 
     // Constructors
 
-    public Movie(UUID movieID, String movieTitle, boolean movieStatusActive, double movieBasePrice, ScreeningRoom screeningRoom) {
-        this.movieID = movieID;
-        this.movieTitle = movieTitle;
-        this.movieStatusActive = movieStatusActive;
-        this.movieBasePrice = movieBasePrice;
-        this.screeningRoom = screeningRoom;
+    public Movie() {
     }
 
-    public Movie(UUID movieID, String movieTitle, double movieBasePrice, ScreeningRoom screeningRoom) {
+    public Movie(UUID movieID, String movieTitle, double movieBasePrice, int numberOfAvailableSeats, int screeningRoomNumber) {
         this.movieID = movieID;
         this.movieTitle = movieTitle;
         this.movieBasePrice = movieBasePrice;
-        this.movieStatusActive = true;
-        this.screeningRoom = screeningRoom;
+        this.numberOfAvailableSeats = numberOfAvailableSeats;
+        this.screeningRoomNumber = screeningRoomNumber;
     }
 
     // Getters
@@ -41,19 +55,23 @@ public class Movie {
         return movieTitle;
     }
 
-    public boolean isMovieStatusActive() {
-        return movieStatusActive;
-    }
-
-    public ScreeningRoom getScreeningRoom() {
-        return screeningRoom;
-    }
-
     public double getMovieBasePrice() {
         return movieBasePrice;
     }
 
+    public int getNumberOfAvailableSeats() {
+        return numberOfAvailableSeats;
+    }
+
+    public int getScreeningRoomNumber() {
+        return screeningRoomNumber;
+    }
+
     // Setters
+
+    public void setMovieID(UUID movieID) {
+        this.movieID = movieID;
+    }
 
     public void setMovieTitle(String movieTitle) {
         this.movieTitle = movieTitle;
@@ -63,21 +81,25 @@ public class Movie {
         this.movieBasePrice = movieBasePrice;
     }
 
-    public void setMovieStatusActive(boolean movieStatusActive) {
-        this.movieStatusActive = movieStatusActive;
+    public void setNumberOfAvailableSeats(int numberOfAvailableSeats) {
+        this.numberOfAvailableSeats = numberOfAvailableSeats;
+    }
+
+    public void setScreeningRoomNumber(int screeningRoomNumber) {
+        this.screeningRoomNumber = screeningRoomNumber;
     }
 
     // Other methods
 
-    public String getMovieInfo() {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Movie id: ")
-                .append(this.movieID)
-                .append(", movie title: ")
-                .append(this.movieTitle)
-                .append(", location of the spectacle: ")
-                .append(" ; " + this.screeningRoom.getScreeningRoomInfo());
-        return stringBuilder.toString();
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("movieID: ", movieID)
+                .append("movieTitle: ", movieTitle)
+                .append("movieBasePrice: ", movieBasePrice)
+                .append("numberOfAvailableSeats: ", numberOfAvailableSeats)
+                .append("screeningRoomNumber: ", screeningRoomNumber)
+                .toString();
     }
 
     @Override
@@ -89,11 +111,11 @@ public class Movie {
         Movie movie = (Movie) o;
 
         return new EqualsBuilder()
+                .append(movieBasePrice, movie.movieBasePrice)
+                .append(numberOfAvailableSeats, movie.numberOfAvailableSeats)
+                .append(screeningRoomNumber, movie.screeningRoomNumber)
                 .append(movieID, movie.movieID)
                 .append(movieTitle, movie.movieTitle)
-                .append(movieBasePrice, movie.movieBasePrice)
-                .append(movieStatusActive, movie.movieStatusActive)
-                .append(screeningRoom, movie.screeningRoom)
                 .isEquals();
     }
 
@@ -102,9 +124,9 @@ public class Movie {
         return new HashCodeBuilder(17, 37)
                 .append(movieID)
                 .append(movieTitle)
-                .append(movieStatusActive)
                 .append(movieBasePrice)
-                .append(screeningRoom)
+                .append(numberOfAvailableSeats)
+                .append(screeningRoomNumber)
                 .toHashCode();
     }
 }

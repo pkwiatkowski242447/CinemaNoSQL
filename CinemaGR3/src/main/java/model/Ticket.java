@@ -1,68 +1,64 @@
 package model;
 
-import model.exceptions.model_exceptions.TicketReservationException;
-import model.ticket_types.Normal;
-import model.ticket_types.Reduced;
-import model.ticket_types.TypeOfTicket;
+import com.datastax.oss.driver.api.mapper.annotations.*;
+import com.datastax.oss.driver.api.mapper.entity.naming.NamingConvention;
+import lombok.AccessLevel;
+import lombok.Setter;
+import model.constants.GeneralConstants;
+import model.constants.TicketConstants;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.UUID;
 
+@Entity(defaultKeyspace = GeneralConstants.KEY_SPACE)
+@CqlName(value = TicketConstants.TICKETS_TABLE_NAME)
+@PropertyStrategy(mutable = false)
+@NamingStrategy(convention = NamingConvention.SNAKE_CASE_INSENSITIVE)
 public class Ticket {
 
-    private final UUID ticketID;
-    private final Date movieTime;
-    private final Date reservationTime;
-    private boolean ticketStatusActive;
-    private final double ticketFinalPrice;
+    @PartitionKey
+    @CqlName(value = TicketConstants.TICKET_ID)
+    private UUID ticketID;
 
-    private final Movie movie;
-    private final Client client;
-    private TypeOfTicket typeOfTicket;
+    @CqlName(value = TicketConstants.MOVIE_TIME)
+    @Setter(AccessLevel.NONE)
+    private Instant movieTime;
+
+    @CqlName(value = TicketConstants.RESERVATION_TIME)
+    @Setter(AccessLevel.NONE)
+    private Instant reservationTime;
+
+    @CqlName(value = TicketConstants.TICKET_FINAL_PRICE)
+    @Setter(AccessLevel.NONE)
+    private double ticketFinalPrice;
+
+    @CqlName(value = TicketConstants.MOVIE_ID)
+    @Setter(AccessLevel.NONE)
+    private UUID movieId;
+
+    @CqlName(value = TicketConstants.CLIENT_ID)
+    @Setter(AccessLevel.NONE)
+    private UUID clientId;
+
+    @CqlName(value = TicketConstants.TYPE_OF_TICKET_ID)
+    private UUID typeOfTicketId;
 
     // Constructors
 
-    public Ticket(UUID ticketID, Date movieTime, Date reservationTime, Movie movie, Client client, String typeOfTicket) throws TicketReservationException, NullPointerException{
-        this.movie = movie;
-        try {
-            if (movie.getScreeningRoom().getNumberOfAvailableSeats() > 0) {
-                movie.getScreeningRoom().setNumberOfAvailableSeats(movie.getScreeningRoom().getNumberOfAvailableSeats() - 1);
-            } else {
-                throw new TicketReservationException("Cannot create a new ticket - there are no available seats.");
-            }
-        } catch (NullPointerException exception) {
-            throw new TicketReservationException("Reference to movie object is null.");
-        }
-        this.client = client;
-        this.ticketID = ticketID;
-        this.movieTime = movieTime;
-        this.reservationTime = reservationTime;
-
-        TypeOfTicket ticketType;
-        try {
-            ticketType = switch (typeOfTicket) {
-                case "reduced" -> new Reduced(UUID.randomUUID());
-                default -> new Normal(UUID.randomUUID());
-            };
-        } catch (NullPointerException exception) {
-            throw new TicketReservationException("Ticket type was not entered correctly.");
-        }
-        this.typeOfTicket = ticketType;
-        this.ticketFinalPrice = ticketType.applyDiscount(movie.getMovieBasePrice());
-        this.ticketStatusActive = true;
+    public Ticket() {
     }
 
-    public Ticket(UUID ticketID, Date movieTime, Date reservationTime, boolean ticketStatusActive, double ticketFinalPrice, Movie movie, Client client, TypeOfTicket typeOfTicket) {
+    public Ticket(UUID ticketID, Instant movieTime, Instant reservationTime, double ticketFinalPrice, UUID movieId, UUID clientId, UUID typeOfTicketId) {
         this.ticketID = ticketID;
         this.movieTime = movieTime;
         this.reservationTime = reservationTime;
-        this.ticketStatusActive = ticketStatusActive;
         this.ticketFinalPrice = ticketFinalPrice;
-        this.movie = movie;
-        this.client = client;
-        this.typeOfTicket = typeOfTicket;
+        this.movieId = movieId;
+        this.clientId = clientId;
+        this.typeOfTicketId = typeOfTicketId;
     }
 
     // Getters
@@ -71,62 +67,73 @@ public class Ticket {
         return ticketID;
     }
 
-    public Date getMovieTime() {
+    public Instant getMovieTime() {
         return movieTime;
     }
 
-    public Date getReservationTime() {
+    public Instant getReservationTime() {
         return reservationTime;
-    }
-
-    public boolean isTicketStatusActive() {
-        return ticketStatusActive;
     }
 
     public double getTicketFinalPrice() {
         return ticketFinalPrice;
     }
 
-    public Movie getMovie() {
-        return movie;
+    public UUID getMovieId() {
+        return movieId;
     }
 
-    public Client getClient() {
-        return client;
+    public UUID getClientId() {
+        return clientId;
     }
 
-    public TypeOfTicket getTicketType() {
-        return typeOfTicket;
+    public UUID getTypeOfTicketId() {
+        return typeOfTicketId;
     }
 
     // Setters
 
-    public void setTicketStatusActive(boolean ticketStatusActive) {
-        this.ticketStatusActive = ticketStatusActive;
+    public void setTicketID(UUID ticketID) {
+        this.ticketID = ticketID;
     }
 
-    public void setTypeOfTicket(TypeOfTicket typeOfTicket) {
-        this.typeOfTicket = typeOfTicket;
+    public void setMovieTime(Instant movieTime) {
+        this.movieTime = movieTime;
+    }
+
+    public void setReservationTime(Instant reservationTime) {
+        this.reservationTime = reservationTime;
+    }
+
+    public void setTicketFinalPrice(double ticketFinalPrice) {
+        this.ticketFinalPrice = ticketFinalPrice;
+    }
+
+    public void setMovieId(UUID movieId) {
+        this.movieId = movieId;
+    }
+
+    public void setClientId(UUID clientId) {
+        this.clientId = clientId;
+    }
+
+    public void setTypeOfTicketId(UUID typeOfTicketId) {
+        this.typeOfTicketId = typeOfTicketId;
     }
 
     // Other methods
 
-    public String getTicketInfo() {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Ticket identifier: ")
-                .append(this.ticketID)
-                .append(" Date of making reservation: ")
-                .append(this.reservationTime.toString())
-                .append(" Date of the movie: ")
-                .append(this.movieTime.toString());
-        if (this.ticketStatusActive) {
-            stringBuilder.append(" Reservation status: active");
-        } else {
-            stringBuilder.append(" Reservation status: not active");
-        }
-        stringBuilder.append(" Final price of the ticket: ").append(this.ticketFinalPrice);
-        stringBuilder.append(this.typeOfTicket.getTicketTypeInfo());
-        return stringBuilder.toString();
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("ticketID: ", ticketID)
+                .append("movieTime: ", movieTime)
+                .append("reservationTime: ", reservationTime)
+                .append("ticketFinalPrice: ", ticketFinalPrice)
+                .append("movieId: ", movieId)
+                .append("clientId: ", clientId)
+                .append("typeOfTicketId: ", typeOfTicketId)
+                .toString();
     }
 
     @Override
@@ -138,15 +145,13 @@ public class Ticket {
         Ticket ticket = (Ticket) o;
 
         return new EqualsBuilder()
+                .append(ticketFinalPrice, ticket.ticketFinalPrice)
                 .append(ticketID, ticket.ticketID)
                 .append(movieTime, ticket.movieTime)
                 .append(reservationTime, ticket.reservationTime)
-                .append(ticketStatusActive, ticket.ticketStatusActive)
-                .append(ticketFinalPrice, ticket.ticketFinalPrice)
-                .append(movie.getMovieID(), ticket.movie.getMovieID())
-                .append(movie.getScreeningRoom().getNumberOfAvailableSeats(), ticket.movie.getScreeningRoom().getNumberOfAvailableSeats())
-                .append(client, ticket.client)
-                .append(typeOfTicket, ticket.typeOfTicket)
+                .append(movieId, ticket.movieId)
+                .append(clientId, ticket.clientId)
+                .append(typeOfTicketId, ticket.typeOfTicketId)
                 .isEquals();
     }
 
@@ -156,11 +161,10 @@ public class Ticket {
                 .append(ticketID)
                 .append(movieTime)
                 .append(reservationTime)
-                .append(ticketStatusActive)
                 .append(ticketFinalPrice)
-                .append(movie)
-                .append(client)
-                .append(typeOfTicket.getClass())
+                .append(movieId)
+                .append(clientId)
+                .append(typeOfTicketId)
                 .toHashCode();
     }
 }

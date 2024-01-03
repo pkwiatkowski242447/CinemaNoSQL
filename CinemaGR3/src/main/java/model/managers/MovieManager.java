@@ -1,10 +1,9 @@
 package model.managers;
 
 import model.Movie;
-import model.ScreeningRoom;
-import model.exceptions.repository_exceptions.RepositoryCreateException;
-import model.exceptions.repository_exceptions.RepositoryReadException;
-import model.exceptions.repository_exceptions.RepositoryUpdateException;
+import model.exceptions.repository_exceptions.create_exceptions.RepositoryCreateException;
+import model.exceptions.repository_exceptions.read_exceptions.RepositoryReadException;
+import model.exceptions.repository_exceptions.update_exceptions.RepositoryUpdateException;
 import model.repositories.implementations.MovieRepository;
 
 import java.util.List;

@@ -3,12 +3,12 @@ package model.managers;
 import model.Client;
 import model.Movie;
 import model.Ticket;
-import model.exceptions.repository_exceptions.RepositoryCreateException;
-import model.exceptions.repository_exceptions.RepositoryReadException;
-import model.exceptions.repository_exceptions.RepositoryUpdateException;
+import model.exceptions.repository_exceptions.create_exceptions.RepositoryCreateException;
+import model.exceptions.repository_exceptions.read_exceptions.RepositoryReadException;
+import model.exceptions.repository_exceptions.update_exceptions.RepositoryUpdateException;
 import model.repositories.implementations.TicketRepository;
 
-import java.util.Date;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,7 +20,7 @@ public class TicketManager {
         this.ticketRepository = ticketRepository;
     }
 
-    public Ticket register(Date movieTime, Date reservationTime, Movie movie, Client client, String typeOfTicket) {
+    public Ticket register(Instant movieTime, Instant reservationTime, Movie movie, Client client, String typeOfTicket) {
         Ticket ticketToRepo = null;
         try{
             ticketToRepo = ticketRepository.create(movieTime, reservationTime, movie, client, typeOfTicket);

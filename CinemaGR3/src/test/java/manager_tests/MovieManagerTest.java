@@ -1,10 +1,7 @@
 package manager_tests;
 
 import model.Movie;
-import model.ScreeningRoom;
-import model.exceptions.repository_exceptions.MongoConfigNotFoundException;
 import model.managers.MovieManager;
-import model.managers.ScreeningRoomManager;
 import model.repositories.implementations.MovieRepository;
 import model.repositories.implementations.ScreeningRoomRepository;
 import org.junit.jupiter.api.*;
@@ -16,7 +13,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class MovieManagerTest {
 
-    private final static String databaseName = "test";
     private static MovieRepository movieRepositoryForTests;
     private static ScreeningRoomRepository screeningRoomRepositoryForTests;
     private static MovieManager movieManagerForTests;
@@ -24,8 +20,8 @@ public class MovieManagerTest {
 
     @BeforeAll
     public static void init() throws MongoConfigNotFoundException {
-        movieRepositoryForTests = new MovieRepository(databaseName);
-        screeningRoomRepositoryForTests = new ScreeningRoomRepository(databaseName);
+        movieRepositoryForTests = new MovieRepository();
+        screeningRoomRepositoryForTests = new ScreeningRoomRepository();
         movieManagerForTests = new MovieManager(movieRepositoryForTests);
         screeningRoomManagerForTests = new ScreeningRoomManager(screeningRoomRepositoryForTests);
     }
@@ -78,7 +74,7 @@ public class MovieManagerTest {
 
     @Test
     public void createMovieManagerTest() throws MongoConfigNotFoundException {
-        MovieRepository movieRepository = new MovieRepository(databaseName);
+        MovieRepository movieRepository = new MovieRepository();
         assertNotNull(movieRepository);
         MovieManager movieManager = new MovieManager(movieRepository);
         assertNotNull(movieManager);
@@ -86,9 +82,9 @@ public class MovieManagerTest {
 
     @Test
     public void setMovieRepositoryForMovieManagerTest() throws MongoConfigNotFoundException {
-        MovieRepository movieRepositoryNo1 = new MovieRepository(databaseName);
+        MovieRepository movieRepositoryNo1 = new MovieRepository();
         assertNotNull(movieRepositoryNo1);
-        MovieRepository movieRepositoryNo2 = new MovieRepository(databaseName);
+        MovieRepository movieRepositoryNo2 = new MovieRepository();
         assertNotNull(movieRepositoryNo2);
         MovieManager movieManager = new MovieManager(movieRepositoryNo1);
         assertNotNull(movieManager);

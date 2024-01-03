@@ -1,8 +1,5 @@
 package manager_tests;
 
-import model.ScreeningRoom;
-import model.exceptions.repository_exceptions.MongoConfigNotFoundException;
-import model.managers.ScreeningRoomManager;
 import model.repositories.implementations.ScreeningRoomRepository;
 import org.junit.jupiter.api.*;
 
@@ -13,13 +10,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ScreeningRoomManagerTest {
 
-    private final static String databaseName = "test";
     private static ScreeningRoomRepository screeningRoomRepositoryForTests;
     private static ScreeningRoomManager screeningRoomManagerForTests;
 
     @BeforeAll
     public static void init() throws MongoConfigNotFoundException  {
-        screeningRoomRepositoryForTests = new ScreeningRoomRepository(databaseName);
+        screeningRoomRepositoryForTests = new ScreeningRoomRepository();
         screeningRoomManagerForTests = new ScreeningRoomManager(screeningRoomRepositoryForTests);
     }
 
@@ -55,7 +51,7 @@ public class ScreeningRoomManagerTest {
 
     @Test
     public void createScreeningRoomManagerTest() throws MongoConfigNotFoundException {
-        ScreeningRoomRepository screeningRoomRepository = new ScreeningRoomRepository(databaseName);
+        ScreeningRoomRepository screeningRoomRepository = new ScreeningRoomRepository();
         assertNotNull(screeningRoomRepository);
         ScreeningRoomManager screeningRoomManager = new ScreeningRoomManager(screeningRoomRepository);
         assertNotNull(screeningRoomManager);
@@ -64,9 +60,9 @@ public class ScreeningRoomManagerTest {
 
     @Test
     public void setScreeningRoomRepositoryForScreeningRoomManagerTest() throws MongoConfigNotFoundException {
-        ScreeningRoomRepository screeningRoomRepositoryNo1 = new ScreeningRoomRepository(databaseName);
+        ScreeningRoomRepository screeningRoomRepositoryNo1 = new ScreeningRoomRepository();
         assertNotNull(screeningRoomRepositoryNo1);
-        ScreeningRoomRepository screeningRoomRepositoryNo2 = new ScreeningRoomRepository(databaseName);
+        ScreeningRoomRepository screeningRoomRepositoryNo2 = new ScreeningRoomRepository();
         assertNotNull(screeningRoomRepositoryNo2);
         ScreeningRoomManager screeningRoomManager = new ScreeningRoomManager(screeningRoomRepositoryNo1);
         assertNotNull(screeningRoomManager);

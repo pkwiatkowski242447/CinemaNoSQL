@@ -1,7 +1,6 @@
 package manager_tests;
 
 import model.Client;
-import model.exceptions.repository_exceptions.MongoConfigNotFoundException;
 import model.managers.ClientManager;
 import model.repositories.implementations.ClientRepository;
 import org.junit.jupiter.api.*;
@@ -13,13 +12,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ClientManagerTest {
 
-    private final static String databaseName = "test";
     private static ClientRepository clientRepositoryForTests;
     private static ClientManager clientManagerForTests;
 
     @BeforeAll
     public static void init() throws MongoConfigNotFoundException  {
-        clientRepositoryForTests = new ClientRepository(databaseName);
+        clientRepositoryForTests = new ClientRepository();
         clientManagerForTests = new ClientManager(clientRepositoryForTests);
     }
 
@@ -55,7 +53,7 @@ public class ClientManagerTest {
 
     @Test
     public void createClientManagerTest() throws MongoConfigNotFoundException {
-        ClientRepository clientRepository = new ClientRepository(databaseName);
+        ClientRepository clientRepository = new ClientRepository();
         assertNotNull(clientRepository);
         ClientManager clientManager = new ClientManager(clientRepository);
         assertNotNull(clientManager);
@@ -64,9 +62,9 @@ public class ClientManagerTest {
 
     @Test
     public void setClientRepositoryForClientManagerTest() throws MongoConfigNotFoundException {
-        ClientRepository clientRepositoryNo1 = new ClientRepository(databaseName);
+        ClientRepository clientRepositoryNo1 = new ClientRepository();
         assertNotNull(clientRepositoryNo1);
-        ClientRepository clientRepositoryNo2 = new ClientRepository(databaseName);
+        ClientRepository clientRepositoryNo2 = new ClientRepository();
         assertNotNull(clientRepositoryNo2);
         ClientManager clientManager = new ClientManager(clientRepositoryNo1);
         assertNotNull(clientManager);

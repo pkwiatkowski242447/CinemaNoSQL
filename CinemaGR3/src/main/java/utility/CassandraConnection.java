@@ -3,7 +3,7 @@ package utility;
 import lombok.Getter;
 import lombok.Setter;
 import model.exceptions.repository_exceptions.CassandraConfigNotFound;
-import model.repositories.implementations.CassandraRepository;
+import model.repositories.implementations.CassandraClient;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,7 +21,7 @@ public class CassandraConnection {
 
     public static void getDataFromPropertyFile() throws CassandraConfigNotFound {
         Properties properties = new Properties();
-        try (InputStream inputStream = CassandraRepository.class.getResourceAsStream("cassandra.properties")) {
+        try (InputStream inputStream = CassandraClient.class.getResourceAsStream("cassandra.properties")) {
             properties.load(inputStream);
             dataCenterName = properties.getProperty("datacenter.name");
             cassandraUsername = properties.getProperty("cassandra.username");
@@ -30,6 +30,7 @@ public class CassandraConnection {
 
             socketData.put(properties.getProperty("cluster.hostname.node.first"), Integer.parseInt(properties.getProperty("cluster.port.node.first")));
             socketData.put(properties.getProperty("cluster.hostname.node.second"), Integer.parseInt(properties.getProperty("cluster.port.node.second")));
+            socketData.put(properties.getProperty("cluster.hostname.node.third"), Integer.parseInt(properties.getProperty("cluster.port.node.third")));
         } catch (IOException exception) {
             throw new CassandraConfigNotFound("File containing Apache Cassandra's config was not found.");
         }

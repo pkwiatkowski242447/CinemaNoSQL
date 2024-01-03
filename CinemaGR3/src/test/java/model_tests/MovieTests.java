@@ -1,7 +1,6 @@
 package model_tests;
 
 import model.Movie;
-import model.ScreeningRoom;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

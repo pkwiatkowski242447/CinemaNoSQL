@@ -2,10 +2,8 @@ package manager_tests;
 
 import model.Client;
 import model.Movie;
-import model.ScreeningRoom;
 import model.Ticket;
 import model.exceptions.model_exceptions.TicketReservationException;
-import model.exceptions.repository_exceptions.MongoConfigNotFoundException;
 import model.managers.*;
 import model.repositories.implementations.ClientRepository;
 import model.repositories.implementations.MovieRepository;
@@ -13,8 +11,8 @@ import model.repositories.implementations.ScreeningRoomRepository;
 import model.repositories.implementations.TicketRepository;
 import org.junit.jupiter.api.*;
 
+import java.time.Instant;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,14 +20,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TicketManagerTest {
 
-    private final static String databaseName = "test";
-    private final Date movieTimeNo1 = new Calendar.Builder().setDate(2023, 10, 1).setTimeOfDay(10, 15, 0).build().getTime();
-    private final Date movieTimeNo2 = new Calendar.Builder().setDate(2023, 10, 8).setTimeOfDay(16, 13, 0).build().getTime();
-    private final Date movieTimeNo3 = new Calendar.Builder().setDate(2023, 10, 16).setTimeOfDay(20, 5, 0).build().getTime();
+    private final Instant movieTimeNo1 = new Calendar.Builder().setDate(2023, 10, 1).setTimeOfDay(10, 15, 0).build().getTime().toInstant();
+    private final Instant movieTimeNo2 = new Calendar.Builder().setDate(2023, 10, 8).setTimeOfDay(16, 13, 0).build().getTime().toInstant();
+    private final Instant movieTimeNo3 = new Calendar.Builder().setDate(2023, 10, 16).setTimeOfDay(20, 5, 0).build().getTime().toInstant();
 
-    private final Date reservationTimeNo1 = new Calendar.Builder().setDate(2023, 9, 29).setTimeOfDay(12, 37, 0).build().getTime();
-    private final Date reservationTimeNo2 = new Calendar.Builder().setDate(2023, 9, 31).setTimeOfDay(14, 15, 0).build().getTime();
-    private final Date reservationTimeNo3 = new Calendar.Builder().setDate(2023, 10, 11).setTimeOfDay(18, 7, 15).build().getTime();
+    private final Instant reservationTimeNo1 = new Calendar.Builder().setDate(2023, 9, 29).setTimeOfDay(12, 37, 0).build().getTime().toInstant();
+    private final Instant reservationTimeNo2 = new Calendar.Builder().setDate(2023, 9, 31).setTimeOfDay(14, 15, 0).build().getTime().toInstant();
+    private final Instant reservationTimeNo3 = new Calendar.Builder().setDate(2023, 10, 11).setTimeOfDay(18, 7, 15).build().getTime().toInstant();
 
     private Client clientNo1;
     private Client clientNo2;
@@ -58,10 +55,10 @@ public class TicketManagerTest {
 
     @BeforeAll
     public static void init() throws MongoConfigNotFoundException  {
-        ticketRepositoryForTests = new TicketRepository(databaseName);
-        clientRepositoryForTests = new ClientRepository(databaseName);
-        movieRepositoryForTests = new MovieRepository(databaseName);
-        screeningRoomRepositoryForTests = new ScreeningRoomRepository(databaseName);
+        ticketRepositoryForTests = new TicketRepository();
+        clientRepositoryForTests = new ClientRepository();
+        movieRepositoryForTests = new MovieRepository();
+        screeningRoomRepositoryForTests = new ScreeningRoomRepository();
         ticketManagerForTests = new TicketManager(ticketRepositoryForTests);
         clientManagerForTests = new ClientManager(clientRepositoryForTests);
         movieManagerForTests = new MovieManager(movieRepositoryForTests);
@@ -144,7 +141,7 @@ public class TicketManagerTest {
 
     @Test
     public void createTicketManagerTest() throws MongoConfigNotFoundException {
-        TicketRepository ticketRepository = new TicketRepository(databaseName);
+        TicketRepository ticketRepository = new TicketRepository();
         assertNotNull(ticketRepository);
         TicketManager ticketManager = new TicketManager(ticketRepository);
         assertNotNull(ticketManager);
@@ -153,9 +150,9 @@ public class TicketManagerTest {
 
     @Test
     public void setTicketRepositoryForTicketManagerTest() throws MongoConfigNotFoundException {
-        TicketRepository ticketRepositoryNo1 = new TicketRepository(databaseName);
+        TicketRepository ticketRepositoryNo1 = new TicketRepository();
         assertNotNull(ticketRepositoryNo1);
-        TicketRepository ticketRepositoryNo2 = new TicketRepository(databaseName);
+        TicketRepository ticketRepositoryNo2 = new TicketRepository();
         assertNotNull(ticketRepositoryNo2);
         TicketManager ticketManager = new TicketManager(ticketRepositoryNo1);
         assertNotNull(ticketManager);
