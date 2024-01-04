@@ -54,10 +54,10 @@ public class TicketTests {
         assertEquals(ticketIDNo1, ticketNo1.getTicketID());
         assertEquals(movieTime, ticketNo1.getMovieTime());
         assertEquals(reservationTime, ticketNo1.getReservationTime());
-        assertEquals(clientNo1.getClientID(), ticketNo1.getClientId());
-        assertEquals(movieNo1.getMovieID(), ticketNo1.getMovieId());
-        assertEquals(Normal.class, ticketNo1.getClass());
         assertEquals(movieBasePrice, ticketNo1.getTicketFinalPrice());
+        assertEquals(movieNo1.getMovieID(), ticketNo1.getMovieId());
+        assertEquals(clientNo1.getClientID(), ticketNo1.getClientId());
+        assertEquals(Normal.class, ticketNo1.getClass());
 
         UUID ticketIDNo2 = UUID.randomUUID();
 
@@ -68,10 +68,40 @@ public class TicketTests {
         assertEquals(ticketIDNo2, ticketNo2.getTicketID());
         assertEquals(movieTime, ticketNo2.getMovieTime());
         assertEquals(reservationTime, ticketNo2.getReservationTime());
-        assertEquals(clientNo1.getClientID(), ticketNo2.getClientId());
-        assertEquals(movieNo1.getMovieID(), ticketNo2.getMovieId());
-        assertEquals(Reduced.class, ticketNo2.getClass());
         assertEquals(movieBasePrice * 0.75, ticketNo2.getTicketFinalPrice());
+        assertEquals(movieNo1.getMovieID(), ticketNo2.getMovieId());
+        assertEquals(clientNo1.getClientID(), ticketNo2.getClientId());
+        assertEquals(Reduced.class, ticketNo2.getClass());
+    }
+
+    @Test
+    public void movieTimeSetterTestPositive() {
+        Instant reservationTime = new Calendar.Builder().setDate(2023, 9, 30).setTimeOfDay(12, 12, 0).build().getTime().toInstant();
+        Instant movieTimeNo1 = new Calendar.Builder().setDate(2023, 10, 2).setTimeOfDay(20, 15, 0).build().getTime().toInstant();
+        Instant movieTimeNo2 = new Calendar.Builder().setDate(2023, 10, 3).setTimeOfDay(20, 15, 0).build().getTime().toInstant();
+
+        Ticket ticket = new Normal(UUID.randomUUID(), movieTimeNo1, reservationTime, movieBasePrice, movieNo1.getMovieID(), clientNo1.getClientID());
+
+        assertNotNull(ticket);
+        assertEquals(movieTimeNo1, ticket.getMovieTime());
+
+        ticket.setMovieTime(movieTimeNo2);
+        assertEquals(movieTimeNo2, ticket.getMovieTime());
+    }
+
+    @Test
+    public void reservationTimeSetterTestPositive() {
+        Instant reservationTimeNo1 = new Calendar.Builder().setDate(2023, 9, 30).setTimeOfDay(12, 12, 0).build().getTime().toInstant();
+        Instant reservationTimeNo2 = new Calendar.Builder().setDate(2023, 9, 31).setTimeOfDay(12, 12, 0).build().getTime().toInstant();
+        Instant movieTime = new Calendar.Builder().setDate(2023, 10, 2).setTimeOfDay(20, 15, 0).build().getTime().toInstant();
+
+        Ticket ticket = new Normal(UUID.randomUUID(), movieTime, reservationTimeNo1, movieBasePrice, movieNo1.getMovieID(), clientNo1.getClientID());
+
+        assertNotNull(ticket);
+        assertEquals(reservationTimeNo1, ticket.getReservationTime());
+
+        ticket.setMovieTime(reservationTimeNo2);
+        assertEquals(reservationTimeNo1, ticket.getReservationTime());
     }
 
     @Test

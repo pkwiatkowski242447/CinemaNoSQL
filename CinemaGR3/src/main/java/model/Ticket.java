@@ -197,6 +197,7 @@ public class Ticket {
         Ticket ticket = (Ticket) o;
 
         return new EqualsBuilder()
+                .append(ticketBasePrice, ticket.ticketBasePrice)
                 .append(ticketFinalPrice, ticket.ticketFinalPrice)
                 .append(ticketID, ticket.ticketID)
                 .append(movieTime, ticket.movieTime)
@@ -215,6 +216,7 @@ public class Ticket {
                 .append(ticketID)
                 .append(movieTime)
                 .append(reservationTime)
+                .append(ticketBasePrice)
                 .append(ticketFinalPrice)
                 .append(movieId)
                 .append(clientId)

@@ -114,7 +114,7 @@ public class ClientTests {
     }
 
     @Test
-    public void getClientInfoTestStatusActive() {
+    public void clientToStringWithStatusActiveTest() {
         UUID clientID = UUID.randomUUID();
         String clientName = "SomeName";
         String clientSurname = "SomeSurname";
@@ -127,7 +127,7 @@ public class ClientTests {
     }
 
     @Test
-    public void getClientInfoTestStatusNotActive() {
+    public void clientToStringWithStatusNotActiveTest() {
         UUID clientID = UUID.randomUUID();
         String clientName = "SomeName";
         String clientSurname = "SomeSurname";

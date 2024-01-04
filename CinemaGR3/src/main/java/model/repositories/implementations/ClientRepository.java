@@ -2,6 +2,7 @@ package model.repositories.implementations;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.core.type.DataTypes;
 import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
@@ -29,10 +30,10 @@ public class ClientRepository extends CassandraClient implements ClientRepositor
 
     public ClientRepository() throws CassandraConfigNotFound {
         this.session = this.initializeCassandraSession();
+        this.createClientsTable();
+
         ClientMapper clientMapper = new ClientMapperBuilder(session).build();
         clientDao = clientMapper.clientDao();
-
-        createClientsTable();
     }
 
     private void createClientsTable() {

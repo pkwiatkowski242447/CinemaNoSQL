@@ -29,10 +29,10 @@ public class MovieRepository extends CassandraClient implements MovieRepositoryI
 
     public MovieRepository() throws CassandraConfigNotFound {
         this.session = this.initializeCassandraSession();
+        this.createMoviesTable();
+
         MovieMapper movieMapper = new MovieMapperBuilder(session).build();
         this.movieDao = movieMapper.movieDao();
-
-        createMoviesTable();
     }
 
     private void createMoviesTable() {
@@ -41,6 +41,7 @@ public class MovieRepository extends CassandraClient implements MovieRepositoryI
                 .ifNotExists()
                 .withPartitionKey(CqlIdentifier.fromCql(MovieConstants.MOVIE_ID), DataTypes.UUID)
                 .withColumn(CqlIdentifier.fromCql(MovieConstants.MOVIE_TITLE), DataTypes.TEXT)
+                .withColumn(CqlIdentifier.fromCql(MovieConstants.MOVIE_BASE_PRICE), DataTypes.DOUBLE)
                 .withColumn(CqlIdentifier.fromCql(MovieConstants.NUMBER_OF_AVAILABLE_SEATS), DataTypes.INT)
                 .withColumn(CqlIdentifier.fromCql(MovieConstants.SCREENING_ROOM_NUMBER), DataTypes.INT)
                 .build();

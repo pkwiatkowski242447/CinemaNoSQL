@@ -64,6 +64,24 @@ public class MovieTests {
     }
 
     @Test
+    public void movieBasePriceSetterTestPositive() {
+        UUID movieID = UUID.randomUUID();
+        String movieTitle = "Pulp Fiction";
+        double movieBasePriceNo1 = 25.50;
+        double movieBasePriceNo2 = 37.75;
+        int numberOfAvailableSeats = 90;
+        int screeningRoomNumber = 1;
+
+        Movie movie = new Movie(movieID, movieTitle, movieBasePriceNo1, numberOfAvailableSeats, screeningRoomNumber);
+
+        assertNotNull(movie);
+        assertEquals(movieBasePriceNo1, movie.getMovieBasePrice());
+
+        movie.setMovieBasePrice(movieBasePriceNo2);
+        assertEquals(movieBasePriceNo2, movie.getMovieBasePrice());
+    }
+
+    @Test
     public void numberOfAvailableSeatsSetterTestPositive() {
         UUID movieID = UUID.randomUUID();
         String movieTitle = "Pulp Fiction";

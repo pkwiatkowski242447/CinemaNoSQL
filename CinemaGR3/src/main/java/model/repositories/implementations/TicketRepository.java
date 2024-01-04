@@ -33,10 +33,10 @@ public class TicketRepository extends CassandraClient implements TicketRepositor
 
     public TicketRepository() throws CassandraConfigNotFound {
         this.session = this.initializeCassandraSession();
+        this.createTicketsTable();
+
         TicketMapper ticketMapper = new TicketMapperBuilder(session).build();
         this.ticketDao = ticketMapper.ticketDao();
-
-        createTicketsTable();
     }
 
     private void createTicketsTable() {

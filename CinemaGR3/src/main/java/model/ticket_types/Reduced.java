@@ -25,7 +25,7 @@ public class Reduced extends Ticket {
 
     public Reduced(UUID ticketID, Instant movieTime, Instant reservationTime, double ticketBasePrice, UUID movieId, UUID clientId) {
         super(ticketID, movieTime, reservationTime, ticketBasePrice, movieId, clientId);
-        this.ticketFinalPrice = this.getTicketBasePrice();
+        this.ticketFinalPrice = this.getTicketBasePrice() * 0.75;
         this.ticketTypeDiscriminator = TicketConstants.REDUCED_TICKET;
     }
 
