@@ -2,8 +2,10 @@ package model;
 
 import com.datastax.oss.driver.api.mapper.annotations.*;
 import com.datastax.oss.driver.api.mapper.entity.naming.NamingConvention;
+import jakarta.validation.constraints.*;
 import model.constants.GeneralConstants;
 import model.constants.MovieConstants;
+import model.messages.MovieValidation;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -18,18 +20,28 @@ public class Movie {
 
     @PartitionKey
     @CqlName(value = MovieConstants.MOVIE_ID)
+    @Pattern(regexp = MovieValidation.UUID_REGEX_PATTERN, message = MovieValidation.MOVIE_ID_NOT_UUID)
     private UUID movieID;
 
     @CqlName(value = MovieConstants.MOVIE_TITLE)
+    @NotBlank(message = MovieValidation.MOVIE_TITLE_BLANK)
+    @Size(min = 1, message = MovieValidation.MOVIE_TITLE_TOO_SHORT)
+    @Size(max = 150, message = MovieValidation.MOVIE_TITLE_TOO_LONG)
     private String movieTitle;
 
     @CqlName(value = MovieConstants.MOVIE_BASE_PRICE)
+    @Min(value = 0, message = MovieValidation.MOVIE_BASE_PRICE_NEGATIVE)
+    @Max(value = 100, message = MovieValidation.MOVIE_BASE_PRICE_TOO_HIGH)
     private double movieBasePrice;
 
     @CqlName(value = MovieConstants.NUMBER_OF_AVAILABLE_SEATS)
+    @Min(value = 0, message = MovieValidation.NUMBER_OF_AVAILABLE_SEATS_NEGATIVE)
+    @Max(value = 150, message = MovieValidation.NUMBER_OF_AVAILABLE_SEATS_TOO_HIGH)
     private int numberOfAvailableSeats;
 
     @CqlName(value = MovieConstants.SCREENING_ROOM_NUMBER)
+    @Min(value = 1, message = MovieValidation.SCREENING_ROOM_NUMBER_TOO_LOW)
+    @Max(value = 20, message = MovieValidation.SCREENING_ROOM_NUMBER_TOO_HIGH)
     private int screeningRoomNumber;
 
     // Constructors
@@ -37,7 +49,17 @@ public class Movie {
     public Movie() {
     }
 
-    public Movie(UUID movieID, String movieTitle, double movieBasePrice, int numberOfAvailableSeats, int screeningRoomNumber) {
+    public Movie(@NotNull(message = MovieValidation.MOVIE_ID_NULL)
+                 @Pattern(regexp = MovieValidation.UUID_REGEX_PATTERN, message = MovieValidation.MOVIE_ID_NOT_UUID) UUID movieID,
+                 @NotBlank(message = MovieValidation.MOVIE_TITLE_BLANK)
+                 @Size(min = 1, message = MovieValidation.MOVIE_TITLE_TOO_SHORT)
+                 @Size(max = 150, message = MovieValidation.MOVIE_TITLE_TOO_LONG) String movieTitle,
+                 @Min(value = 0, message = MovieValidation.MOVIE_BASE_PRICE_NEGATIVE)
+                 @Max(value = 100, message = MovieValidation.MOVIE_BASE_PRICE_TOO_HIGH) double movieBasePrice,
+                 @Min(value = 0, message = MovieValidation.NUMBER_OF_AVAILABLE_SEATS_NEGATIVE)
+                 @Max(value = 150, message = MovieValidation.NUMBER_OF_AVAILABLE_SEATS_TOO_HIGH) int numberOfAvailableSeats,
+                 @Min(value = 1, message = MovieValidation.SCREENING_ROOM_NUMBER_TOO_LOW)
+                 @Max(value = 20, message = MovieValidation.SCREENING_ROOM_NUMBER_TOO_HIGH) int screeningRoomNumber) {
         this.movieID = movieID;
         this.movieTitle = movieTitle;
         this.movieBasePrice = movieBasePrice;
@@ -69,23 +91,29 @@ public class Movie {
 
     // Setters
 
-    public void setMovieID(UUID movieID) {
+    public void setMovieID(@NotNull(message = MovieValidation.MOVIE_ID_NULL)
+                           @Pattern(regexp = MovieValidation.UUID_REGEX_PATTERN, message = MovieValidation.MOVIE_ID_NOT_UUID) UUID movieID) {
         this.movieID = movieID;
     }
 
-    public void setMovieTitle(String movieTitle) {
+    public void setMovieTitle(@NotBlank(message = MovieValidation.MOVIE_TITLE_BLANK)
+                              @Size(min = 1, message = MovieValidation.MOVIE_TITLE_TOO_SHORT)
+                              @Size(max = 150, message = MovieValidation.MOVIE_TITLE_TOO_LONG) String movieTitle) {
         this.movieTitle = movieTitle;
     }
 
-    public void setMovieBasePrice(double movieBasePrice) {
+    public void setMovieBasePrice(@Min(value = 0, message = MovieValidation.MOVIE_BASE_PRICE_NEGATIVE)
+                                  @Max(value = 100, message = MovieValidation.MOVIE_BASE_PRICE_TOO_HIGH) double movieBasePrice) {
         this.movieBasePrice = movieBasePrice;
     }
 
-    public void setNumberOfAvailableSeats(int numberOfAvailableSeats) {
+    public void setNumberOfAvailableSeats(@Min(value = 0, message = MovieValidation.NUMBER_OF_AVAILABLE_SEATS_NEGATIVE)
+                                          @Max(value = 150, message = MovieValidation.NUMBER_OF_AVAILABLE_SEATS_TOO_HIGH) int numberOfAvailableSeats) {
         this.numberOfAvailableSeats = numberOfAvailableSeats;
     }
 
-    public void setScreeningRoomNumber(int screeningRoomNumber) {
+    public void setScreeningRoomNumber(@Min(value = 1, message = MovieValidation.SCREENING_ROOM_NUMBER_TOO_LOW)
+                                       @Max(value = 20, message = MovieValidation.SCREENING_ROOM_NUMBER_TOO_HIGH) int screeningRoomNumber) {
         this.screeningRoomNumber = screeningRoomNumber;
     }
 
@@ -96,7 +124,6 @@ public class Movie {
         return new ToStringBuilder(this)
                 .append("movieID: ", movieID)
                 .append("movieTitle: ", movieTitle)
-                .append("movieBasePrice: ", movieBasePrice)
                 .append("numberOfAvailableSeats: ", numberOfAvailableSeats)
                 .append("screeningRoomNumber: ", screeningRoomNumber)
                 .toString();
@@ -111,7 +138,6 @@ public class Movie {
         Movie movie = (Movie) o;
 
         return new EqualsBuilder()
-                .append(movieBasePrice, movie.movieBasePrice)
                 .append(numberOfAvailableSeats, movie.numberOfAvailableSeats)
                 .append(screeningRoomNumber, movie.screeningRoomNumber)
                 .append(movieID, movie.movieID)
@@ -124,7 +150,6 @@ public class Movie {
         return new HashCodeBuilder(17, 37)
                 .append(movieID)
                 .append(movieTitle)
-                .append(movieBasePrice)
                 .append(numberOfAvailableSeats)
                 .append(screeningRoomNumber)
                 .toHashCode();

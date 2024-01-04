@@ -1,6 +1,10 @@
 package manager_tests;
 
 import model.Client;
+import model.exceptions.CassandraConfigNotFound;
+import model.exceptions.create_exceptions.ClientRepositoryCreateException;
+import model.exceptions.delete_exceptions.ClientRepositoryDeleteException;
+import model.exceptions.read_exceptions.ClientRepositoryReadException;
 import model.managers.ClientManager;
 import model.repositories.implementations.ClientRepository;
 import org.junit.jupiter.api.*;
@@ -16,7 +20,7 @@ public class ClientManagerTest {
     private static ClientManager clientManagerForTests;
 
     @BeforeAll
-    public static void init() throws MongoConfigNotFoundException  {
+    public static void init() throws CassandraConfigNotFound {
         clientRepositoryForTests = new ClientRepository();
         clientManagerForTests = new ClientManager(clientRepositoryForTests);
     }
@@ -38,21 +42,31 @@ public class ClientManagerTest {
         String clientNo3Surname = "Vega";
         int clientNo3Age = 40;
 
-        clientRepositoryForTests.create(clientNo1Name, clientNo1Surname, clientNo1Age);
-        clientRepositoryForTests.create(clientNo2Name, clientNo2Surname, clientNo2Age);
-        clientRepositoryForTests.create(clientNo3Name, clientNo3Surname, clientNo3Age);
+        try {
+            clientRepositoryForTests.create(clientNo1Name, clientNo1Surname, clientNo1Age);
+            clientRepositoryForTests.create(clientNo2Name, clientNo2Surname, clientNo2Age);
+            clientRepositoryForTests.create(clientNo3Name, clientNo3Surname, clientNo3Age);
+        } catch (ClientRepositoryCreateException exception) {
+            throw new RuntimeException("Sample clients could not be created in the repository.", exception);
+        }
     }
 
     @AfterEach
     public void depopulateClientRepositoryForTests() {
-        List<Client> listOfClients = clientRepositoryForTests.findAll();
-        for (Client client : listOfClients) {
-            clientRepositoryForTests.delete(client);
+        try {
+            List<Client> listOfClients = clientRepositoryForTests.findAll();
+            for (Client client : listOfClients) {
+                clientRepositoryForTests.delete(client);
+            }
+        } catch (ClientRepositoryDeleteException exception) {
+            throw new RuntimeException("Sample clients could not be deleted from repository." ,exception);
+        } catch (ClientRepositoryReadException exception) {
+            throw new RuntimeException("Sample clients could not be read from repository." ,exception);
         }
     }
 
     @Test
-    public void createClientManagerTest() throws MongoConfigNotFoundException {
+    public void createClientManagerTest() throws CassandraConfigNotFound {
         ClientRepository clientRepository = new ClientRepository();
         assertNotNull(clientRepository);
         ClientManager clientManager = new ClientManager(clientRepository);
@@ -61,7 +75,7 @@ public class ClientManagerTest {
     }
 
     @Test
-    public void setClientRepositoryForClientManagerTest() throws MongoConfigNotFoundException {
+    public void setClientRepositoryForClientManagerTest() throws CassandraConfigNotFound {
         ClientRepository clientRepositoryNo1 = new ClientRepository();
         assertNotNull(clientRepositoryNo1);
         ClientRepository clientRepositoryNo2 = new ClientRepository();
@@ -133,7 +147,7 @@ public class ClientManagerTest {
     }
 
     @Test
-    public void getAllClientsFromRepositoryTest() {
+    public void getAllClientsFromRepositoryTest() throws ClientRepositoryReadException {
         List<Client> listOfAllClientsNo1 = clientManagerForTests.getClientRepository().findAll();
         List<Client> listOfAllClientsNo2 = clientManagerForTests.getAll();
         assertNotNull(listOfAllClientsNo1);

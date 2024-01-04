@@ -1,11 +1,8 @@
 package model.managers;
 
-import model.Client;
-import model.Movie;
 import model.Ticket;
-import model.exceptions.repository_exceptions.create_exceptions.RepositoryCreateException;
-import model.exceptions.repository_exceptions.read_exceptions.RepositoryReadException;
-import model.exceptions.repository_exceptions.update_exceptions.RepositoryUpdateException;
+import model.exceptions.create_exceptions.TicketRepositoryCreateException;
+import model.exceptions.read_exceptions.TicketRepositoryReadException;
 import model.repositories.implementations.TicketRepository;
 
 import java.time.Instant;
@@ -20,52 +17,44 @@ public class TicketManager {
         this.ticketRepository = ticketRepository;
     }
 
-    public Ticket register(Instant movieTime, Instant reservationTime, Movie movie, Client client, String typeOfTicket) {
-        Ticket ticketToRepo = null;
-        try{
-            ticketToRepo = ticketRepository.create(movieTime, reservationTime, movie, client, typeOfTicket);
-        } catch (RepositoryCreateException exception) {
+    public Ticket registerNormalTicket(Instant movieTime, Instant reservationTime, double ticketBasePrice, UUID movieId, UUID clientId) {
+        Ticket ticket = null;
+        try {
+            ticket = ticketRepository.createNormalTicket(movieTime, reservationTime, ticketBasePrice, movieId, clientId);
+        } catch (TicketRepositoryCreateException exception) {
             exception.printStackTrace();
         }
-        return ticketToRepo;
+        return ticket;
     }
 
-    public void unregister(Ticket ticket) {
+    public Ticket registerReducedTicket(Instant movieTime, Instant reservationTime, double ticketBasePrice, UUID movieId, UUID clientId) {
+        Ticket ticket = null;
         try {
-            ticketRepository.expire(ticket);
-        } catch (RepositoryUpdateException exception) {
+            ticket = ticketRepository.createReducedTicket(movieTime, reservationTime, ticketBasePrice, movieId, clientId);
+        } catch (TicketRepositoryCreateException exception) {
             exception.printStackTrace();
         }
+        return ticket;
     }
 
     public Ticket get(UUID identifier) {
         Ticket ticket = null;
         try {
             ticket = ticketRepository.findByUUID(identifier);
-        } catch (RepositoryReadException exception) {
+        } catch (TicketRepositoryReadException exception) {
             exception.printStackTrace();
         }
         return ticket;
     }
 
     public List<Ticket> getAll() {
-        List<Ticket> listOfTickets = null;
+        List<Ticket> listOfAllTickets = null;
         try {
-            listOfTickets = ticketRepository.findAll();
-        } catch (RepositoryReadException exception) {
+            listOfAllTickets = ticketRepository.findAll();
+        } catch (TicketRepositoryReadException exception) {
             exception.printStackTrace();
         }
-        return listOfTickets;
-    }
-
-    public List<Ticket> getAllActive() {
-        List<Ticket> listOfTickets = null;
-        try {
-            listOfTickets = ticketRepository.findAllActive();
-        } catch (RepositoryReadException exception) {
-            exception.printStackTrace();
-        }
-        return listOfTickets;
+        return listOfAllTickets;
     }
 
     public TicketRepository getTicketRepository() {

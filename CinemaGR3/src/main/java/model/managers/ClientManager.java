@@ -1,9 +1,9 @@
 package model.managers;
 
 import model.Client;
-import model.exceptions.repository_exceptions.create_exceptions.RepositoryCreateException;
-import model.exceptions.repository_exceptions.read_exceptions.RepositoryReadException;
-import model.exceptions.repository_exceptions.update_exceptions.RepositoryUpdateException;
+import model.exceptions.create_exceptions.ClientRepositoryCreateException;
+import model.exceptions.read_exceptions.ClientRepositoryReadException;
+import model.exceptions.update_exceptions.ClientRepositoryUpdateException;
 import model.repositories.implementations.ClientRepository;
 
 import java.util.List;
@@ -18,19 +18,19 @@ public class ClientManager {
     }
 
     public Client register(String clientName, String clientSurname, int clientAge) {
-        Client clientToRepo = null;
+        Client client = null;
         try {
-            clientToRepo = clientRepository.create(clientName, clientSurname, clientAge);
-        } catch (RepositoryCreateException exception) {
+            client = clientRepository.create(clientName, clientSurname, clientAge);
+        } catch (ClientRepositoryCreateException exception) {
             exception.printStackTrace();
         }
-        return clientToRepo;
+        return client;
     }
 
     public void unregister(Client client) {
         try {
-            clientRepository.expire(client);
-        } catch (RepositoryUpdateException exception) {
+            clientRepository.expire(client.getClientID());
+        } catch (ClientRepositoryUpdateException exception) {
             exception.printStackTrace();
         }
     }
@@ -39,30 +39,30 @@ public class ClientManager {
         Client client = null;
         try {
             client = clientRepository.findByUUID(identifier);
-        } catch (RepositoryReadException exception) {
+        } catch (ClientRepositoryReadException exception) {
             exception.printStackTrace();
         }
         return client;
     }
 
     public List<Client> getAll() {
-        List<Client> listOfClients = null;
+        List<Client> listOfAllClients = null;
         try {
-            listOfClients = clientRepository.findAll();
-        } catch (RepositoryReadException exception) {
+            listOfAllClients = clientRepository.findAll();
+        } catch (ClientRepositoryReadException exception) {
             exception.printStackTrace();
         }
-        return listOfClients;
+        return listOfAllClients;
     }
 
     public List<Client> getAllActive() {
-        List<Client> listOfClients = null;
+        List<Client> listOfAllActiveClients = null;
         try {
-            listOfClients = clientRepository.findAllActive();
-        } catch (RepositoryReadException exception) {
+            listOfAllActiveClients = clientRepository.findAllActive();
+        } catch (ClientRepositoryReadException exception) {
             exception.printStackTrace();
         }
-        return listOfClients;
+        return listOfAllActiveClients;
     }
 
     public ClientRepository getClientRepository() {

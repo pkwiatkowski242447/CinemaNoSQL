@@ -1,15 +1,11 @@
 package model.repositories.daos;
 
-import com.datastax.oss.driver.api.mapper.annotations.Dao;
-import com.datastax.oss.driver.api.mapper.annotations.QueryProvider;
-import com.datastax.oss.driver.api.mapper.annotations.StatementAttributes;
-import mapping_layer.model_rows.TicketRow;
-import model.Client;
-import model.Movie;
+import com.datastax.oss.driver.api.mapper.annotations.*;
 import model.Ticket;
+import model.constants.GeneralConstants;
+import model.exceptions.read_exceptions.TicketRepositoryReadException;
 import model.repositories.providers.TicketQueryProvider;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,45 +14,29 @@ public interface TicketDao {
 
     // Create methods
 
-    @StatementAttributes(consistencyLevel = "QUORUM")
-    @QueryProvider(providerClass = TicketQueryProvider.class, entityHelpers = {TicketRow.class})
-    Ticket create(Instant movieTime, Instant reservationTime, Movie movie, Client client, String typeOfTicket);
+    @StatementAttributes(consistencyLevel = GeneralConstants.CASSANDRA_WRITE_CONSISTENCY_LEVEL)
+    @Insert
+    void create(Ticket ticket);
 
     // Read methods
 
-    @StatementAttributes(consistencyLevel = "QUORUM")
-    @QueryProvider(providerClass = TicketQueryProvider.class, entityHelpers = {TicketRow.class})
-    Ticket findByUUID(UUID ticketId);
+    @StatementAttributes(consistencyLevel = GeneralConstants.CASSANDRA_READ_CONSISTENCY_LEVEL)
+    @QueryProvider(providerClass = TicketQueryProvider.class, entityHelpers = {Ticket.class}, providerMethod = "findByUUID")
+    Ticket findByUUID(UUID ticketId) throws TicketRepositoryReadException;
 
-    @StatementAttributes(consistencyLevel = "QUORUM")
-    @QueryProvider(providerClass = TicketQueryProvider.class, entityHelpers = {TicketRow.class})
-    List<Ticket> findAll();
-
-    @StatementAttributes(consistencyLevel = "QUORUM")
-    @QueryProvider(providerClass = TicketQueryProvider.class, entityHelpers = {TicketRow.class})
-    List<Ticket> findAllActive();
-
-    @StatementAttributes(consistencyLevel = "QUORUM")
-    @QueryProvider(providerClass = TicketQueryProvider.class, entityHelpers = {TicketRow.class})
-    List<UUID> findAllUUIDs();
+    @StatementAttributes(consistencyLevel = GeneralConstants.CASSANDRA_READ_CONSISTENCY_LEVEL)
+    @QueryProvider(providerClass = TicketQueryProvider.class, entityHelpers = {Ticket.class}, providerMethod = "findAll")
+    List<Ticket> findAll() throws TicketRepositoryReadException;
 
     // Update methods
 
-    @StatementAttributes(consistencyLevel = "QUORUM")
-    @QueryProvider(providerClass = TicketQueryProvider.class, entityHelpers = {TicketRow.class})
+    @StatementAttributes(consistencyLevel = GeneralConstants.CASSANDRA_WRITE_CONSISTENCY_LEVEL)
+    @Update
     void update(Ticket ticket);
-
-    @StatementAttributes(consistencyLevel = "QUORUM")
-    @QueryProvider(providerClass = TicketQueryProvider.class, entityHelpers = {TicketRow.class})
-    void expire(Ticket ticket);
 
     // Delete methods
 
-    @StatementAttributes(consistencyLevel = "QUORUM")
-    @QueryProvider(providerClass = TicketQueryProvider.class, entityHelpers = {TicketRow.class})
+    @StatementAttributes(consistencyLevel = GeneralConstants.CASSANDRA_WRITE_CONSISTENCY_LEVEL)
+    @Delete
     void delete(Ticket ticket);
-
-    @StatementAttributes(consistencyLevel = "QUORUM")
-    @QueryProvider(providerClass = TicketQueryProvider.class, entityHelpers = {TicketRow.class})
-    void deleteByUUID(UUID ticketId);
 }

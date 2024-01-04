@@ -3,12 +3,21 @@ package manager_tests;
 import model.Client;
 import model.Movie;
 import model.Ticket;
-import model.exceptions.model_exceptions.TicketReservationException;
+import model.exceptions.CassandraConfigNotFound;
+import model.exceptions.create_exceptions.ClientRepositoryCreateException;
+import model.exceptions.create_exceptions.MovieRepositoryCreateException;
+import model.exceptions.create_exceptions.TicketRepositoryCreateException;
+import model.exceptions.delete_exceptions.ClientRepositoryDeleteException;
+import model.exceptions.delete_exceptions.MovieRepositoryDeleteException;
+import model.exceptions.delete_exceptions.TicketRepositoryDeleteException;
+import model.exceptions.read_exceptions.ClientRepositoryReadException;
+import model.exceptions.read_exceptions.MovieRepositoryReadException;
+import model.exceptions.read_exceptions.TicketRepositoryReadException;
 import model.managers.*;
 import model.repositories.implementations.ClientRepository;
 import model.repositories.implementations.MovieRepository;
-import model.repositories.implementations.ScreeningRoomRepository;
 import model.repositories.implementations.TicketRepository;
+import model.ticket_types.Normal;
 import org.junit.jupiter.api.*;
 
 import java.time.Instant;
@@ -32,10 +41,6 @@ public class TicketManagerTest {
     private Client clientNo2;
     private Client clientNo3;
 
-    private ScreeningRoom screeningRoomNo1;
-    private ScreeningRoom screeningRoomNo2;
-    private ScreeningRoom screeningRoomNo3;
-
     private Movie movieNo1;
     private Movie movieNo2;
     private Movie movieNo3;
@@ -47,22 +52,18 @@ public class TicketManagerTest {
     private static TicketRepository ticketRepositoryForTests;
     private static ClientRepository clientRepositoryForTests;
     private static MovieRepository movieRepositoryForTests;
-    private static ScreeningRoomRepository screeningRoomRepositoryForTests;
     private static TicketManager ticketManagerForTests;
     private static ClientManager clientManagerForTests;
     private static MovieManager movieManagerForTests;
-    private static ScreeningRoomManager screeningRoomManagerForTests;
 
     @BeforeAll
-    public static void init() throws MongoConfigNotFoundException  {
+    public static void init() throws CassandraConfigNotFound {
         ticketRepositoryForTests = new TicketRepository();
         clientRepositoryForTests = new ClientRepository();
         movieRepositoryForTests = new MovieRepository();
-        screeningRoomRepositoryForTests = new ScreeningRoomRepository();
         ticketManagerForTests = new TicketManager(ticketRepositoryForTests);
         clientManagerForTests = new ClientManager(clientRepositoryForTests);
         movieManagerForTests = new MovieManager(movieRepositoryForTests);
-        screeningRoomManagerForTests = new ScreeningRoomManager(screeningRoomRepositoryForTests);
     }
 
     @AfterAll
@@ -70,7 +71,6 @@ public class TicketManagerTest {
         ticketRepositoryForTests.close();
         clientRepositoryForTests.close();
         movieRepositoryForTests.close();
-        screeningRoomRepositoryForTests.close();
     }
 
     @BeforeEach
@@ -85,9 +85,13 @@ public class TicketManagerTest {
         String clientNo3Surname = "Vega";
         int clientNo3Age = 40;
 
-        clientNo1 = clientRepositoryForTests.create(clientNo1Name, clientNo1Surname, clientNo1Age);
-        clientNo2 = clientRepositoryForTests.create(clientNo2Name, clientNo2Surname, clientNo2Age);
-        clientNo3 = clientRepositoryForTests.create(clientNo3Name, clientNo3Surname, clientNo3Age);
+        try {
+            clientNo1 = clientRepositoryForTests.create(clientNo1Name, clientNo1Surname, clientNo1Age);
+            clientNo2 = clientRepositoryForTests.create(clientNo2Name, clientNo2Surname, clientNo2Age);
+            clientNo3 = clientRepositoryForTests.create(clientNo3Name, clientNo3Surname, clientNo3Age);
+        } catch (ClientRepositoryCreateException exception) {
+            throw new RuntimeException("Sample clients could not be created in repository.", exception);
+        }
 
         int screeningRoomNo1Floor = 1;
         int screeningRoomNo1Number = 10;
@@ -99,10 +103,6 @@ public class TicketManagerTest {
         int screeningRoomNo3Number = 19;
         int screeningRoomNo3NumberOfAvailSeats = 120;
 
-        screeningRoomNo1 = screeningRoomRepositoryForTests.create(screeningRoomNo1Floor, screeningRoomNo1Number, screeningRoomNo1NumberOfAvailSeats);
-        screeningRoomNo2 = screeningRoomRepositoryForTests.create(screeningRoomNo2Floor, screeningRoomNo2Number, screeningRoomNo2NumberOfAvailSeats);
-        screeningRoomNo3 = screeningRoomRepositoryForTests.create(screeningRoomNo3Floor, screeningRoomNo3Number, screeningRoomNo3NumberOfAvailSeats);
-
         String movieNo1Title = "Harry Potter and The Goblet of Fire";
         double movieNo1BasePrice = 20.05;
         String movieNo2Title = "The Da Vinci Code";
@@ -110,37 +110,61 @@ public class TicketManagerTest {
         String movieNo3Title = "A Space Odyssey";
         double movieNo3BasePrice = 59.99;
 
-        movieNo1 = movieRepositoryForTests.create(movieNo1Title, movieNo1BasePrice, screeningRoomNo1);
-        movieNo2 = movieRepositoryForTests.create(movieNo2Title, movieNo2BasePrice, screeningRoomNo2);
-        movieNo3 = movieRepositoryForTests.create(movieNo3Title, movieNo3BasePrice, screeningRoomNo3);
+        try {
+            movieNo1 = movieRepositoryForTests.create(movieNo1Title, movieNo1BasePrice, screeningRoomNo1NumberOfAvailSeats, screeningRoomNo1Number);
+            movieNo2 = movieRepositoryForTests.create(movieNo2Title, movieNo2BasePrice, screeningRoomNo2NumberOfAvailSeats, screeningRoomNo2Number);
+            movieNo3 = movieRepositoryForTests.create(movieNo3Title, movieNo3BasePrice, screeningRoomNo3NumberOfAvailSeats, screeningRoomNo3Number);
+        } catch (MovieRepositoryCreateException exception) {
+            throw new RuntimeException("Sample movies could not be created in repository.", exception);
+        }
 
-        ticketNo1 = ticketManagerForTests.getTicketRepository().create(movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, "normal");
-        ticketNo2 = ticketManagerForTests.getTicketRepository().create(movieTimeNo2, reservationTimeNo2, movieNo2, clientNo2, "normal");
-        ticketNo3 = ticketManagerForTests.getTicketRepository().create(movieTimeNo3, reservationTimeNo3, movieNo3, clientNo3, "normal");
+        try {
+            ticketNo1 = ticketManagerForTests.getTicketRepository().createNormalTicket(movieTimeNo1, reservationTimeNo1, movieNo1.getMovieBasePrice(), movieNo1.getMovieID(), clientNo1.getClientID());
+            ticketNo2 = ticketManagerForTests.getTicketRepository().createNormalTicket(movieTimeNo2, reservationTimeNo2, movieNo2.getMovieBasePrice(), movieNo2.getMovieID(), clientNo2.getClientID());
+            ticketNo3 = ticketManagerForTests.getTicketRepository().createNormalTicket(movieTimeNo3, reservationTimeNo3, movieNo3.getMovieBasePrice(), movieNo3.getMovieID(), clientNo3.getClientID());
+        } catch (TicketRepositoryCreateException exception) {
+            throw new RuntimeException("Sample tickets could not be created in repository.", exception);
+        }
     }
 
     @AfterEach
     public void depopulateTicketRepositoryAfterEach() {
-        List<Ticket> listOfTickets = ticketRepositoryForTests.findAll();
-        for (Ticket ticket : listOfTickets) {
-            ticketRepositoryForTests.delete(ticket);
+        try {
+            List<Ticket> listOfTickets = ticketRepositoryForTests.findAll();
+            for (Ticket ticket : listOfTickets) {
+                ticketRepositoryForTests.delete(ticket);
+            }
+        } catch (TicketRepositoryDeleteException exception) {
+            throw new RuntimeException("Sample tickets could not be deleted from the repository.", exception);
+        } catch (TicketRepositoryReadException exception) {
+            throw new RuntimeException("Sample tickets could not be read from the repository.", exception);
         }
-        List<Client> listOfClients = clientRepositoryForTests.findAll();
-        for (Client client : listOfClients) {
-            clientRepositoryForTests.delete(client);
+
+        try {
+            List<Movie> listOfMovies = movieRepositoryForTests.findAll();
+            for (Movie movie : listOfMovies) {
+                movieRepositoryForTests.delete(movie);
+            }
+        } catch (MovieRepositoryDeleteException exception) {
+            throw new RuntimeException("Sample movies could not be deleted from the repository.", exception);
+        } catch (MovieRepositoryReadException exception) {
+            throw new RuntimeException("Sample movies could not be read from the repository.", exception);
         }
-        List<Movie> listOfMovies = movieRepositoryForTests.findAll();
-        for (Movie movie : listOfMovies) {
-            movieRepositoryForTests.delete(movie);
-        }
-        List<ScreeningRoom> listOfScreeningRooms = screeningRoomRepositoryForTests.findAll();
-        for (ScreeningRoom screeningRoom : listOfScreeningRooms) {
-            screeningRoomRepositoryForTests.delete(screeningRoom);
+
+        try {
+            List<Client> listOfClients = clientRepositoryForTests.findAll();
+            for (Client client : listOfClients) {
+                clientRepositoryForTests.delete(client);
+            }
+        } catch (ClientRepositoryDeleteException exception) {
+            throw new RuntimeException("Sample clients could not be deleted from the repository.", exception);
+        } catch (ClientRepositoryReadException exception) {
+            throw new RuntimeException("Sample clients could not be read from the repository.", exception);
         }
     }
 
     @Test
-    public void createTicketManagerTest() throws MongoConfigNotFoundException {
+    public void createTicketManagerTest() throws CassandraConfigNotFound {
         TicketRepository ticketRepository = new TicketRepository();
         assertNotNull(ticketRepository);
         TicketManager ticketManager = new TicketManager(ticketRepository);
@@ -149,7 +173,7 @@ public class TicketManagerTest {
     }
 
     @Test
-    public void setTicketRepositoryForTicketManagerTest() throws MongoConfigNotFoundException {
+    public void setTicketRepositoryForTicketManagerTest() throws CassandraConfigNotFound {
         TicketRepository ticketRepositoryNo1 = new TicketRepository();
         assertNotNull(ticketRepositoryNo1);
         TicketRepository ticketRepositoryNo2 = new TicketRepository();
@@ -166,7 +190,7 @@ public class TicketManagerTest {
     @Test
     public void registerNewTicketTestPositive() {
         int numOfTicketsBefore = ticketManagerForTests.getAll().size();
-        Ticket ticket = ticketManagerForTests.register(movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, "normal");
+        Ticket ticket = ticketManagerForTests.registerNormalTicket(movieTimeNo1, reservationTimeNo1, movieNo1.getMovieBasePrice(), movieNo1.getMovieID(), clientNo1.getClientID());
         assertNotNull(ticket);
         int numOfTicketsAfter = ticketManagerForTests.getAll().size();
         assertNotEquals(numOfTicketsBefore, numOfTicketsAfter);
@@ -174,33 +198,8 @@ public class TicketManagerTest {
 
     @Test
     public void registerNewTicketTestNegative() {
-        Ticket ticket = ticketManagerForTests.register(null, reservationTimeNo1, movieNo1, clientNo1, "normal");
+        Ticket ticket = ticketManagerForTests.registerNormalTicket(null, reservationTimeNo1, movieNo1.getMovieBasePrice(), movieNo1.getMovieID(), clientNo1.getClientID());
         assertNull(ticket);
-    }
-
-    @Test
-    public void unregisterCertainTicketTestPositive() {
-        int numOfTicketsBefore = ticketManagerForTests.getAllActive().size();
-        Ticket someTicketFromRepo = ticketManagerForTests.getAllActive().get(0);
-        assertNotNull(someTicketFromRepo);
-        assertTrue(someTicketFromRepo.isTicketStatusActive());
-        UUID removedTicketID = someTicketFromRepo.getTicketID();
-        ticketManagerForTests.unregister(someTicketFromRepo);
-        int numOfTicketsAfter = ticketManagerForTests.getAllActive().size();
-        Ticket foundTicket = ticketManagerForTests.get(removedTicketID);
-        assertNotNull(foundTicket);
-        assertFalse(foundTicket.isTicketStatusActive());
-        assertNotEquals(numOfTicketsBefore, numOfTicketsAfter);
-    }
-
-    @Test
-    public void unregisterCertainTicketTestNegative() throws TicketReservationException {
-        int numOfTicketsBefore = ticketManagerForTests.getAll().size();
-        Ticket ticket = new Ticket(UUID.randomUUID(), movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, "normal");
-        assertNotNull(ticket);
-        ticketManagerForTests.unregister(ticket);
-        int numOfTicketsAfter = ticketManagerForTests.getAll().size();
-        assertEquals(numOfTicketsBefore, numOfTicketsAfter);
     }
 
     @Test
@@ -213,15 +212,15 @@ public class TicketManagerTest {
     }
 
     @Test
-    public void getCertainTicketFromTicketRepositoryTestNegative() throws TicketReservationException {
-        Ticket ticket = new Ticket(UUID.randomUUID(), movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, "normal");
+    public void getCertainTicketFromTicketRepositoryTestNegative() {
+        Ticket ticket = new Normal(UUID.randomUUID(), movieTimeNo1, reservationTimeNo1, movieNo1.getMovieBasePrice(), movieNo1.getMovieID(), clientNo1.getClientID());
         assertNotNull(ticket);
         Ticket foundTicket = ticketManagerForTests.get(ticket.getTicketID());
         assertNull(foundTicket);
     }
 
     @Test
-    public void getAllTicketsFromRepositoryTest() {
+    public void getAllTicketsFromRepositoryTest() throws TicketRepositoryReadException {
         List<Ticket> listOfAllTicketsNo1 = ticketManagerForTests.getTicketRepository().findAll();
         List<Ticket> listOfAllTicketsNo2 = ticketManagerForTests.getAll();
         assertNotNull(listOfAllTicketsNo1);

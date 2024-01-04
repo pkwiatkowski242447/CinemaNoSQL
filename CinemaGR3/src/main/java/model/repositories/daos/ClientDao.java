@@ -1,10 +1,9 @@
 package model.repositories.daos;
 
 import com.datastax.oss.driver.api.mapper.annotations.*;
-import mapping_layer.model_rows.ClientRow;
 import model.Client;
-import model.exceptions.repository_exceptions.create_exceptions.ClientRepositoryCreateException;
-import model.exceptions.repository_exceptions.read_exceptions.ClientRepositoryReadException;
+import model.constants.GeneralConstants;
+import model.exceptions.read_exceptions.ClientRepositoryReadException;
 import model.repositories.providers.ClientQueryProvider;
 
 import java.util.List;
@@ -15,41 +14,33 @@ public interface ClientDao {
 
     // Create methods
 
-    @StatementAttributes(consistencyLevel = "LOCAL_QUORUM")
-    @QueryProvider(providerClass = ClientQueryProvider.class, entityHelpers = {ClientRow.class})
-    Client create(String clientName, String clientSurname, int clientAge) throws ClientRepositoryCreateException;
+    @StatementAttributes(consistencyLevel = GeneralConstants.CASSANDRA_WRITE_CONSISTENCY_LEVEL)
+    @Insert
+    void create(Client client);
 
     // Read methods
 
-    @StatementAttributes(consistencyLevel = "LOCAL_QUORUM")
-    @QueryProvider(providerClass = ClientQueryProvider.class, entityHelpers = {ClientRow.class})
+    @StatementAttributes(consistencyLevel = GeneralConstants.CASSANDRA_READ_CONSISTENCY_LEVEL)
+    @QueryProvider(providerClass = ClientQueryProvider.class, entityHelpers = {Client.class}, providerMethod = "findByUUID")
     Client findByUUID(UUID clientId) throws ClientRepositoryReadException;
 
-    @StatementAttributes(consistencyLevel = "LOCAL_QUORUM")
-    @QueryProvider(providerClass = ClientQueryProvider.class, entityHelpers = {ClientRow.class})
+    @StatementAttributes(consistencyLevel =GeneralConstants.CASSANDRA_READ_CONSISTENCY_LEVEL)
+    @QueryProvider(providerClass = ClientQueryProvider.class, entityHelpers = {Client.class}, providerMethod = "findAll")
     List<Client> findAll() throws ClientRepositoryReadException;
 
-    @StatementAttributes(consistencyLevel = "LOCAL_QUORUM")
-    @QueryProvider(providerClass = ClientQueryProvider.class, entityHelpers = {ClientRow.class})
+    @StatementAttributes(consistencyLevel = GeneralConstants.CASSANDRA_READ_CONSISTENCY_LEVEL)
+    @QueryProvider(providerClass = ClientQueryProvider.class, entityHelpers = {Client.class}, providerMethod = "findAllActive")
     List<Client> findAllActive() throws ClientRepositoryReadException;
 
     // Update methods
 
-    @StatementAttributes(consistencyLevel = "LOCAL_QUORUM")
-    @QueryProvider(providerClass = ClientQueryProvider.class, entityHelpers = {ClientRow.class})
+    @StatementAttributes(consistencyLevel = GeneralConstants.CASSANDRA_WRITE_CONSISTENCY_LEVEL)
+    @Update
     void update(Client client);
-
-    @StatementAttributes(consistencyLevel = "LOCAL_QUORUM")
-    @QueryProvider(providerClass = ClientQueryProvider.class, entityHelpers = {ClientRow.class})
-    void expire(Client client);
 
     // Delete methods
 
-    @StatementAttributes(consistencyLevel = "LOCAL_QUORUM")
-    @QueryProvider(providerClass = ClientQueryProvider.class, entityHelpers = {ClientRow.class})
+    @StatementAttributes(consistencyLevel = GeneralConstants.CASSANDRA_WRITE_CONSISTENCY_LEVEL)
+    @Delete
     void delete(Client client);
-
-    @StatementAttributes(consistencyLevel = "LOCAL_QUORUM")
-    @QueryProvider(providerClass = ClientQueryProvider.class, entityHelpers = {ClientRow.class})
-    void deleteByUUID(UUID clientId);
 }

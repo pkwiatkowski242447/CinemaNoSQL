@@ -3,13 +3,11 @@ package model_tests;
 import model.Client;
 import model.Movie;
 import model.Ticket;
-import model.exceptions.model_exceptions.TicketReservationException;
 import model.ticket_types.Normal;
 import model.ticket_types.Reduced;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.text.ParseException;
 import java.time.Instant;
 import java.util.Calendar;
 import java.util.Date;
@@ -20,8 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TicketTests {
 
     private final double movieBasePrice = 40;
-    private final ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 1, 6, 90);
-    private final Movie movieNo1 = new Movie(UUID.randomUUID(), "Pulp Fiction", movieBasePrice, screeningRoom);
+    private final Movie movieNo1 = new Movie(UUID.randomUUID(), "Pulp Fiction", 37.75, 1, 90);
     private final Movie movieNo2 = null;
     private final Client clientNo1 = new Client(UUID.randomUUID(), "Jules", "Winnfield", 74);
     private final Client clientNo2 = null;
@@ -29,102 +26,66 @@ public class TicketTests {
     private Ticket newTestTicket;
 
     @BeforeEach
-    public void init() throws ParseException, TicketReservationException {
+    public void init() {
         Instant reservationTime = new Calendar.Builder().setDate(2023, 9, 30).setTimeOfDay(12, 12, 0).build().getTime().toInstant();
         Instant movieTime = new Calendar.Builder().setDate(2023, 10, 2).setTimeOfDay(20, 15, 0).build().getTime().toInstant();
 
-        testTicket = new Ticket(UUID.randomUUID(), movieTime, reservationTime, movieNo1, clientNo1, "normal");
-        newTestTicket = new Ticket(testTicket.getTicketID(),
+        testTicket = new Normal(UUID.randomUUID(), movieTime, reservationTime, movieBasePrice, movieNo1.getMovieID(), clientNo1.getClientID());
+        newTestTicket = new Normal(testTicket.getTicketID(),
                 testTicket.getMovieTime(),
                 testTicket.getReservationTime(),
-                testTicket.getMovie(),
-                testTicket.getClient(),
-                "normal");
-        newTestTicket.setTypeOfTicket(testTicket.getTicketType());
+                testTicket.getTicketBasePrice(),
+                testTicket.getMovieId(),
+                testTicket.getClientId()
+        );
     }
 
     @Test
-    public void ticketConstructorAndGettersTestPositive() throws ParseException, TicketReservationException {
+    public void ticketConstructorAndGettersTestPositive() {
         Instant reservationTime = new Calendar.Builder().setDate(2023, 9, 30).setTimeOfDay(12, 12, 0).build().getTime().toInstant();
         Instant movieTime = new Calendar.Builder().setDate(2023, 10, 2).setTimeOfDay(20, 15, 0).build().getTime().toInstant();
 
         UUID ticketIDNo1 = UUID.randomUUID();
 
-        Ticket ticketNo1 = new Ticket(ticketIDNo1, movieTime, reservationTime, movieNo1, clientNo1, "normal");
+        Ticket ticketNo1 = new Normal(ticketIDNo1, movieTime, reservationTime, movieBasePrice, movieNo1.getMovieID(), clientNo1.getClientID());
 
         assertNotNull(ticketNo1);
 
         assertEquals(ticketIDNo1, ticketNo1.getTicketID());
         assertEquals(movieTime, ticketNo1.getMovieTime());
         assertEquals(reservationTime, ticketNo1.getReservationTime());
-        assertTrue(ticketNo1.isTicketStatusActive());
-        assertEquals(clientNo1, ticketNo1.getClient());
-        assertEquals(movieNo1, ticketNo1.getMovie());
-        assertEquals(Normal.class, ticketNo1.getTicketType().getClass());
+        assertEquals(clientNo1.getClientID(), ticketNo1.getClientId());
+        assertEquals(movieNo1.getMovieID(), ticketNo1.getMovieId());
+        assertEquals(Normal.class, ticketNo1.getClass());
         assertEquals(movieBasePrice, ticketNo1.getTicketFinalPrice());
 
         UUID ticketIDNo2 = UUID.randomUUID();
 
-        Ticket ticketNo2 = new Ticket(ticketIDNo2, movieTime, reservationTime, movieNo1, clientNo1, "reduced");
+        Ticket ticketNo2 = new Reduced(ticketIDNo2, movieTime, reservationTime, movieBasePrice, movieNo1.getMovieID(), clientNo1.getClientID());
 
         assertNotNull(ticketNo2);
 
         assertEquals(ticketIDNo2, ticketNo2.getTicketID());
         assertEquals(movieTime, ticketNo2.getMovieTime());
         assertEquals(reservationTime, ticketNo2.getReservationTime());
-        assertTrue(ticketNo2.isTicketStatusActive());
-        assertEquals(clientNo1, ticketNo2.getClient());
-        assertEquals(movieNo1, ticketNo2.getMovie());
-        assertEquals(Reduced.class, ticketNo2.getTicketType().getClass());
+        assertEquals(clientNo1.getClientID(), ticketNo2.getClientId());
+        assertEquals(movieNo1.getMovieID(), ticketNo2.getMovieId());
+        assertEquals(Reduced.class, ticketNo2.getClass());
         assertEquals(movieBasePrice * 0.75, ticketNo2.getTicketFinalPrice());
     }
 
     @Test
-    public void ticketSetterTicketStatusActiveTest() throws ParseException, TicketReservationException {
-        Instant reservationTime = new Calendar.Builder().setDate(2023, 9, 30).setTimeOfDay(12, 12, 0).build().getTime().toInstant();
-        Instant movieTime = new Calendar.Builder().setDate(2023, 10, 2).setTimeOfDay(20, 15, 0).build().getTime().toInstant();
-
-        UUID ticketID = UUID.randomUUID();
-        boolean ticketStatusActive = false;
-
-        Ticket ticket = new Ticket(ticketID, movieTime, reservationTime, movieNo1, clientNo1, "normal");
-
-        assertNotNull(ticket);
-        assertTrue(ticket.isTicketStatusActive());
-
-        ticket.setTicketStatusActive(ticketStatusActive);
-
-        assertNotNull(ticket);
-        assertFalse(ticket.isTicketStatusActive());
-    }
-
-    @Test
-    public void getTicketInfoTestStatusActive() throws ParseException, TicketReservationException {
+    public void ticketToStringTest() {
         Instant reservationTime = new Calendar.Builder().setDate(2023, 9, 30).setTimeOfDay(12, 12, 0).build().getTime().toInstant();
         Instant movieTime = new Calendar.Builder().setDate(2023, 10, 2).setTimeOfDay(20, 15, 0).build().getTime().toInstant();
 
         UUID ticketID = UUID.randomUUID();
 
-        Ticket ticket = new Ticket(ticketID, movieTime, reservationTime, movieNo1, clientNo1, "normal");
+        Ticket ticket = new Ticket(ticketID, movieTime, reservationTime, movieBasePrice, movieNo1.getMovieID(), clientNo1.getClientID());
 
         assertNotNull(ticket);
-        assertNotNull(ticket.getTicketInfo());
-        assertNotEquals("", ticket.getTicketInfo());
-    }
-
-    @Test
-    public void getTicketInfoTestStatusNotActive() throws ParseException, TicketReservationException {
-        Instant reservationTime = new Calendar.Builder().setDate(2023, 9, 30).setTimeOfDay(12, 12, 0).build().getTime().toInstant();
-        Instant movieTime = new Calendar.Builder().setDate(2023, 10, 2).setTimeOfDay(20, 15, 0).build().getTime().toInstant();
-
-        UUID ticketID = UUID.randomUUID();
-
-        Ticket ticket = new Ticket(ticketID, movieTime, reservationTime, movieNo1, clientNo1, "normal");
-        ticket.setTicketStatusActive(false);
-
-        assertNotNull(ticket);
-        assertNotNull(ticket.getTicketInfo());
-        assertNotEquals("", ticket.getTicketInfo());
+        assertNotNull(ticket.toString());
+        assertNotEquals("", ticket.toString());
     }
 
     @Test
@@ -160,7 +121,7 @@ public class TicketTests {
 
     @Test
     public void ticketHashCodeTestNegative() {
-        testTicket.setTicketStatusActive(false);
+        testTicket.setTicketBasePrice(50);
         int hashCodeNo1 = testTicket.hashCode();
         int hashCodeNo2 = newTestTicket.hashCode();
         assertNotEquals(hashCodeNo1, hashCodeNo2);

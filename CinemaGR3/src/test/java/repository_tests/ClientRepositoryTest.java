@@ -1,12 +1,12 @@
 package repository_tests;
 
 import model.Client;
-import model.exceptions.repository_exceptions.*;
-import model.exceptions.repository_exceptions.create_exceptions.ClientRepositoryCreateException;
-import model.exceptions.repository_exceptions.delete_exceptions.ClientRepositoryDeleteException;
-import model.exceptions.repository_exceptions.read_exceptions.ClientRepositoryReadException;
-import model.exceptions.repository_exceptions.update_exceptions.ClientRepositoryUpdateException;
-import model.exceptions.repository_exceptions.update_exceptions.RepositoryUpdateException;
+import model.exceptions.CassandraConfigNotFound;
+import model.exceptions.create_exceptions.ClientRepositoryCreateException;
+import model.exceptions.delete_exceptions.ClientRepositoryDeleteException;
+import model.exceptions.read_exceptions.ClientRepositoryReadException;
+import model.exceptions.update_exceptions.ClientRepositoryUpdateException;
+import model.exceptions.update_exceptions.RepositoryUpdateException;
 import model.repositories.implementations.ClientRepository;
 import org.junit.jupiter.api.*;
 
@@ -17,14 +17,13 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ClientRepositoryTest {
 
-    private final static String databaseName = "test";
     private Client clientNo1;
     private Client clientNo2;
     private Client clientNo3;
     private static ClientRepository clientRepositoryForTests;
 
     @BeforeAll
-    public static void init() throws MongoConfigNotFoundException {
+    public static void init() throws CassandraConfigNotFound {
         clientRepositoryForTests = new ClientRepository();
     }
 
@@ -33,22 +32,35 @@ public class ClientRepositoryTest {
         String clientNo1Name = "John";
         String clientNo1Surname = "Smith";
         int clientNo1Age = 21;
-        clientNo1 = clientRepositoryForTests.create(clientNo1Name, clientNo1Surname, clientNo1Age);
+
         String clientNo2Name = "Mary";
         String clientNo2Surname = "Jane";
         int clientNo2Age = 18;
-        clientNo2 = clientRepositoryForTests.create(clientNo2Name, clientNo2Surname, clientNo2Age);
+
         String clientNo3Name = "Vincent";
         String clientNo3Surname = "Vega";
         int clientNo3Age = 40;
-        clientNo3 = clientRepositoryForTests.create(clientNo3Name, clientNo3Surname, clientNo3Age);
+
+        try {
+            clientNo1 = clientRepositoryForTests.create(clientNo1Name, clientNo1Surname, clientNo1Age);
+            clientNo2 = clientRepositoryForTests.create(clientNo2Name, clientNo2Surname, clientNo2Age);
+            clientNo3 = clientRepositoryForTests.create(clientNo3Name, clientNo3Surname, clientNo3Age);
+        } catch (ClientRepositoryCreateException exception) {
+            throw new RuntimeException("Sample clients could not be created in the repository correctly.", exception);
+        }
     }
 
     @AfterEach
     public void deleteExampleClients() {
-        List<UUID> listOfAllClientsUUIDs = clientRepositoryForTests.findAllUUIDs();
-        for (UUID clientID : listOfAllClientsUUIDs) {
-            clientRepositoryForTests.delete(clientID);
+        try {
+            List<Client> listOfAllClients = clientRepositoryForTests.findAll();
+            for (Client client : listOfAllClients) {
+                clientRepositoryForTests.delete(client);
+            }
+        } catch (ClientRepositoryDeleteException exception) {
+            throw new RuntimeException("Sample clients could not be deleted from the repository.", exception);
+        } catch (ClientRepositoryReadException exception) {
+            throw new RuntimeException("Sample clients could not be read the repository.", exception);
         }
     }
 
@@ -58,19 +70,16 @@ public class ClientRepositoryTest {
     }
 
     @Test
-    public void clientRepositoryConstructorTest() throws MongoConfigNotFoundException {
+    public void clientRepositoryConstructorTest() throws CassandraConfigNotFound {
         ClientRepository clientRepository = new ClientRepository();
         assertNotNull(clientRepository);
     }
 
     @Test
-    public void createNewClientTestPositive() {
-        final Client[] newClient = new Client[1];
-        assertDoesNotThrow(() -> {
-            newClient[0] = clientRepositoryForTests.create("Stefania", "Czarnecka", 80);
-        });
-        Client createdClient = clientRepositoryForTests.findByUUID(newClient[0].getClientID());
-        assertEquals(createdClient, newClient[0]);
+    public void createNewClientTestPositive() throws ClientRepositoryCreateException, ClientRepositoryReadException{
+        Client newClient = clientRepositoryForTests.create("Stefania", "Czarnecka", 80);
+        Client createdClient = clientRepositoryForTests.findByUUID(newClient.getClientID());
+        assertEquals(createdClient, newClient);
     }
 
     @Test
@@ -111,7 +120,7 @@ public class ClientRepositoryTest {
     }
 
     @Test
-    public void updateCertainClientTestPositive() {
+    public void updateCertainClientTestPositive() throws ClientRepositoryReadException {
         String oldSurname = clientNo1.getClientSurname();
         String newSurname = "Doe";
         clientNo1.setClientSurname(newSurname);
@@ -131,7 +140,7 @@ public class ClientRepositoryTest {
     }
 
     @Test
-    public void updateCertainClientWithNullNameTestNegative() {
+    public void updateCertainClientWithNullNameTestNegative() throws ClientRepositoryReadException {
         Client foundClient = clientRepositoryForTests.findAll().get(0);
         assertNotNull(foundClient);
         foundClient.setClientName(null);
@@ -139,7 +148,7 @@ public class ClientRepositoryTest {
     }
 
     @Test
-    public void updateCertainClientWithEmptyNameTestNegative() {
+    public void updateCertainClientWithEmptyNameTestNegative() throws ClientRepositoryReadException {
         Client foundClient = clientRepositoryForTests.findAll().get(0);
         assertNotNull(foundClient);
         foundClient.setClientName("");
@@ -147,7 +156,7 @@ public class ClientRepositoryTest {
     }
 
     @Test
-    public void updateCertainClientWithNameTooLongTestNegative() {
+    public void updateCertainClientWithNameTooLongTestNegative() throws ClientRepositoryReadException {
         String newName = "ddddddddddddddddddddddddddddddddddddddddddddddddddd";
         Client foundClient = clientRepositoryForTests.findAll().get(0);
         assertNotNull(foundClient);
@@ -156,7 +165,7 @@ public class ClientRepositoryTest {
     }
 
     @Test
-    public void updateCertainClientWithNullSurnameTestNegative() {
+    public void updateCertainClientWithNullSurnameTestNegative() throws ClientRepositoryReadException {
         Client foundClient = clientRepositoryForTests.findAll().get(0);
         assertNotNull(foundClient);
         foundClient.setClientSurname(null);
@@ -164,7 +173,7 @@ public class ClientRepositoryTest {
     }
 
     @Test
-    public void updateCertainClientWithEmptySurnameTestNegative() {
+    public void updateCertainClientWithEmptySurnameTestNegative() throws ClientRepositoryReadException {
         Client foundClient = clientRepositoryForTests.findAll().get(0);
         assertNotNull(foundClient);
         foundClient.setClientSurname("");
@@ -172,7 +181,7 @@ public class ClientRepositoryTest {
     }
 
     @Test
-    public void updateCertainClientWithSurnameTooLongTestNegative() {
+    public void updateCertainClientWithSurnameTooLongTestNegative() throws ClientRepositoryReadException {
         String newSurname = "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd";
         Client foundClient = clientRepositoryForTests.findAll().get(0);
         assertNotNull(foundClient);
@@ -181,7 +190,7 @@ public class ClientRepositoryTest {
     }
 
     @Test
-    public void updateCertainClientWithAgeLesserThan18TestNegative() {
+    public void updateCertainClientWithAgeLesserThan18TestNegative() throws ClientRepositoryReadException {
         Client foundClient = clientRepositoryForTests.findAll().get(0);
         assertNotNull(foundClient);
         foundClient.setClientAge(17);
@@ -189,7 +198,7 @@ public class ClientRepositoryTest {
     }
 
     @Test
-    public void updateCertainClientWithAgeGreaterThan120TestNegative() {
+    public void updateCertainClientWithAgeGreaterThan120TestNegative() throws ClientRepositoryReadException {
         Client foundClient = clientRepositoryForTests.findAll().get(0);
         assertNotNull(foundClient);
         foundClient.setClientAge(121);
@@ -197,7 +206,7 @@ public class ClientRepositoryTest {
     }
 
     @Test
-    public void deleteCertainClientTestPositive() {
+    public void deleteCertainClientTestPositive() throws ClientRepositoryReadException {
         UUID removedClientUUID = clientNo1.getClientID();
         int numberOfClientsBeforeDelete = clientRepositoryForTests.findAll().size();
         assertDoesNotThrow(() -> clientRepositoryForTests.delete(clientNo1));
@@ -224,11 +233,11 @@ public class ClientRepositoryTest {
     }
 
     @Test
-    public void expireCertainClientTestPositive() {
+    public void expireCertainClientTestPositive() throws ClientRepositoryReadException, ClientRepositoryUpdateException {
         UUID expiredClientUUID = clientNo1.getClientID();
         int beforeExpiringClient = clientRepositoryForTests.findAll().size();
         int numOfActiveClientsBefore = clientRepositoryForTests.findAllActive().size();
-        clientRepositoryForTests.expire(clientNo1);
+        clientRepositoryForTests.expire(clientNo1.getClientID());
         int afterExpiringClient = clientRepositoryForTests.findAll().size();
         int numOfActiveClientsAfter = clientRepositoryForTests.findAllActive().size();
         Client foundClient = clientRepositoryForTests.findByUUID(expiredClientUUID);
@@ -245,12 +254,12 @@ public class ClientRepositoryTest {
         Client newClient = new Client(UUID.randomUUID(), "Stefania", "Czarnecka", 80);
         assertNotNull(newClient);
         assertThrows(ClientRepositoryUpdateException.class, () -> {
-            clientRepositoryForTests.expire(newClient);
+            clientRepositoryForTests.expire(newClient.getClientID());
         });
     }
 
     @Test
-    public void findCertainClientTestPositive() {
+    public void findCertainClientTestPositive() throws ClientRepositoryReadException {
         Client foundClient = clientRepositoryForTests.findByUUID(clientNo1.getClientID());
         assertNotNull(foundClient);
         assertEquals(foundClient, clientNo1);
@@ -266,17 +275,17 @@ public class ClientRepositoryTest {
     }
 
     @Test
-    public void findAllClientsTestPositive() {
+    public void findAllClientsTestPositive() throws ClientRepositoryReadException {
         List<Client> listOfAllClients = clientRepositoryForTests.findAll();
         assertNotNull(listOfAllClients);
         assertEquals(3, listOfAllClients.size());
     }
 
     @Test
-    public void findAllActiveClientsTestPositive() {
+    public void findAllActiveClientsTestPositive()  throws ClientRepositoryReadException, ClientRepositoryUpdateException {
         List<Client> startingListOfClients = clientRepositoryForTests.findAllActive();
         assertNotNull(startingListOfClients);
-        clientRepositoryForTests.expire(startingListOfClients.get(0));
+        clientRepositoryForTests.expire(startingListOfClients.get(0).getClientID());
         List<Client> endingListOfClients = clientRepositoryForTests.findAllActive();
         assertNotNull(endingListOfClients);
         assertEquals(startingListOfClients.size(), 3);

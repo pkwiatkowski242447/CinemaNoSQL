@@ -3,6 +3,9 @@ package main;
 import model.Client;
 import model.Movie;
 import model.Ticket;
+import model.exceptions.CassandraConfigNotFound;
+import model.exceptions.delete_exceptions.RepositoryDeleteException;
+import model.exceptions.read_exceptions.RepositoryReadException;
 import model.managers.*;
 import model.repositories.implementations.ClientRepository;
 import model.repositories.implementations.MovieRepository;
@@ -14,7 +17,7 @@ import java.util.List;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws CassandraConfigNotFound {
         ClientRepository clientRepository = new ClientRepository();
         MovieRepository movieRepository = new MovieRepository();
         TicketRepository ticketRepository = new TicketRepository();
@@ -62,33 +65,39 @@ public class Main {
         Movie movieNo2 = movieManager.register(movieNo2Title, movieNo2BasePrice, screeningRoomNo2NumberOfAvailSeats, screeningRoomNo2Number);
         Movie movieNo3 = movieManager.register(movieNo3Title, movieNo3BasePrice, screeningRoomNo3NumberOfAvailSeats, screeningRoomNo3Number);
 
-        ticketManager.register(movieTimeNo1, reservationTimeNo1, movieNo1, clientNo1, "normal");
-        ticketManager.register(movieTimeNo2, reservationTimeNo2, movieNo2, clientNo2, "normal");
-        ticketManager.register(movieTimeNo3, reservationTimeNo3, movieNo3, clientNo3, "normal");
+        ticketManager.registerNormalTicket(movieTimeNo1, reservationTimeNo1, movieNo1BasePrice, movieNo1.getMovieID(), clientNo1.getClientID());
+        ticketManager.registerNormalTicket(movieTimeNo2, reservationTimeNo2, movieNo2BasePrice, movieNo2.getMovieID(), clientNo2.getClientID());
+        ticketManager.registerReducedTicket(movieTimeNo3, reservationTimeNo3, movieNo3BasePrice, movieNo3.getMovieID(), clientNo3.getClientID());
 
-        List<Ticket> ticketList = ticketManager.getTicketRepository().findAll();
-        int numOfTicketsBefore = ticketList.size();
-        for (Ticket ticket : ticketList) {
-            System.out.println(ticket.toString());
-        }
+        try {
+            List<Ticket> ticketList = ticketManager.getTicketRepository().findAll();
+            int numOfTicketsBefore = ticketList.size();
+            for (Ticket ticket : ticketList) {
+                System.out.println(ticket.toString());
+            }
 
-        for (Ticket ticket : ticketList) {
-            ticketManager.getTicketRepository().delete(ticket);
-        }
+            for (Ticket ticket : ticketList) {
+                ticketManager.getTicketRepository().delete(ticket);
+            }
 
-        int numOfTicketsAfter = ticketManager.getTicketRepository().findAll().size();
+            int numOfTicketsAfter = ticketManager.getTicketRepository().findAll().size();
 
-        System.out.println("Number of tickets before: " + numOfTicketsBefore);
-        System.out.println("Number of tickets after: " + numOfTicketsAfter);
+            System.out.println("Number of tickets before: " + numOfTicketsBefore);
+            System.out.println("Number of tickets after: " + numOfTicketsAfter);
 
-        List<Client> listOfClients = clientManager.getClientRepository().findAll();
-        for (Client client : listOfClients) {
-            System.out.println(client.getClientInfo());
-        }
+            List<Client> listOfClients = clientManager.getClientRepository().findAll();
+            for (Client client : listOfClients) {
+                System.out.println(client.toString());
+            }
 
-        List<Movie> listOfMovies = movieManager.getMovieRepository().findAll();
-        for (Movie movie : listOfMovies) {
-            System.out.println(movie.toString());
+            List<Movie> listOfMovies = movieManager.getMovieRepository().findAll();
+            for (Movie movie : listOfMovies) {
+                System.out.println(movie.toString());
+            }
+        } catch (RepositoryReadException exception) {
+            throw new RuntimeException("Error while reading from repositories.", exception);
+        } catch (RepositoryDeleteException exception) {
+            throw new RuntimeException("Error while removing objects from repository.", exception);
         }
 
         ticketRepository.close();

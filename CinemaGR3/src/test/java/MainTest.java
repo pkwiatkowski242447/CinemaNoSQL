@@ -1,4 +1,5 @@
 import main.Main;
+import model.exceptions.CassandraConfigNotFound;
 import org.junit.jupiter.api.Test;
 
 public class MainTest {
@@ -10,7 +11,7 @@ public class MainTest {
     }
 
     @Test
-    public void mainTestRun() throws MongoConfigNotFoundException {
+    public void mainTestRun() throws CassandraConfigNotFound {
         Main.main(null);
     }
 }

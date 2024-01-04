@@ -1,11 +1,11 @@
 package model.managers;
 
 import model.Movie;
-import model.exceptions.repository_exceptions.create_exceptions.RepositoryCreateException;
-import model.exceptions.repository_exceptions.read_exceptions.RepositoryReadException;
-import model.exceptions.repository_exceptions.update_exceptions.RepositoryUpdateException;
+import model.exceptions.create_exceptions.MovieRepositoryCreateException;
+import model.exceptions.read_exceptions.MovieRepositoryReadException;
 import model.repositories.implementations.MovieRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,52 +17,34 @@ public class MovieManager{
         this.movieRepository = movieRepository;
     }
 
-    public Movie register(String movieTitle, double baseMoviePrice, ScreeningRoom screeningRoom) {
-        Movie movieToRepo = null;
+    public Movie register(String movieTitle, double movieBasePrice, int numberOfAvailableSeats, int screeningRoomNumber) {
+        Movie movie = null;
         try {
-            movieToRepo = movieRepository.create(movieTitle, baseMoviePrice, screeningRoom);
-        } catch (RepositoryCreateException exception) {
+            movie = movieRepository.create(movieTitle, movieBasePrice, numberOfAvailableSeats, screeningRoomNumber);
+        } catch (MovieRepositoryCreateException exception) {
             exception.printStackTrace();
         }
-        return movieToRepo;
-    }
-
-    public void unregister(Movie movie) {
-        try {
-            movieRepository.expire(movie);
-        } catch (RepositoryUpdateException exception) {
-            exception.printStackTrace();
-        }
+        return movie;
     }
 
     public Movie get(UUID identifier) {
         Movie movie = null;
         try {
             movie = movieRepository.findByUUID(identifier);
-        } catch (RepositoryReadException exception) {
+        } catch (MovieRepositoryReadException exception) {
             exception.printStackTrace();
         }
         return movie;
     }
 
     public List<Movie> getAll() {
-        List<Movie> listOfMovies = null;
+        List<Movie> listOfAllMovies = new ArrayList<>();
         try {
-            listOfMovies = movieRepository.findAll();
-        } catch (RepositoryReadException exception) {
+            listOfAllMovies = movieRepository.findAll();
+        } catch (MovieRepositoryReadException exception) {
             exception.printStackTrace();
         }
-        return listOfMovies;
-    }
-
-    public List<Movie> getAllActive() {
-        List<Movie> listOfMovies = null;
-        try {
-            listOfMovies = movieRepository.findAllActive();
-        } catch (RepositoryReadException exception) {
-            exception.printStackTrace();
-        }
-        return listOfMovies;
+        return listOfAllMovies;
     }
 
     public MovieRepository getMovieRepository() {

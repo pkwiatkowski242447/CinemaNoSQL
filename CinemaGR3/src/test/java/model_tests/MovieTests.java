@@ -12,34 +12,35 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class MovieTests {
 
-    private final ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 1, 6, 90);
     private Movie testMovie;
     private Movie newTestMovie;
 
     @BeforeEach
     public void init() {
-        testMovie = new Movie(UUID.randomUUID(), "Oppenheimer", 20, screeningRoom);
+        testMovie = new Movie(UUID.randomUUID(), "Oppenheimer", 45.00, 90, 1);
         newTestMovie = new Movie(testMovie.getMovieID(),
                 testMovie.getMovieTitle(),
                 testMovie.getMovieBasePrice(),
-                testMovie.getScreeningRoom());
+                testMovie.getNumberOfAvailableSeats(),
+                testMovie.getScreeningRoomNumber());
     }
 
     @Test
     public void movieConstructorAndGettersTestPositive() {
         UUID movieID = UUID.randomUUID();
         String movieTitle = "Die Hard";
-        double movieBasePrice = 20;
+        double movieBasePrice = 37.75;
+        int numberOfAvailableSeats = 90;
+        int screeningRoomNumber = 1;
 
-        Movie movie = new Movie(movieID, movieTitle, movieBasePrice, screeningRoom);
+        Movie movie = new Movie(movieID, movieTitle, movieBasePrice, numberOfAvailableSeats, screeningRoomNumber);
 
         assertNotNull(movie);
 
         assertEquals(movieID, movie.getMovieID());
         assertEquals(movieTitle, movie.getMovieTitle());
-        assertEquals(movieBasePrice, movie.getMovieBasePrice());
-        assertTrue(movie.isMovieStatusActive());
-        assertEquals(screeningRoom, movie.getScreeningRoom());
+        assertEquals(numberOfAvailableSeats, movie.getNumberOfAvailableSeats());
+        assertEquals(screeningRoomNumber, movie.getScreeningRoomNumber());
     }
 
     @Test
@@ -47,9 +48,11 @@ public class MovieTests {
         UUID movieID = UUID.randomUUID();
         String movieTitleNo1 = "Pulp Fiction";
         String movieTitleNo2 = "Other title";
-        double movieBasePrice = 20;
+        double movieBasePrice = 37.75;
+        int numberOfAvailableSeats = 90;
+        int screeningRoomNumber = 1;
 
-        Movie movie = new Movie(movieID, movieTitleNo1, movieBasePrice, screeningRoom);
+        Movie movie = new Movie(movieID, movieTitleNo1, movieBasePrice, numberOfAvailableSeats, screeningRoomNumber);
 
         assertNotNull(movie);
         assertEquals(movieTitleNo1, movie.getMovieTitle());
@@ -61,48 +64,54 @@ public class MovieTests {
     }
 
     @Test
-    public void movieBasePriceSetterTest() {
+    public void numberOfAvailableSeatsSetterTestPositive() {
         UUID movieID = UUID.randomUUID();
         String movieTitle = "Pulp Fiction";
-        double movieBasePriceNo1 = 20;
-        double movieBasePriceNo2 = -10;
+        double movieBasePrice = 37.75;
+        int numberOfAvailableSeatsNo1 = 90;
+        int numberOfAvailableSeatsNo2 = 10;
+        int screeningRoomNumber = 1;
 
-        Movie movie = new Movie(movieID, movieTitle, movieBasePriceNo1, screeningRoom);
+        Movie movie = new Movie(movieID, movieTitle, movieBasePrice, numberOfAvailableSeatsNo1, screeningRoomNumber);
 
         assertNotNull(movie);
-        assertEquals(movieBasePriceNo1, movie.getMovieBasePrice());
+        assertEquals(numberOfAvailableSeatsNo1, movie.getNumberOfAvailableSeats());
 
-        movie.setMovieBasePrice(movieBasePriceNo2);
-        assertEquals(movieBasePriceNo2, movie.getMovieBasePrice());
+        movie.setNumberOfAvailableSeats(numberOfAvailableSeatsNo2);
+        assertEquals(numberOfAvailableSeatsNo2, movie.getNumberOfAvailableSeats());
     }
 
     @Test
-    public void movieSetterMovieStatusActiveTest() {
+    public void screeningRoomNumberSetterTestPositive() {
         UUID movieID = UUID.randomUUID();
         String movieTitle = "Pulp Fiction";
-        double movieBasePrice = 20;
-        boolean movieStatusActive = false;
+        double movieBasePrice = 37.75;
+        int numberOfAvailableSeats = 90;
+        int screeningRoomNumberNo1 = 1;
+        int screeningRoomNumberNo2 = 5;
 
-        Movie movie = new Movie(movieID, movieTitle, movieBasePrice, screeningRoom);
+        Movie movie = new Movie(movieID, movieTitle, movieBasePrice, numberOfAvailableSeats, screeningRoomNumberNo1);
 
         assertNotNull(movie);
-        assertTrue(movie.isMovieStatusActive());
+        assertEquals(screeningRoomNumberNo1, movie.getScreeningRoomNumber());
 
-        movie.setMovieStatusActive(movieStatusActive);
-        assertFalse(movie.isMovieStatusActive());
+        movie.setScreeningRoomNumber(screeningRoomNumberNo2);
+        assertEquals(screeningRoomNumberNo2, movie.getScreeningRoomNumber());
     }
 
     @Test
-    public void getMovieInfoTest() {
+    public void toStringTest() {
         UUID movieID = UUID.randomUUID();
         String movieTitle = "Pulp Fiction";
-        double movieBasePrice = 20;
+        double movieBasePrice = 37.75;
+        int numberOfAvailableSeats = 90;
+        int screeningRoomNumber = 1;
 
-        Movie movie = new Movie(movieID, movieTitle, movieBasePrice, screeningRoom);
+        Movie movie = new Movie(movieID, movieTitle, movieBasePrice, numberOfAvailableSeats, screeningRoomNumber);
 
         assertNotNull(movie);
-        assertNotNull(movie.getMovieInfo());
-        assertNotEquals("", movie.getMovieInfo());
+        assertNotNull(movie.toString());
+        assertNotEquals("", movie.toString());
     }
 
     @Test

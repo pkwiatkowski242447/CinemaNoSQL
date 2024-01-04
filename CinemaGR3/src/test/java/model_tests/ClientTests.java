@@ -122,8 +122,8 @@ public class ClientTests {
         Client client = new Client(clientID, clientName, clientSurname, clientAge);
 
         assertNotNull(client);
-        assertNotNull(client.getClientInfo());
-        assertNotEquals("", client.getClientInfo());
+        assertNotNull(client.toString());
+        assertNotEquals("", client.toString());
     }
 
     @Test
@@ -136,8 +136,8 @@ public class ClientTests {
         client.setClientStatusActive(false);
 
         assertNotNull(client);
-        assertNotNull(client.getClientInfo());
-        assertNotEquals("", client.getClientInfo());
+        assertNotNull(client.toString());
+        assertNotEquals("", client.toString());
     }
 
     @Test

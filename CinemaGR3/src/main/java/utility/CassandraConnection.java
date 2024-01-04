@@ -2,7 +2,7 @@ package utility;
 
 import lombok.Getter;
 import lombok.Setter;
-import model.exceptions.repository_exceptions.CassandraConfigNotFound;
+import model.exceptions.CassandraConfigNotFound;
 import model.repositories.implementations.CassandraClient;
 
 import java.io.IOException;
@@ -21,7 +21,7 @@ public class CassandraConnection {
 
     public static void getDataFromPropertyFile() throws CassandraConfigNotFound {
         Properties properties = new Properties();
-        try (InputStream inputStream = CassandraClient.class.getResourceAsStream("cassandra.properties")) {
+        try (InputStream inputStream = CassandraClient.class.getClassLoader().getResourceAsStream("cassandra.properties")) {
             properties.load(inputStream);
             dataCenterName = properties.getProperty("datacenter.name");
             cassandraUsername = properties.getProperty("cassandra.username");

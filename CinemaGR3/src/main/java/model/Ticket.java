@@ -2,10 +2,10 @@ package model;
 
 import com.datastax.oss.driver.api.mapper.annotations.*;
 import com.datastax.oss.driver.api.mapper.entity.naming.NamingConvention;
-import lombok.AccessLevel;
-import lombok.Setter;
+import jakarta.validation.constraints.*;
 import model.constants.GeneralConstants;
 import model.constants.TicketConstants;
+import model.messages.TicketValidation;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -21,44 +21,79 @@ public class Ticket {
 
     @PartitionKey
     @CqlName(value = TicketConstants.TICKET_ID)
+    @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.TICKET_ID_NOT_UUID)
     private UUID ticketID;
 
     @CqlName(value = TicketConstants.MOVIE_TIME)
-    @Setter(AccessLevel.NONE)
     private Instant movieTime;
 
     @CqlName(value = TicketConstants.RESERVATION_TIME)
-    @Setter(AccessLevel.NONE)
     private Instant reservationTime;
 
+    @CqlName(value = TicketConstants.TICKET_BASE_PRICE)
+    @Min(value = 0, message = TicketValidation.TICKET_BASE_PRICE_NEGATIVE)
+    @Max(value = 100, message = TicketValidation.TICKET_BASE_PRICE_TOO_HIGH)
+    private double ticketBasePrice;
+
     @CqlName(value = TicketConstants.TICKET_FINAL_PRICE)
-    @Setter(AccessLevel.NONE)
-    private double ticketFinalPrice;
+    protected double ticketFinalPrice;
 
     @CqlName(value = TicketConstants.MOVIE_ID)
-    @Setter(AccessLevel.NONE)
+    @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.MOVIE_ID_NOT_UUID)
     private UUID movieId;
 
     @CqlName(value = TicketConstants.CLIENT_ID)
-    @Setter(AccessLevel.NONE)
+    @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.CLIENT_ID_NOT_UUID)
     private UUID clientId;
 
-    @CqlName(value = TicketConstants.TYPE_OF_TICKET_ID)
-    private UUID typeOfTicketId;
+    @CqlName(value = TicketConstants.TICKET_TYPE_DISCRIMINATOR)
+    @Pattern(regexp = TicketValidation.TICKET_TYPE_DISCRIMINATOR_REGEX_PATTERN, message = TicketValidation.TICKET_TYPE_DISCRIMINATOR_INCORRECT_VALUE)
+    protected String ticketTypeDiscriminator;
 
     // Constructors
 
     public Ticket() {
     }
 
-    public Ticket(UUID ticketID, Instant movieTime, Instant reservationTime, double ticketFinalPrice, UUID movieId, UUID clientId, UUID typeOfTicketId) {
+    public Ticket(@NotNull(message = TicketValidation.TICKET_ID_NULL)
+                  @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.TICKET_ID_NOT_UUID) UUID ticketID,
+                  @NotNull(message = TicketValidation.MOVIE_TIME_NULL) Instant movieTime,
+                  @NotNull(message = TicketValidation.RESERVATION_TIME_NULL) Instant reservationTime,
+                  @Min(value = 0, message = TicketValidation.TICKET_BASE_PRICE_NEGATIVE)
+                  @Max(value = 100, message = TicketValidation.TICKET_BASE_PRICE_TOO_HIGH) double ticketBasePrice,
+                  @NotNull(message = TicketValidation.MOVIE_ID_NULL)
+                  @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.MOVIE_ID_NOT_UUID) UUID movieId,
+                  @NotNull(message = TicketValidation.CLIENT_ID_NULL)
+                  @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.CLIENT_ID_NOT_UUID) UUID clientId) {
         this.ticketID = ticketID;
         this.movieTime = movieTime;
         this.reservationTime = reservationTime;
+        this.ticketBasePrice = ticketBasePrice;
+        this.movieId = movieId;
+        this.clientId = clientId;
+    }
+
+    public Ticket(@NotNull(message = TicketValidation.TICKET_ID_NULL)
+                  @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.TICKET_ID_NOT_UUID) UUID ticketID,
+                  @NotNull(message = TicketValidation.MOVIE_TIME_NULL) Instant movieTime,
+                  @NotNull(message = TicketValidation.RESERVATION_TIME_NULL) Instant reservationTime,
+                  @Min(value = 0, message = TicketValidation.TICKET_BASE_PRICE_NEGATIVE)
+                  @Max(value = 100, message = TicketValidation.TICKET_BASE_PRICE_TOO_HIGH) double ticketBasePrice,
+                  @PositiveOrZero(message = TicketValidation.TICKET_FINAL_PRICE_NEGATIVE) double ticketFinalPrice,
+                  @NotNull(message = TicketValidation.MOVIE_ID_NULL)
+                  @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.MOVIE_ID_NOT_UUID) UUID movieId,
+                  @NotNull(message = TicketValidation.CLIENT_ID_NULL)
+                  @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.CLIENT_ID_NOT_UUID) UUID clientId,
+                  @NotBlank(message = TicketValidation.TICKET_TYPE_DISCRIMINATOR_BLANK)
+                  @Pattern(regexp = TicketValidation.TICKET_TYPE_DISCRIMINATOR_REGEX_PATTERN, message = TicketValidation.TICKET_TYPE_DISCRIMINATOR_INCORRECT_VALUE) String ticketTypeDiscriminator) {
+        this.ticketID = ticketID;
+        this.movieTime = movieTime;
+        this.reservationTime = reservationTime;
+        this.ticketBasePrice = ticketBasePrice;
         this.ticketFinalPrice = ticketFinalPrice;
         this.movieId = movieId;
         this.clientId = clientId;
-        this.typeOfTicketId = typeOfTicketId;
+        this.ticketTypeDiscriminator = ticketTypeDiscriminator;
     }
 
     // Getters
@@ -75,6 +110,10 @@ public class Ticket {
         return reservationTime;
     }
 
+    public double getTicketBasePrice() {
+        return ticketBasePrice;
+    }
+
     public double getTicketFinalPrice() {
         return ticketFinalPrice;
     }
@@ -87,41 +126,52 @@ public class Ticket {
         return clientId;
     }
 
-    public UUID getTypeOfTicketId() {
-        return typeOfTicketId;
+    public String getTicketTypeDiscriminator() {
+        return ticketTypeDiscriminator;
     }
 
     // Setters
 
-    public void setTicketID(UUID ticketID) {
+    public void setTicketID(@NotNull(message = TicketValidation.TICKET_ID_NULL)
+                            @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.TICKET_ID_NOT_UUID) UUID ticketID) {
         this.ticketID = ticketID;
     }
 
-    public void setMovieTime(Instant movieTime) {
+    public void setMovieTime(@NotNull(message = TicketValidation.MOVIE_TIME_NULL) Instant movieTime) {
         this.movieTime = movieTime;
     }
 
-    public void setReservationTime(Instant reservationTime) {
+    public void setReservationTime(@NotNull(message = TicketValidation.RESERVATION_TIME_NULL) Instant reservationTime) {
         this.reservationTime = reservationTime;
     }
 
-    public void setTicketFinalPrice(double ticketFinalPrice) {
+    public void setTicketBasePrice(@Min(value = 0, message = TicketValidation.TICKET_BASE_PRICE_NEGATIVE)
+                                   @Max(value = 100, message = TicketValidation.TICKET_BASE_PRICE_TOO_HIGH) double ticketBasePrice) {
+        this.ticketBasePrice = ticketBasePrice;
+    }
+
+    public void setTicketFinalPrice(@PositiveOrZero(message = TicketValidation.TICKET_FINAL_PRICE_NEGATIVE) double ticketFinalPrice) {
         this.ticketFinalPrice = ticketFinalPrice;
     }
 
-    public void setMovieId(UUID movieId) {
+    public void setMovieId(@NotNull(message = TicketValidation.MOVIE_ID_NULL)
+                           @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.MOVIE_ID_NOT_UUID) UUID movieId) {
         this.movieId = movieId;
     }
 
-    public void setClientId(UUID clientId) {
+    public void setClientId(@NotNull(message = TicketValidation.CLIENT_ID_NULL)
+                            @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.CLIENT_ID_NOT_UUID) UUID clientId) {
         this.clientId = clientId;
     }
 
-    public void setTypeOfTicketId(UUID typeOfTicketId) {
-        this.typeOfTicketId = typeOfTicketId;
+    public void setTicketTypeDiscriminator(@NotBlank(message = TicketValidation.TICKET_TYPE_DISCRIMINATOR_BLANK)
+                                           @Pattern(regexp = TicketValidation.TICKET_TYPE_DISCRIMINATOR_REGEX_PATTERN, message = TicketValidation.TICKET_TYPE_DISCRIMINATOR_INCORRECT_VALUE) String ticketTypeDiscriminator) {
+        this.ticketTypeDiscriminator = ticketTypeDiscriminator;
     }
 
     // Other methods
+
+    // ToString method
 
     @Override
     public String toString() {
@@ -132,9 +182,11 @@ public class Ticket {
                 .append("ticketFinalPrice: ", ticketFinalPrice)
                 .append("movieId: ", movieId)
                 .append("clientId: ", clientId)
-                .append("typeOfTicketId: ", typeOfTicketId)
+                .append("ticketTypeDiscriminator: ", ticketTypeDiscriminator)
                 .toString();
     }
+
+    // Equals method
 
     @Override
     public boolean equals(Object o) {
@@ -151,9 +203,11 @@ public class Ticket {
                 .append(reservationTime, ticket.reservationTime)
                 .append(movieId, ticket.movieId)
                 .append(clientId, ticket.clientId)
-                .append(typeOfTicketId, ticket.typeOfTicketId)
+                .append(ticketTypeDiscriminator, ticket.ticketTypeDiscriminator)
                 .isEquals();
     }
+
+    // HashCode method
 
     @Override
     public int hashCode() {
@@ -164,7 +218,7 @@ public class Ticket {
                 .append(ticketFinalPrice)
                 .append(movieId)
                 .append(clientId)
-                .append(typeOfTicketId)
+                .append(ticketTypeDiscriminator)
                 .toHashCode();
     }
 }

@@ -2,10 +2,13 @@ package model;
 
 import com.datastax.oss.driver.api.mapper.annotations.*;
 import com.datastax.oss.driver.api.mapper.entity.naming.NamingConvention;
+import jakarta.validation.constraints.*;
 import model.constants.ClientConstants;
 import model.constants.GeneralConstants;
+import model.messages.ClientValidation;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.UUID;
 
@@ -17,15 +20,24 @@ public class Client {
 
     @PartitionKey
     @CqlName(value = ClientConstants.CLIENT_ID)
+    @Pattern(regexp = ClientValidation.UUID_REGEX_PATTERN, message = ClientValidation.CLIENT_ID_NOT_UUID)
     private UUID clientID;
 
     @CqlName(value = ClientConstants.CLIENT_NAME)
+    @NotBlank(message = ClientValidation.CLIENT_NAME_BLANK)
+    @Size(min = 1, message = ClientValidation.CLIENT_NAME_TOO_SHORT)
+    @Size(max = 50, message = ClientValidation.CLIENT_NAME_TOO_LONG)
     private String clientName;
 
     @CqlName(value = ClientConstants.CLIENT_SURNAME)
+    @NotBlank(message = ClientValidation.CLIENT_SURNAME_BLANK)
+    @Size(min = 2, message = ClientValidation.CLIENT_SURNAME_TOO_SHORT)
+    @Size(max = 100, message = ClientValidation.CLIENT_SURNAME_TOO_LONG)
     private String clientSurname;
 
     @CqlName(value = ClientConstants.CLIENT_AGE)
+    @Min(value = 18, message = ClientValidation.CLIENT_AGE_TOO_LOW)
+    @Max(value = 120, message = ClientValidation.CLIENT_AGE_TOO_HIGH)
     private int clientAge;
 
     @CqlName(value = ClientConstants.CLIENT_STATUS_ACTIVE)
@@ -36,7 +48,17 @@ public class Client {
     public Client() {
     }
 
-    public Client(UUID clientID, String clientName, String clientSurname, int clientAge, boolean clientStatusActive) {
+    public Client(@NotNull(message = ClientValidation.CLIENT_ID_NAME)
+                  @Pattern(regexp = ClientValidation.UUID_REGEX_PATTERN, message = ClientValidation.CLIENT_ID_NOT_UUID) UUID clientID,
+                  @NotBlank(message = ClientValidation.CLIENT_NAME_BLANK)
+                  @Size(min = 1, message = ClientValidation.CLIENT_NAME_TOO_SHORT)
+                  @Size(max = 50, message = ClientValidation.CLIENT_NAME_TOO_LONG) String clientName,
+                  @NotBlank(message = ClientValidation.CLIENT_SURNAME_BLANK)
+                  @Size(min = 2, message = ClientValidation.CLIENT_SURNAME_TOO_SHORT)
+                  @Size(max = 100, message = ClientValidation.CLIENT_SURNAME_TOO_LONG) String clientSurname,
+                  @Min(value = 18, message = ClientValidation.CLIENT_AGE_TOO_LOW)
+                  @Max(value = 120, message = ClientValidation.CLIENT_AGE_TOO_HIGH) int clientAge,
+                  boolean clientStatusActive) {
         this.clientID = clientID;
         this.clientName = clientName;
         this.clientSurname = clientSurname;
@@ -44,7 +66,16 @@ public class Client {
         this.clientStatusActive = clientStatusActive;
     }
 
-    public Client(UUID clientID, String clientName, String clientSurname, int clientAge) {
+    public Client(@NotNull(message = ClientValidation.CLIENT_ID_NAME)
+                  @Pattern(regexp = ClientValidation.UUID_REGEX_PATTERN, message = ClientValidation.CLIENT_ID_NOT_UUID) UUID clientID,
+                  @NotBlank(message = ClientValidation.CLIENT_NAME_BLANK)
+                  @Size(min = 1, message = ClientValidation.CLIENT_NAME_TOO_SHORT)
+                  @Size(max = 50, message = ClientValidation.CLIENT_NAME_TOO_LONG) String clientName,
+                  @NotBlank(message = ClientValidation.CLIENT_SURNAME_BLANK)
+                  @Size(min = 2, message = ClientValidation.CLIENT_SURNAME_TOO_SHORT)
+                  @Size(max = 100, message = ClientValidation.CLIENT_SURNAME_TOO_LONG) String clientSurname,
+                  @Min(value = 18, message = ClientValidation.CLIENT_AGE_TOO_LOW)
+                  @Max(value = 120, message = ClientValidation.CLIENT_AGE_TOO_HIGH) int clientAge) {
         this.clientID = clientID;
         this.clientName = clientName;
         this.clientSurname = clientSurname;
@@ -76,19 +107,25 @@ public class Client {
 
     // Setter
 
-    public void setClientID(UUID clientID) {
+    public void setClientID(@NotNull(message = ClientValidation.CLIENT_ID_NAME)
+                            @Pattern(regexp = ClientValidation.UUID_REGEX_PATTERN, message = ClientValidation.CLIENT_ID_NOT_UUID) UUID clientID) {
         this.clientID = clientID;
     }
 
-    public void setClientName(String clientName) {
+    public void setClientName(@NotBlank(message = ClientValidation.CLIENT_NAME_BLANK)
+                              @Size(min = 1, message = ClientValidation.CLIENT_NAME_TOO_SHORT)
+                              @Size(max = 50, message = ClientValidation.CLIENT_NAME_TOO_LONG) String clientName) {
         this.clientName = clientName;
     }
 
-    public void setClientSurname(String clientSurname) {
+    public void setClientSurname(@NotBlank(message = ClientValidation.CLIENT_SURNAME_BLANK)
+                                 @Size(min = 2, message = ClientValidation.CLIENT_SURNAME_TOO_SHORT)
+                                 @Size(max = 100, message = ClientValidation.CLIENT_SURNAME_TOO_LONG) String clientSurname) {
         this.clientSurname = clientSurname;
     }
 
-    public void setClientAge(int clientAge) {
+    public void setClientAge(@Min(value = 18, message = ClientValidation.CLIENT_AGE_TOO_LOW)
+                             @Max(value = 120, message = ClientValidation.CLIENT_AGE_TOO_HIGH) int clientAge) {
         this.clientAge = clientAge;
     }
 
@@ -98,23 +135,20 @@ public class Client {
 
     // Other methods
 
-    public String getClientInfo() {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("Client identifier: ")
-                .append(this.clientID)
-                .append(", name and surname: ")
-                .append(this.clientName)
-                .append(" ")
-                .append(this.clientSurname)
-                .append(", age: ")
-                .append(this.clientAge);
-        if (this.clientStatusActive) {
-            stringBuilder.append(", client status: active");
-        } else {
-            stringBuilder.append(", client status: not active");
-        }
-        return stringBuilder.toString();
+    // ToString method
+
+    @Override
+    public String toString() {
+        return new ToStringBuilder(this)
+                .append("clientID: ", clientID)
+                .append("clientName: ", clientName)
+                .append("clientSurname: ", clientSurname)
+                .append("clientAge: ", clientAge)
+                .append("clientStatusActive: ", clientStatusActive)
+                .toString();
     }
+
+    // Equals method
 
     @Override
     public boolean equals(Object o) {
@@ -132,6 +166,8 @@ public class Client {
                 .append(clientSurname, client.clientSurname)
                 .isEquals();
     }
+
+    // HashCode method
 
     @Override
     public int hashCode() {

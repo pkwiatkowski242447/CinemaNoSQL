@@ -1,9 +1,12 @@
 package manager_tests;
 
 import model.Movie;
+import model.exceptions.CassandraConfigNotFound;
+import model.exceptions.create_exceptions.MovieRepositoryCreateException;
+import model.exceptions.delete_exceptions.MovieRepositoryDeleteException;
+import model.exceptions.read_exceptions.MovieRepositoryReadException;
 import model.managers.MovieManager;
 import model.repositories.implementations.MovieRepository;
-import model.repositories.implementations.ScreeningRoomRepository;
 import org.junit.jupiter.api.*;
 
 import java.util.List;
@@ -14,66 +17,61 @@ import static org.junit.jupiter.api.Assertions.*;
 public class MovieManagerTest {
 
     private static MovieRepository movieRepositoryForTests;
-    private static ScreeningRoomRepository screeningRoomRepositoryForTests;
     private static MovieManager movieManagerForTests;
-    private static ScreeningRoomManager screeningRoomManagerForTests;
 
     @BeforeAll
-    public static void init() throws MongoConfigNotFoundException {
+    public static void init() throws CassandraConfigNotFound {
         movieRepositoryForTests = new MovieRepository();
-        screeningRoomRepositoryForTests = new ScreeningRoomRepository();
         movieManagerForTests = new MovieManager(movieRepositoryForTests);
-        screeningRoomManagerForTests = new ScreeningRoomManager(screeningRoomRepositoryForTests);
     }
 
     @AfterAll
     public static void destroy() {
         movieRepositoryForTests.close();
-        screeningRoomRepositoryForTests.close();
     }
 
     @BeforeEach
     public void populateMovieRepositoryForTests() {
-        int screeningRoomNo1Floor = 1;
         int screeningRoomNo1Number = 10;
         int screeningRoomNo1NumberOfAvailSeats = 45;
-        int screeningRoomNo2Floor = 2;
         int screeningRoomNo2Number = 5;
         int screeningRoomNo2NumberOfAvailSeats = 90;
-        int screeningRoomNo3Floor = 0;
         int screeningRoomNo3Number = 19;
         int screeningRoomNo3NumberOfAvailSeats = 120;
 
         String movieNo1Title = "Harry Potter and The Goblet of Fire";
-        double movieNo1BasePrice = 20.05;
         String movieNo2Title = "The Da Vinci Code";
-        double movieNo2BasePrice = 40.5;
         String movieNo3Title = "A Space Odyssey";
-        double movieNo3BasePrice = 59.99;
 
-        ScreeningRoom screeningRoomNo1 = screeningRoomRepositoryForTests.create(screeningRoomNo1Floor, screeningRoomNo1Number, screeningRoomNo1NumberOfAvailSeats);
-        ScreeningRoom screeningRoomNo2 = screeningRoomRepositoryForTests.create(screeningRoomNo2Floor, screeningRoomNo2Number, screeningRoomNo2NumberOfAvailSeats);
-        ScreeningRoom screeningRoomNo3 = screeningRoomRepositoryForTests.create(screeningRoomNo3Floor, screeningRoomNo3Number, screeningRoomNo3NumberOfAvailSeats);
+        double movieNo1BasePrice = 25.50;
+        double movieNo2BasePrice = 35.75;
+        double movieNo3BasePrice = 42.25;
 
-        movieRepositoryForTests.create(movieNo1Title, movieNo1BasePrice, screeningRoomNo1);
-        movieRepositoryForTests.create(movieNo2Title, movieNo2BasePrice, screeningRoomNo2);
-        movieRepositoryForTests.create(movieNo3Title, movieNo3BasePrice, screeningRoomNo3);
+        try {
+            movieRepositoryForTests.create(movieNo1Title, movieNo1BasePrice, screeningRoomNo1NumberOfAvailSeats, screeningRoomNo1Number);
+            movieRepositoryForTests.create(movieNo2Title, movieNo2BasePrice, screeningRoomNo2NumberOfAvailSeats, screeningRoomNo2Number);
+            movieRepositoryForTests.create(movieNo3Title, movieNo3BasePrice, screeningRoomNo3NumberOfAvailSeats, screeningRoomNo3Number);
+        } catch (MovieRepositoryCreateException exception) {
+            throw new RuntimeException("Sample movies could not be created in the repository.", exception);
+        }
     }
 
     @AfterEach
     public void depopulateMovieRepositoryForTests() {
-        List<Movie> listOfMovies = movieRepositoryForTests.findAll();
-        for (Movie movie : listOfMovies) {
-            movieRepositoryForTests.delete(movie);
-        }
-        List<ScreeningRoom> listOfScreeningRooms = screeningRoomRepositoryForTests.findAll();
-        for (ScreeningRoom screeningRoom : listOfScreeningRooms) {
-            screeningRoomRepositoryForTests.delete(screeningRoom);
+        try {
+            List<Movie> listOfMovies = movieRepositoryForTests.findAll();
+            for (Movie movie : listOfMovies) {
+                movieRepositoryForTests.delete(movie);
+            }
+        } catch (MovieRepositoryDeleteException exception) {
+            throw new RuntimeException("Sample movies could not be deleted from the repository.", exception);
+        } catch (MovieRepositoryReadException exception) {
+            throw new RuntimeException("Sample movies could not be read from the repository.", exception);
         }
     }
 
     @Test
-    public void createMovieManagerTest() throws MongoConfigNotFoundException {
+    public void createMovieManagerTest() throws CassandraConfigNotFound {
         MovieRepository movieRepository = new MovieRepository();
         assertNotNull(movieRepository);
         MovieManager movieManager = new MovieManager(movieRepository);
@@ -81,7 +79,7 @@ public class MovieManagerTest {
     }
 
     @Test
-    public void setMovieRepositoryForMovieManagerTest() throws MongoConfigNotFoundException {
+    public void setMovieRepositoryForMovieManagerTest() throws CassandraConfigNotFound {
         MovieRepository movieRepositoryNo1 = new MovieRepository();
         assertNotNull(movieRepositoryNo1);
         MovieRepository movieRepositoryNo2 = new MovieRepository();
@@ -98,9 +96,7 @@ public class MovieManagerTest {
     @Test
     public void registerNewMovieTestPositive() {
         int numOfMoviesBefore = movieManagerForTests.getAll().size();
-        ScreeningRoom screeningRoom = screeningRoomManagerForTests.register(0, 5, 50);
-        assertNotNull(screeningRoom);
-        Movie movie = movieManagerForTests.register("American Psycho", 48.25, screeningRoom);
+        Movie movie = movieManagerForTests.register("American Psycho", 42.50, 5, 50);
         assertNotNull(movie);
         int numOfMoviesAfter = movieManagerForTests.getAll().size();
         assertNotEquals(numOfMoviesBefore, numOfMoviesAfter);
@@ -108,37 +104,8 @@ public class MovieManagerTest {
 
     @Test
     public void registerNewMovieTestNegative() {
-        ScreeningRoom screeningRoom = screeningRoomManagerForTests.register(0, 5, 50);
-        assertNotNull(screeningRoom);
-        Movie movie = movieManagerForTests.register(null, 48.25, screeningRoom);
+        Movie movie = movieManagerForTests.register(null, 42.50, 5, 50);
         assertNull(movie);
-    }
-
-    @Test
-    public void unregisterCertainMovieTestPositive() {
-        int numOfMoviesBefore = movieManagerForTests.getAllActive().size();
-        Movie someMovieFromRepo = movieManagerForTests.getAllActive().get(0);
-        assertNotNull(someMovieFromRepo);
-        assertTrue(someMovieFromRepo.isMovieStatusActive());
-        UUID removedMovieID = someMovieFromRepo.getMovieID();
-        movieManagerForTests.unregister(someMovieFromRepo);
-        int numOfMoviesAfter = movieManagerForTests.getAllActive().size();
-        Movie foundMovie = movieManagerForTests.get(removedMovieID);
-        assertNotNull(foundMovie);
-        assertFalse(foundMovie.isMovieStatusActive());
-        assertNotEquals(numOfMoviesBefore, numOfMoviesAfter);
-    }
-
-    @Test
-    public void unregisterCertainMovieTestNegative() {
-        int numOfMoviesBefore = movieManagerForTests.getAll().size();
-        ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
-        assertNotNull(screeningRoom);
-        Movie movie = new Movie(UUID.randomUUID(), "American Psycho", 48.25,  screeningRoom);
-        assertNotNull(movie);
-        movieManagerForTests.unregister(movie);
-        int numOfMoviesAfter = movieManagerForTests.getAll().size();
-        assertEquals(numOfMoviesBefore, numOfMoviesAfter);
     }
 
     @Test
@@ -152,16 +119,14 @@ public class MovieManagerTest {
 
     @Test
     public void getCertainMovieFromMovieRepositoryTestNegative() {
-        ScreeningRoom screeningRoom = new ScreeningRoom(UUID.randomUUID(), 0, 5, 50);
-        assertNotNull(screeningRoom);
-        Movie movie = new Movie(UUID.randomUUID(), "American Psycho", 48.25, screeningRoom);
+        Movie movie = new Movie(UUID.randomUUID(), "American Psycho", 42.50,  5, 50);
         assertNotNull(movie);
         Movie foundMovie = movieManagerForTests.get(movie.getMovieID());
         assertNull(foundMovie);
     }
 
     @Test
-    public void getAllMoviesFromRepositoryTest() {
+    public void getAllMoviesFromRepositoryTest() throws MovieRepositoryReadException {
         List<Movie> listOfAllMoviesNo1 = movieManagerForTests.getMovieRepository().findAll();
         List<Movie> listOfAllMoviesNo2 = movieManagerForTests.getAll();
         assertNotNull(listOfAllMoviesNo1);

@@ -1,10 +1,9 @@
 package model.repositories.daos;
 
-import com.datastax.oss.driver.api.mapper.annotations.Dao;
-import com.datastax.oss.driver.api.mapper.annotations.QueryProvider;
-import com.datastax.oss.driver.api.mapper.annotations.StatementAttributes;
-import mapping_layer.model_rows.MovieRow;
+import com.datastax.oss.driver.api.mapper.annotations.*;
 import model.Movie;
+import model.constants.GeneralConstants;
+import model.exceptions.read_exceptions.MovieRepositoryReadException;
 import model.repositories.providers.MovieQueryProvider;
 
 import java.util.List;
@@ -15,45 +14,29 @@ public interface MovieDao {
 
     // Create methods
 
-    @StatementAttributes(consistencyLevel = "QUORUM")
-    @QueryProvider(providerClass = MovieQueryProvider.class, entityHelpers = {MovieRow.class})
-    Movie create(String movieTitle, double baseMoviePrice, ScreeningRoom screeningRoom);
+    @StatementAttributes(consistencyLevel = GeneralConstants.CASSANDRA_WRITE_CONSISTENCY_LEVEL)
+    @Insert
+    void create(Movie movie);
 
     // Read methods
 
-    @StatementAttributes(consistencyLevel = "QUORUM")
-    @QueryProvider(providerClass = MovieQueryProvider.class, entityHelpers = {MovieRow.class})
-    Movie findByUUID(UUID movieId);
+    @StatementAttributes(consistencyLevel = GeneralConstants.CASSANDRA_READ_CONSISTENCY_LEVEL)
+    @QueryProvider(providerClass = MovieQueryProvider.class, entityHelpers = {Movie.class}, providerMethod = "findByUUID")
+    Movie findByUUID(UUID movieId) throws MovieRepositoryReadException;
 
-    @StatementAttributes(consistencyLevel = "QUORUM")
-    @QueryProvider(providerClass = MovieQueryProvider.class, entityHelpers = {MovieRow.class})
-    List<Movie> findAll();
-
-    @StatementAttributes(consistencyLevel = "QUORUM")
-    @QueryProvider(providerClass = MovieQueryProvider.class, entityHelpers = {MovieRow.class})
-    List<Movie> findAllActive();
-
-    @StatementAttributes(consistencyLevel = "QUORUM")
-    @QueryProvider(providerClass = MovieQueryProvider.class, entityHelpers = {MovieRow.class})
-    List<UUID> findAllUUIDs();
+    @StatementAttributes(consistencyLevel = GeneralConstants.CASSANDRA_READ_CONSISTENCY_LEVEL)
+    @QueryProvider(providerClass = MovieQueryProvider.class, entityHelpers = {Movie.class}, providerMethod = "findAll")
+    List<Movie> findAll() throws MovieRepositoryReadException;
 
     // Update methods
 
-    @StatementAttributes(consistencyLevel = "QUORUM")
-    @QueryProvider(providerClass = MovieQueryProvider.class, entityHelpers = {MovieRow.class})
+    @StatementAttributes(consistencyLevel = GeneralConstants.CASSANDRA_WRITE_CONSISTENCY_LEVEL)
+    @Update
     void update(Movie movie);
-
-    @StatementAttributes(consistencyLevel = "QUORUM")
-    @QueryProvider(providerClass = MovieQueryProvider.class, entityHelpers = {MovieRow.class})
-    void expire(Movie movie);
 
     // Delete methods
 
-    @StatementAttributes(consistencyLevel = "QUORUM")
-    @QueryProvider(providerClass = MovieQueryProvider.class, entityHelpers = {MovieRow.class})
+    @StatementAttributes(consistencyLevel = GeneralConstants.CASSANDRA_WRITE_CONSISTENCY_LEVEL)
+    @Delete
     void delete(Movie movie);
-
-    @StatementAttributes(consistencyLevel = "QUORUM")
-    @QueryProvider(providerClass = MovieQueryProvider.class, entityHelpers = {MovieRow.class})
-    void deleteByUUID(UUID movieId);
 }
