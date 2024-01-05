@@ -11,7 +11,8 @@ services:
     volumes:
       - cassandra_node1_data:/bitnami
     networks:
-      - cassandranet
+      cassandranet:
+        ipv4_address: 172.24.0.2
     environment:
       - CASSANDRA_LISTEN_ADDRESS=cassandranode1
       - CASSANDRA_BROADCAST_ADDRESS=cassandranode1
@@ -30,12 +31,13 @@ services:
     image: bitnami/cassandra:latest
     hostname: cassandranode2
     ports:
-      - "7001:7000"
-      - "9043:9042"
+      - "7001:7001"
+      - "9043:9043"
     volumes:
       - cassandra_node2_data:/bitnami
     networks:
-      - cassandranet
+      cassandranet:
+        ipv4_address: 172.24.0.3
     environment:
       - CASSANDRA_LISTEN_ADDRESS=cassandranode2
       - CASSANDRA_BROADCAST_ADDRESS=cassandranode2
@@ -53,12 +55,13 @@ services:
     image: bitnami/cassandra:latest
     hostname: cassandranode3
     ports:
-      - "7002:7000"
-      - "9044:9042"
+      - "7002:7002"
+      - "9044:9044"
     volumes:
       - cassandra_node3_data:/bitnami
     networks:
-      - cassandranet
+      cassandranet:
+        ipv4_address: 172.24.0.4
     environment:
       - CASSANDRA_LISTEN_ADDRESS=cassandranode3
       - CASSANDRA_BROADCAST_ADDRESS=cassandranode3
@@ -82,4 +85,9 @@ volumes:
     driver: local
 
 networks:
-  cassandranet: {}
+  cassandranet:
+    driver: bridge
+    ipam:
+      config:
+      - subnet: 172.24.0.0/24
+        gateway: 172.24.0.1

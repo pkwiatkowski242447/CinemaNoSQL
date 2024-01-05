@@ -2,7 +2,6 @@ package model.repositories.implementations;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.core.type.DataTypes;
 import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
@@ -47,6 +46,14 @@ public class ClientRepository extends CassandraClient implements ClientRepositor
                 .withColumn(CqlIdentifier.fromCql(ClientConstants.CLIENT_STATUS_ACTIVE), DataTypes.BOOLEAN)
                 .build();
         session.execute(createClientsTable);
+    }
+
+    private void dropClientsTable() {
+        SimpleStatement dropClientsTable = SchemaBuilder
+                .dropTable(ClientConstants.CLIENTS_TABLE_NAME)
+                .ifExists()
+                .build();
+        session.execute(dropClientsTable);
     }
 
     // Create methods

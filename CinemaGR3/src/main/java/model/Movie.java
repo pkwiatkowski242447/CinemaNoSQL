@@ -20,7 +20,6 @@ public class Movie {
 
     @PartitionKey
     @CqlName(value = MovieConstants.MOVIE_ID)
-    @Pattern(regexp = MovieValidation.UUID_REGEX_PATTERN, message = MovieValidation.MOVIE_ID_NOT_UUID)
     private UUID movieID;
 
     @CqlName(value = MovieConstants.MOVIE_TITLE)
@@ -49,8 +48,7 @@ public class Movie {
     public Movie() {
     }
 
-    public Movie(@NotNull(message = MovieValidation.MOVIE_ID_NULL)
-                 @Pattern(regexp = MovieValidation.UUID_REGEX_PATTERN, message = MovieValidation.MOVIE_ID_NOT_UUID) UUID movieID,
+    public Movie(@NotNull(message = MovieValidation.MOVIE_ID_NULL) UUID movieID,
                  @NotBlank(message = MovieValidation.MOVIE_TITLE_BLANK)
                  @Size(min = 1, message = MovieValidation.MOVIE_TITLE_TOO_SHORT)
                  @Size(max = 150, message = MovieValidation.MOVIE_TITLE_TOO_LONG) String movieTitle,
@@ -91,8 +89,7 @@ public class Movie {
 
     // Setters
 
-    public void setMovieID(@NotNull(message = MovieValidation.MOVIE_ID_NULL)
-                           @Pattern(regexp = MovieValidation.UUID_REGEX_PATTERN, message = MovieValidation.MOVIE_ID_NOT_UUID) UUID movieID) {
+    public void setMovieID(@NotNull(message = MovieValidation.MOVIE_ID_NULL) UUID movieID) {
         this.movieID = movieID;
     }
 

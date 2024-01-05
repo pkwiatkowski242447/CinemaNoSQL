@@ -42,6 +42,7 @@ public class TicketRepository extends CassandraClient implements TicketRepositor
     private void createTicketsTable() {
         SimpleStatement createTicketsTable = SchemaBuilder
                 .createTable(TicketConstants.TICKETS_TABLE_NAME)
+                .ifNotExists()
                 .withPartitionKey(CqlIdentifier.fromCql(TicketConstants.TICKET_ID), DataTypes.UUID)
                 .withColumn(CqlIdentifier.fromCql(TicketConstants.MOVIE_TIME), DataTypes.TIMESTAMP)
                 .withColumn(CqlIdentifier.fromCql(TicketConstants.RESERVATION_TIME), DataTypes.TIMESTAMP)
@@ -52,6 +53,14 @@ public class TicketRepository extends CassandraClient implements TicketRepositor
                 .withColumn(CqlIdentifier.fromCql(TicketConstants.TICKET_TYPE_DISCRIMINATOR), DataTypes.TEXT)
                 .build();
         session.execute(createTicketsTable);
+    }
+
+    private void dropTicketsTable()  {
+        SimpleStatement dropTicketsTable = SchemaBuilder
+                .dropTable(TicketConstants.TICKETS_TABLE_NAME)
+                .ifExists()
+                .build();
+        session.execute(dropTicketsTable);
     }
 
     // Create methods

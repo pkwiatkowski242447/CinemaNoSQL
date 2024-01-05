@@ -70,6 +70,11 @@ public class Main {
         ticketManager.registerReducedTicket(movieTimeNo3, reservationTimeNo3, movieNo3BasePrice, movieNo3.getMovieID(), clientNo3.getClientID());
 
         try {
+            List<Client> listOfClients = clientManager.getClientRepository().findAll();
+            for (Client client : listOfClients) {
+                System.out.println(client.toString());
+            }
+
             List<Ticket> ticketList = ticketManager.getTicketRepository().findAll();
             int numOfTicketsBefore = ticketList.size();
             for (Ticket ticket : ticketList) {
@@ -84,11 +89,6 @@ public class Main {
 
             System.out.println("Number of tickets before: " + numOfTicketsBefore);
             System.out.println("Number of tickets after: " + numOfTicketsAfter);
-
-            List<Client> listOfClients = clientManager.getClientRepository().findAll();
-            for (Client client : listOfClients) {
-                System.out.println(client.toString());
-            }
 
             List<Movie> listOfMovies = movieManager.getMovieRepository().findAll();
             for (Movie movie : listOfMovies) {

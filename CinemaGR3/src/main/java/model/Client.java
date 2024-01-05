@@ -20,7 +20,6 @@ public class Client {
 
     @PartitionKey
     @CqlName(value = ClientConstants.CLIENT_ID)
-    @Pattern(regexp = ClientValidation.UUID_REGEX_PATTERN, message = ClientValidation.CLIENT_ID_NOT_UUID)
     private UUID clientID;
 
     @CqlName(value = ClientConstants.CLIENT_NAME)
@@ -48,8 +47,7 @@ public class Client {
     public Client() {
     }
 
-    public Client(@NotNull(message = ClientValidation.CLIENT_ID_NAME)
-                  @Pattern(regexp = ClientValidation.UUID_REGEX_PATTERN, message = ClientValidation.CLIENT_ID_NOT_UUID) UUID clientID,
+    public Client(@NotNull(message = ClientValidation.CLIENT_ID_NAME) UUID clientID,
                   @NotBlank(message = ClientValidation.CLIENT_NAME_BLANK)
                   @Size(min = 1, message = ClientValidation.CLIENT_NAME_TOO_SHORT)
                   @Size(max = 50, message = ClientValidation.CLIENT_NAME_TOO_LONG) String clientName,
@@ -66,8 +64,7 @@ public class Client {
         this.clientStatusActive = clientStatusActive;
     }
 
-    public Client(@NotNull(message = ClientValidation.CLIENT_ID_NAME)
-                  @Pattern(regexp = ClientValidation.UUID_REGEX_PATTERN, message = ClientValidation.CLIENT_ID_NOT_UUID) UUID clientID,
+    public Client(@NotNull(message = ClientValidation.CLIENT_ID_NAME) UUID clientID,
                   @NotBlank(message = ClientValidation.CLIENT_NAME_BLANK)
                   @Size(min = 1, message = ClientValidation.CLIENT_NAME_TOO_SHORT)
                   @Size(max = 50, message = ClientValidation.CLIENT_NAME_TOO_LONG) String clientName,
@@ -107,8 +104,7 @@ public class Client {
 
     // Setter
 
-    public void setClientID(@NotNull(message = ClientValidation.CLIENT_ID_NAME)
-                            @Pattern(regexp = ClientValidation.UUID_REGEX_PATTERN, message = ClientValidation.CLIENT_ID_NOT_UUID) UUID clientID) {
+    public void setClientID(@NotNull(message = ClientValidation.CLIENT_ID_NAME) UUID clientID) {
         this.clientID = clientID;
     }
 

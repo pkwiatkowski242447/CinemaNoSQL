@@ -21,7 +21,6 @@ public class Ticket {
 
     @PartitionKey
     @CqlName(value = TicketConstants.TICKET_ID)
-    @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.TICKET_ID_NOT_UUID)
     private UUID ticketID;
 
     @CqlName(value = TicketConstants.MOVIE_TIME)
@@ -39,15 +38,12 @@ public class Ticket {
     protected double ticketFinalPrice;
 
     @CqlName(value = TicketConstants.MOVIE_ID)
-    @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.MOVIE_ID_NOT_UUID)
     private UUID movieId;
 
     @CqlName(value = TicketConstants.CLIENT_ID)
-    @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.CLIENT_ID_NOT_UUID)
     private UUID clientId;
 
     @CqlName(value = TicketConstants.TICKET_TYPE_DISCRIMINATOR)
-    @Pattern(regexp = TicketValidation.TICKET_TYPE_DISCRIMINATOR_REGEX_PATTERN, message = TicketValidation.TICKET_TYPE_DISCRIMINATOR_INCORRECT_VALUE)
     protected String ticketTypeDiscriminator;
 
     // Constructors
@@ -55,16 +51,15 @@ public class Ticket {
     public Ticket() {
     }
 
-    public Ticket(@NotNull(message = TicketValidation.TICKET_ID_NULL)
-                  @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.TICKET_ID_NOT_UUID) UUID ticketID,
+    public Ticket(@NotNull(message = TicketValidation.TICKET_ID_NULL) UUID ticketID,
                   @NotNull(message = TicketValidation.MOVIE_TIME_NULL) Instant movieTime,
                   @NotNull(message = TicketValidation.RESERVATION_TIME_NULL) Instant reservationTime,
                   @Min(value = 0, message = TicketValidation.TICKET_BASE_PRICE_NEGATIVE)
                   @Max(value = 100, message = TicketValidation.TICKET_BASE_PRICE_TOO_HIGH) double ticketBasePrice,
                   @NotNull(message = TicketValidation.MOVIE_ID_NULL)
-                  @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.MOVIE_ID_NOT_UUID) UUID movieId,
+                  @org.hibernate.validator.constraints.UUID(message = TicketValidation.MOVIE_ID_NOT_UUID) UUID movieId,
                   @NotNull(message = TicketValidation.CLIENT_ID_NULL)
-                  @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.CLIENT_ID_NOT_UUID) UUID clientId) {
+                  @org.hibernate.validator.constraints.UUID(message = TicketValidation.CLIENT_ID_NOT_UUID) UUID clientId) {
         this.ticketID = ticketID;
         this.movieTime = movieTime;
         this.reservationTime = reservationTime;
@@ -73,17 +68,14 @@ public class Ticket {
         this.clientId = clientId;
     }
 
-    public Ticket(@NotNull(message = TicketValidation.TICKET_ID_NULL)
-                  @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.TICKET_ID_NOT_UUID) UUID ticketID,
+    public Ticket(@NotNull(message = TicketValidation.TICKET_ID_NULL) UUID ticketID,
                   @NotNull(message = TicketValidation.MOVIE_TIME_NULL) Instant movieTime,
                   @NotNull(message = TicketValidation.RESERVATION_TIME_NULL) Instant reservationTime,
                   @Min(value = 0, message = TicketValidation.TICKET_BASE_PRICE_NEGATIVE)
                   @Max(value = 100, message = TicketValidation.TICKET_BASE_PRICE_TOO_HIGH) double ticketBasePrice,
                   @PositiveOrZero(message = TicketValidation.TICKET_FINAL_PRICE_NEGATIVE) double ticketFinalPrice,
-                  @NotNull(message = TicketValidation.MOVIE_ID_NULL)
-                  @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.MOVIE_ID_NOT_UUID) UUID movieId,
-                  @NotNull(message = TicketValidation.CLIENT_ID_NULL)
-                  @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.CLIENT_ID_NOT_UUID) UUID clientId,
+                  @NotNull(message = TicketValidation.MOVIE_ID_NULL) UUID movieId,
+                  @NotNull(message = TicketValidation.CLIENT_ID_NULL) UUID clientId,
                   @NotBlank(message = TicketValidation.TICKET_TYPE_DISCRIMINATOR_BLANK)
                   @Pattern(regexp = TicketValidation.TICKET_TYPE_DISCRIMINATOR_REGEX_PATTERN, message = TicketValidation.TICKET_TYPE_DISCRIMINATOR_INCORRECT_VALUE) String ticketTypeDiscriminator) {
         this.ticketID = ticketID;
@@ -132,8 +124,7 @@ public class Ticket {
 
     // Setters
 
-    public void setTicketID(@NotNull(message = TicketValidation.TICKET_ID_NULL)
-                            @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.TICKET_ID_NOT_UUID) UUID ticketID) {
+    public void setTicketID(@NotNull(message = TicketValidation.TICKET_ID_NULL) UUID ticketID) {
         this.ticketID = ticketID;
     }
 
@@ -154,13 +145,11 @@ public class Ticket {
         this.ticketFinalPrice = ticketFinalPrice;
     }
 
-    public void setMovieId(@NotNull(message = TicketValidation.MOVIE_ID_NULL)
-                           @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.MOVIE_ID_NOT_UUID) UUID movieId) {
+    public void setMovieId(@NotNull(message = TicketValidation.MOVIE_ID_NULL) UUID movieId) {
         this.movieId = movieId;
     }
 
-    public void setClientId(@NotNull(message = TicketValidation.CLIENT_ID_NULL)
-                            @Pattern(regexp = TicketValidation.UUID_REGEX_PATTERN, message = TicketValidation.CLIENT_ID_NOT_UUID) UUID clientId) {
+    public void setClientId(@NotNull(message = TicketValidation.CLIENT_ID_NULL) UUID clientId) {
         this.clientId = clientId;
     }
 
