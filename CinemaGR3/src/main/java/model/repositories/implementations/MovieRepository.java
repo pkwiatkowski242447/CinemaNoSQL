@@ -8,7 +8,6 @@ import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 import jakarta.validation.ConstraintViolation;
 import model.Movie;
 import model.constants.MovieConstants;
-import model.exceptions.CassandraConfigNotFound;
 import model.exceptions.create_exceptions.MovieRepositoryCreateException;
 import model.exceptions.delete_exceptions.MovieRepositoryDeleteException;
 import model.exceptions.read_exceptions.MovieRepositoryReadException;
@@ -25,13 +24,14 @@ import java.util.UUID;
 public class MovieRepository extends CassandraClient implements MovieRepositoryInterface {
 
     private final CqlSession session;
+    private final MovieMapper movieMapper;
     private final MovieDao movieDao;
 
-    public MovieRepository() throws CassandraConfigNotFound {
-        this.session = this.initializeCassandraSession();
+    public MovieRepository(CqlSession cqlSession) {
+        this.session = cqlSession;
         this.createMoviesTable();
 
-        MovieMapper movieMapper = new MovieMapperBuilder(session).build();
+        this.movieMapper = new MovieMapperBuilder(session).build();
         this.movieDao = movieMapper.movieDao();
     }
 
@@ -144,10 +144,5 @@ public class MovieRepository extends CassandraClient implements MovieRepositoryI
             throw new MovieRepositoryDeleteException("Bean validation for client object failed. Cause: " + stringBuilder);
         }
         movieDao.delete(movie);
-    }
-
-    @Override
-    public void close() {
-        super.close();
     }
 }

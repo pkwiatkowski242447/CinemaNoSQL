@@ -8,7 +8,6 @@ import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 import jakarta.validation.ConstraintViolation;
 import model.Ticket;
 import model.constants.TicketConstants;
-import model.exceptions.CassandraConfigNotFound;
 import model.exceptions.create_exceptions.TicketRepositoryCreateException;
 import model.exceptions.delete_exceptions.TicketRepositoryDeleteException;
 import model.exceptions.read_exceptions.TicketRepositoryReadException;
@@ -29,13 +28,14 @@ import java.util.UUID;
 public class TicketRepository extends CassandraClient implements TicketRepositoryInterface {
 
     private final CqlSession session;
+    private final TicketMapper ticketMapper;
     private final TicketDao ticketDao;
 
-    public TicketRepository() throws CassandraConfigNotFound {
-        this.session = this.initializeCassandraSession();
+    public TicketRepository(CqlSession cqlSession) {
+        this.session = cqlSession;
         this.createTicketsTable();
 
-        TicketMapper ticketMapper = new TicketMapperBuilder(session).build();
+        this.ticketMapper = new TicketMapperBuilder(session).build();
         this.ticketDao = ticketMapper.ticketDao();
     }
 

@@ -1,11 +1,13 @@
 package repository_tests;
 
+import com.datastax.oss.driver.api.core.CqlSession;
 import model.Movie;
 import model.exceptions.CassandraConfigNotFound;
 import model.exceptions.create_exceptions.MovieRepositoryCreateException;
 import model.exceptions.delete_exceptions.MovieRepositoryDeleteException;
 import model.exceptions.read_exceptions.MovieRepositoryReadException;
 import model.exceptions.update_exceptions.RepositoryUpdateException;
+import model.repositories.implementations.CassandraClient;
 import model.repositories.implementations.MovieRepository;
 import org.junit.jupiter.api.*;
 
@@ -16,6 +18,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class MovieRepositoryTest {
 
+    private static CqlSession cqlSession;
+
     private static MovieRepository movieRepositoryForTests;
 
     private Movie movieNo1;
@@ -24,7 +28,8 @@ public class MovieRepositoryTest {
 
     @BeforeAll
     public static void init() throws CassandraConfigNotFound {
-        movieRepositoryForTests = new MovieRepository();
+        cqlSession = CassandraClient.initializeCassandraSession();
+        movieRepositoryForTests = new MovieRepository(cqlSession);
     }
 
     @BeforeEach
@@ -68,12 +73,12 @@ public class MovieRepositoryTest {
 
     @AfterAll
     public static void destroy() {
-        movieRepositoryForTests.close();
+        cqlSession.close();
     }
 
     @Test
     public void movieRepositoryConstructorTest() throws CassandraConfigNotFound {
-        MovieRepository movieRepository = new MovieRepository();
+        MovieRepository movieRepository = new MovieRepository(cqlSession);
         assertNotNull(movieRepository);
     }
 

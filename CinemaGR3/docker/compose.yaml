@@ -1,9 +1,9 @@
-version: '3.8'
+version: '3.9'
 
 services:
 
   cassandranode1:
-    image: bitnami/cassandra:latest
+    image: docker.io/bitnami/cassandra:latest
     hostname: cassandranode1
     ports:
       - "7000:7000"
@@ -21,18 +21,18 @@ services:
       - CASSANDRA_DATACENTER=dc1
       - CASSANDRA_PASSWORD_SEEDER=yes
       - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
-      - CASSANDRA_USER=admin
-      - CASSANDRA_PASSWORD=adminpassword
+      - CASSANDRA_USER=cassandra
+      - CASSANDRA_PASSWORD=cassandra
       - MAX_HEAP_SIZE=2G
       - HEAP_NEWSIZE=200M
 
 
   cassandranode2:
-    image: bitnami/cassandra:latest
+    image: docker.io/bitnami/cassandra:latest
     hostname: cassandranode2
     ports:
-      - "7001:7001"
-      - "9043:9043"
+      - "7001:7000"
+      - "9043:9042"
     volumes:
       - cassandra_node2_data:/bitnami
     networks:
@@ -46,17 +46,17 @@ services:
       - CASSANDRA_DATACENTER=dc1
       - CASSANDRA_PASSWORD_SEEDER=yes
       - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
-      - CASSANDRA_USER=admin
-      - CASSANDRA_PASSWORD=adminpassword
+      - CASSANDRA_USER=cassandra
+      - CASSANDRA_PASSWORD=cassandra
       - MAX_HEAP_SIZE=2G
       - HEAP_NEWSIZE=200M
 
   cassandranode3:
-    image: bitnami/cassandra:latest
+    image: docker.io/bitnami/cassandra:latest
     hostname: cassandranode3
     ports:
-      - "7002:7002"
-      - "9044:9044"
+      - "7002:7000"
+      - "9044:9042"
     volumes:
       - cassandra_node3_data:/bitnami
     networks:
@@ -70,8 +70,8 @@ services:
       - CASSANDRA_DATACENTER=dc1
       - CASSANDRA_PASSWORD_SEEDER=yes
       - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
-      - CASSANDRA_USER=admin
-      - CASSANDRA_PASSWORD=adminpassword
+      - CASSANDRA_USER=cassandra
+      - CASSANDRA_PASSWORD=cassandra
       - MAX_HEAP_SIZE=2G
       - HEAP_NEWSIZE=200M
 
@@ -86,8 +86,9 @@ volumes:
 
 networks:
   cassandranet:
-    driver: bridge
     ipam:
+      driver: default
       config:
       - subnet: 172.24.0.0/24
+        ip_range: 172.24.0.0/24
         gateway: 172.24.0.1

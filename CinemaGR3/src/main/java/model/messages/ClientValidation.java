@@ -2,9 +2,7 @@ package model.messages;
 
 public class ClientValidation {
 
-    public static final String UUID_REGEX_PATTERN = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$";
     public static final String CLIENT_ID_NAME = "Client id could not be a reference to null.";
-    public static final String CLIENT_ID_NOT_UUID = "Given client id is not UUID.";
     public static final String CLIENT_NAME_BLANK = "Client name could neither be blank nor null.";
     public static final String CLIENT_SURNAME_BLANK = "Client name could neither be blank nor null";
 

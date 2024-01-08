@@ -1,5 +1,6 @@
 package manager_tests;
 
+import com.datastax.oss.driver.api.core.CqlSession;
 import model.Client;
 import model.Movie;
 import model.Ticket;
@@ -14,6 +15,7 @@ import model.exceptions.read_exceptions.ClientRepositoryReadException;
 import model.exceptions.read_exceptions.MovieRepositoryReadException;
 import model.exceptions.read_exceptions.TicketRepositoryReadException;
 import model.managers.*;
+import model.repositories.implementations.CassandraClient;
 import model.repositories.implementations.ClientRepository;
 import model.repositories.implementations.MovieRepository;
 import model.repositories.implementations.TicketRepository;
@@ -56,11 +58,15 @@ public class TicketManagerTest {
     private static ClientManager clientManagerForTests;
     private static MovieManager movieManagerForTests;
 
+    private static CqlSession cqlSession;
+
     @BeforeAll
     public static void init() throws CassandraConfigNotFound {
-        ticketRepositoryForTests = new TicketRepository();
-        clientRepositoryForTests = new ClientRepository();
-        movieRepositoryForTests = new MovieRepository();
+        cqlSession = CassandraClient.initializeCassandraSession();
+
+        ticketRepositoryForTests = new TicketRepository(cqlSession);
+        clientRepositoryForTests = new ClientRepository(cqlSession);
+        movieRepositoryForTests = new MovieRepository(cqlSession);
         ticketManagerForTests = new TicketManager(ticketRepositoryForTests);
         clientManagerForTests = new ClientManager(clientRepositoryForTests);
         movieManagerForTests = new MovieManager(movieRepositoryForTests);
@@ -68,9 +74,7 @@ public class TicketManagerTest {
 
     @AfterAll
     public static void destroy() {
-        ticketRepositoryForTests.close();
-        clientRepositoryForTests.close();
-        movieRepositoryForTests.close();
+        cqlSession.close();
     }
 
     @BeforeEach
@@ -165,7 +169,7 @@ public class TicketManagerTest {
 
     @Test
     public void createTicketManagerTest() throws CassandraConfigNotFound {
-        TicketRepository ticketRepository = new TicketRepository();
+        TicketRepository ticketRepository = new TicketRepository(cqlSession);
         assertNotNull(ticketRepository);
         TicketManager ticketManager = new TicketManager(ticketRepository);
         assertNotNull(ticketManager);
@@ -174,9 +178,9 @@ public class TicketManagerTest {
 
     @Test
     public void setTicketRepositoryForTicketManagerTest() throws CassandraConfigNotFound {
-        TicketRepository ticketRepositoryNo1 = new TicketRepository();
+        TicketRepository ticketRepositoryNo1 = new TicketRepository(cqlSession);
         assertNotNull(ticketRepositoryNo1);
-        TicketRepository ticketRepositoryNo2 = new TicketRepository();
+        TicketRepository ticketRepositoryNo2 = new TicketRepository(cqlSession);
         assertNotNull(ticketRepositoryNo2);
         TicketManager ticketManager = new TicketManager(ticketRepositoryNo1);
         assertNotNull(ticketManager);

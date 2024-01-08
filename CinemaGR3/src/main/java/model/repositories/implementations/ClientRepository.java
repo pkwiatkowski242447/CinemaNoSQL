@@ -8,7 +8,6 @@ import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 import jakarta.validation.*;
 import model.Client;
 import model.constants.ClientConstants;
-import model.exceptions.CassandraConfigNotFound;
 import model.exceptions.create_exceptions.ClientRepositoryCreateException;
 import model.exceptions.delete_exceptions.ClientRepositoryDeleteException;
 import model.exceptions.read_exceptions.ClientRepositoryReadException;
@@ -25,13 +24,14 @@ import java.util.UUID;
 public class ClientRepository extends CassandraClient implements ClientRepositoryInterface {
 
     private final CqlSession session;
+    private final ClientMapper clientMapper;
     private final ClientDao clientDao;
 
-    public ClientRepository() throws CassandraConfigNotFound {
-        this.session = this.initializeCassandraSession();
+    public ClientRepository(CqlSession cqlSession) {
+        this.session = cqlSession;
         this.createClientsTable();
 
-        ClientMapper clientMapper = new ClientMapperBuilder(session).build();
+        this.clientMapper = new ClientMapperBuilder(session).build();
         clientDao = clientMapper.clientDao();
     }
 
@@ -175,10 +175,5 @@ public class ClientRepository extends CassandraClient implements ClientRepositor
             throw new ClientRepositoryDeleteException("Bean validation for client object failed. Cause: " + stringBuilder);
         }
         clientDao.delete(client);
-    }
-
-    @Override
-    public void close() {
-        super.close();
     }
 }

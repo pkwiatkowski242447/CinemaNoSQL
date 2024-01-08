@@ -1,5 +1,6 @@
 package repository_tests;
 
+import com.datastax.oss.driver.api.core.CqlSession;
 import model.Client;
 import model.exceptions.CassandraConfigNotFound;
 import model.exceptions.create_exceptions.ClientRepositoryCreateException;
@@ -7,6 +8,7 @@ import model.exceptions.delete_exceptions.ClientRepositoryDeleteException;
 import model.exceptions.read_exceptions.ClientRepositoryReadException;
 import model.exceptions.update_exceptions.ClientRepositoryUpdateException;
 import model.exceptions.update_exceptions.RepositoryUpdateException;
+import model.repositories.implementations.CassandraClient;
 import model.repositories.implementations.ClientRepository;
 import org.junit.jupiter.api.*;
 
@@ -17,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ClientRepositoryTest {
 
+    private static CqlSession cqlSession;
     private Client clientNo1;
     private Client clientNo2;
     private Client clientNo3;
@@ -24,7 +27,8 @@ public class ClientRepositoryTest {
 
     @BeforeAll
     public static void init() throws CassandraConfigNotFound {
-        clientRepositoryForTests = new ClientRepository();
+        cqlSession = CassandraClient.initializeCassandraSession();
+        clientRepositoryForTests = new ClientRepository(cqlSession);
     }
 
     @BeforeEach
@@ -66,12 +70,12 @@ public class ClientRepositoryTest {
 
     @AfterAll
     public static void destroy() {
-        clientRepositoryForTests.close();
+        cqlSession.close();
     }
 
     @Test
     public void clientRepositoryConstructorTest() throws CassandraConfigNotFound {
-        ClientRepository clientRepository = new ClientRepository();
+        ClientRepository clientRepository = new ClientRepository(cqlSession);
         assertNotNull(clientRepository);
     }
 

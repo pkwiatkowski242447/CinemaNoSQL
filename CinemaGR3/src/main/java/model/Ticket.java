@@ -56,10 +56,8 @@ public class Ticket {
                   @NotNull(message = TicketValidation.RESERVATION_TIME_NULL) Instant reservationTime,
                   @Min(value = 0, message = TicketValidation.TICKET_BASE_PRICE_NEGATIVE)
                   @Max(value = 100, message = TicketValidation.TICKET_BASE_PRICE_TOO_HIGH) double ticketBasePrice,
-                  @NotNull(message = TicketValidation.MOVIE_ID_NULL)
-                  @org.hibernate.validator.constraints.UUID(message = TicketValidation.MOVIE_ID_NOT_UUID) UUID movieId,
-                  @NotNull(message = TicketValidation.CLIENT_ID_NULL)
-                  @org.hibernate.validator.constraints.UUID(message = TicketValidation.CLIENT_ID_NOT_UUID) UUID clientId) {
+                  @NotNull(message = TicketValidation.MOVIE_ID_NULL) UUID movieId,
+                  @NotNull(message = TicketValidation.CLIENT_ID_NULL) UUID clientId) {
         this.ticketID = ticketID;
         this.movieTime = movieTime;
         this.reservationTime = reservationTime;

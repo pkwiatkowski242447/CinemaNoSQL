@@ -19,27 +19,21 @@ public abstract class CassandraClient implements AutoCloseable {
 
     protected static final ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory();
     protected static final Validator validator = validatorFactory.getValidator();
-    private CqlSession session;
+    private static CqlSession session;
     private static final String CINEMA_KEYSPACE = "cinema";
 
-    // Getters
-
-    public CqlSession getSession() {
+    public static CqlSession initializeCassandraSession() throws CassandraConfigNotFound {
+        createSession();
+        createKeyspace();
         return session;
     }
 
-    public CqlSession initializeCassandraSession() throws CassandraConfigNotFound {
-        this.createSession();
-        this.createKeyspace();
-        return session;
-    }
-
-    private void createSession() throws CassandraConfigNotFound {
+    private static void createSession() throws CassandraConfigNotFound {
         CassandraConnection.getDataFromPropertyFile();
         List<String> hostNames = CassandraConnection.socketData.keySet().stream().toList();
-        // InetSocketAddress node1 = new InetSocketAddress(hostNames.get(0), CassandraConnection.socketData.get(hostNames.get(0)));
-        // InetSocketAddress node2 = new InetSocketAddress(hostNames.get(1), CassandraConnection.socketData.get(hostNames.get(1)));
-        // InetSocketAddress node3 = new InetSocketAddress(hostNames.get(2), CassandraConnection.socketData.get(hostNames.get(2)));
+//        InetSocketAddress node1 = new InetSocketAddress(hostNames.get(0), CassandraConnection.socketData.get(hostNames.get(0)));
+//        InetSocketAddress node2 = new InetSocketAddress(hostNames.get(1), CassandraConnection.socketData.get(hostNames.get(1)));
+//        InetSocketAddress node3 = new InetSocketAddress(hostNames.get(2), CassandraConnection.socketData.get(hostNames.get(2)));
         InetSocketAddress node1 = new InetSocketAddress("cassandranode1", 9042);
         InetSocketAddress node2 = new InetSocketAddress("cassandranode2", 9043);
         InetSocketAddress node3 = new InetSocketAddress("cassandranode3", 9044);
@@ -53,7 +47,7 @@ public abstract class CassandraClient implements AutoCloseable {
                 .build();
     }
 
-    public void createKeyspace() {
+    public static void createKeyspace() {
         CreateKeyspace keyspace = SchemaBuilder.createKeyspace(CqlIdentifier.fromCql(CINEMA_KEYSPACE))
                 .ifNotExists()
                 .withSimpleStrategy(2)
@@ -62,7 +56,7 @@ public abstract class CassandraClient implements AutoCloseable {
         session.execute(createKeyspace);
     }
 
-    private void dropKeyspace() {
+    public static void dropKeyspace() {
         Drop keyspace = SchemaBuilder.dropKeyspace(CqlIdentifier.fromCql(CINEMA_KEYSPACE))
                 .ifExists();
         SimpleStatement dropKeyspace = keyspace.build();

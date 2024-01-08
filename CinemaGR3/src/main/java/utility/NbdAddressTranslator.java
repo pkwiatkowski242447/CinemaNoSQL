@@ -13,6 +13,7 @@ public class NbdAddressTranslator implements AddressTranslator {
     }
 
     @NonNull
+    @Override
     public InetSocketAddress translate(InetSocketAddress address) {
         String hostAddress = address.getAddress().getHostAddress();
         String hostName = address.getHostName();

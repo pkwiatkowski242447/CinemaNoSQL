@@ -2,9 +2,7 @@ package model.messages;
 
 public class MovieValidation {
 
-    public static final String UUID_REGEX_PATTERN = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$";
     public static final String MOVIE_ID_NULL = "Movie Id could not be a reference to null.";
-    public static final String MOVIE_ID_NOT_UUID = "Given movie Id is not UUID.";
     public static final String MOVIE_TITLE_BLANK = "Movie title could neither be blank nor null.";
 
     public static final String MOVIE_TITLE_TOO_SHORT = "Movie title must be at least 1 character long.";

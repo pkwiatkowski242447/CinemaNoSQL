@@ -1,11 +1,13 @@
 package manager_tests;
 
+import com.datastax.oss.driver.api.core.CqlSession;
 import model.Movie;
 import model.exceptions.CassandraConfigNotFound;
 import model.exceptions.create_exceptions.MovieRepositoryCreateException;
 import model.exceptions.delete_exceptions.MovieRepositoryDeleteException;
 import model.exceptions.read_exceptions.MovieRepositoryReadException;
 import model.managers.MovieManager;
+import model.repositories.implementations.CassandraClient;
 import model.repositories.implementations.MovieRepository;
 import org.junit.jupiter.api.*;
 
@@ -18,16 +20,19 @@ public class MovieManagerTest {
 
     private static MovieRepository movieRepositoryForTests;
     private static MovieManager movieManagerForTests;
+    private static CqlSession cqlSession;
+
 
     @BeforeAll
     public static void init() throws CassandraConfigNotFound {
-        movieRepositoryForTests = new MovieRepository();
+        cqlSession = CassandraClient.initializeCassandraSession();
+        movieRepositoryForTests = new MovieRepository(cqlSession);
         movieManagerForTests = new MovieManager(movieRepositoryForTests);
     }
 
     @AfterAll
     public static void destroy() {
-        movieRepositoryForTests.close();
+        cqlSession.close();
     }
 
     @BeforeEach
@@ -72,7 +77,7 @@ public class MovieManagerTest {
 
     @Test
     public void createMovieManagerTest() throws CassandraConfigNotFound {
-        MovieRepository movieRepository = new MovieRepository();
+        MovieRepository movieRepository = new MovieRepository(cqlSession);
         assertNotNull(movieRepository);
         MovieManager movieManager = new MovieManager(movieRepository);
         assertNotNull(movieManager);
@@ -80,9 +85,9 @@ public class MovieManagerTest {
 
     @Test
     public void setMovieRepositoryForMovieManagerTest() throws CassandraConfigNotFound {
-        MovieRepository movieRepositoryNo1 = new MovieRepository();
+        MovieRepository movieRepositoryNo1 = new MovieRepository(cqlSession);
         assertNotNull(movieRepositoryNo1);
-        MovieRepository movieRepositoryNo2 = new MovieRepository();
+        MovieRepository movieRepositoryNo2 = new MovieRepository(cqlSession);
         assertNotNull(movieRepositoryNo2);
         MovieManager movieManager = new MovieManager(movieRepositoryNo1);
         assertNotNull(movieManager);

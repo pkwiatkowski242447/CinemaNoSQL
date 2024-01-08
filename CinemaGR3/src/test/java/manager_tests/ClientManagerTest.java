@@ -1,11 +1,13 @@
 package manager_tests;
 
+import com.datastax.oss.driver.api.core.CqlSession;
 import model.Client;
 import model.exceptions.CassandraConfigNotFound;
 import model.exceptions.create_exceptions.ClientRepositoryCreateException;
 import model.exceptions.delete_exceptions.ClientRepositoryDeleteException;
 import model.exceptions.read_exceptions.ClientRepositoryReadException;
 import model.managers.ClientManager;
+import model.repositories.implementations.CassandraClient;
 import model.repositories.implementations.ClientRepository;
 import org.junit.jupiter.api.*;
 
@@ -18,16 +20,18 @@ public class ClientManagerTest {
 
     private static ClientRepository clientRepositoryForTests;
     private static ClientManager clientManagerForTests;
+    private static CqlSession cqlSession;
 
     @BeforeAll
     public static void init() throws CassandraConfigNotFound {
-        clientRepositoryForTests = new ClientRepository();
+        cqlSession = CassandraClient.initializeCassandraSession();
+        clientRepositoryForTests = new ClientRepository(cqlSession);
         clientManagerForTests = new ClientManager(clientRepositoryForTests);
     }
 
     @AfterAll
     public static void destroy() {
-        clientRepositoryForTests.close();
+        cqlSession.close();
     }
 
     @BeforeEach
@@ -67,7 +71,7 @@ public class ClientManagerTest {
 
     @Test
     public void createClientManagerTest() throws CassandraConfigNotFound {
-        ClientRepository clientRepository = new ClientRepository();
+        ClientRepository clientRepository = new ClientRepository(cqlSession);
         assertNotNull(clientRepository);
         ClientManager clientManager = new ClientManager(clientRepository);
         assertNotNull(clientManager);
@@ -76,9 +80,9 @@ public class ClientManagerTest {
 
     @Test
     public void setClientRepositoryForClientManagerTest() throws CassandraConfigNotFound {
-        ClientRepository clientRepositoryNo1 = new ClientRepository();
+        ClientRepository clientRepositoryNo1 = new ClientRepository(cqlSession);
         assertNotNull(clientRepositoryNo1);
-        ClientRepository clientRepositoryNo2 = new ClientRepository();
+        ClientRepository clientRepositoryNo2 = new ClientRepository(cqlSession);
         assertNotNull(clientRepositoryNo2);
         ClientManager clientManager = new ClientManager(clientRepositoryNo1);
         assertNotNull(clientManager);

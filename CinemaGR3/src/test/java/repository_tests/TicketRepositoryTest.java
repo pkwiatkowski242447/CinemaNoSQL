@@ -1,5 +1,6 @@
 package repository_tests;
 
+import com.datastax.oss.driver.api.core.CqlSession;
 import model.Client;
 import model.Movie;
 import model.Ticket;
@@ -16,6 +17,7 @@ import model.exceptions.read_exceptions.MovieRepositoryReadException;
 import model.exceptions.read_exceptions.TicketRepositoryReadException;
 import model.exceptions.update_exceptions.MovieRepositoryUpdateException;
 import model.exceptions.update_exceptions.RepositoryUpdateException;
+import model.repositories.implementations.CassandraClient;
 import model.repositories.implementations.ClientRepository;
 import model.repositories.implementations.MovieRepository;
 import model.repositories.implementations.TicketRepository;
@@ -30,6 +32,8 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TicketRepositoryTest {
+
+    private static CqlSession cqlSession;
 
     private static TicketRepository ticketRepositoryForTests;
     private static ClientRepository clientRepositoryForTests;
@@ -57,16 +61,15 @@ public class TicketRepositoryTest {
 
     @BeforeAll
     public static void init() throws CassandraConfigNotFound {
-        clientRepositoryForTests = new ClientRepository();
-        movieRepositoryForTests = new MovieRepository();
-        ticketRepositoryForTests = new TicketRepository();
+        cqlSession = CassandraClient.initializeCassandraSession();
+        clientRepositoryForTests = new ClientRepository(cqlSession);
+        movieRepositoryForTests = new MovieRepository(cqlSession);
+        ticketRepositoryForTests = new TicketRepository(cqlSession);
     }
 
     @AfterAll
     public static void destroy() {
-        ticketRepositoryForTests.close();
-        clientRepositoryForTests.close();
-        movieRepositoryForTests.close();
+        cqlSession.close();
     }
 
     @BeforeEach
@@ -162,7 +165,7 @@ public class TicketRepositoryTest {
 
     @Test
     public void ticketRepositoryConstructorTest() throws CassandraConfigNotFound {
-        TicketRepository ticketRepository = new TicketRepository();
+        TicketRepository ticketRepository = new TicketRepository(cqlSession);
         assertNotNull(ticketRepository);
     }
 
