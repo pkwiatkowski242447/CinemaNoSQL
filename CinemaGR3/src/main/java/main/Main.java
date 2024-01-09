@@ -73,9 +73,9 @@ public class Main {
             Movie movieNo2 = movieManager.create(movieNo2Title, movieNo2BasePrice, screeningRoomNo2NumberOfAvailSeats, screeningRoomNo2Number);
             Movie movieNo3 = movieManager.create(movieNo3Title, movieNo3BasePrice, screeningRoomNo3NumberOfAvailSeats, screeningRoomNo3Number);
 
-            Ticket ticketNo1 = ticketManager.createNormalTicket(movieTimeNo1, reservationTimeNo1, movieNo1.getMovieID(), clientNo1.getClientID());
-            Ticket ticketNo2 = ticketManager.createReducedTicket(movieTimeNo2, reservationTimeNo2, movieNo2.getMovieID(), clientNo2.getClientID());
-            Ticket ticketNo3 = ticketManager.createReducedTicket(movieTimeNo3, reservationTimeNo3, movieNo3.getMovieID(), clientNo3.getClientID());
+            ticketManager.createNormalTicket(movieTimeNo1, reservationTimeNo1, movieNo1.getMovieID(), clientNo1.getClientID());
+            ticketManager.createReducedTicket(movieTimeNo2, reservationTimeNo2, movieNo2.getMovieID(), clientNo2.getClientID());
+            ticketManager.createReducedTicket(movieTimeNo3, reservationTimeNo3, movieNo3.getMovieID(), clientNo3.getClientID());
 
             try {
                 List<Client> listOfClients = clientManager.findAll();

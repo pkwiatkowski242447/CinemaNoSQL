@@ -41,7 +41,7 @@ public class TicketConverter {
                     ticketClientDTO.getMovieTime(),
                     ticketClientDTO.getReservationTime(),
                     ticketClientDTO.getTicketBasePrice(),
-                    ticketClientDTO.getTicketBasePrice(),
+                    ticketClientDTO.getTicketFinalPrice(),
                     ticketClientDTO.getMovieId(),
                     ticketClientDTO.getClientId(),
                     ticketClientDTO.getTicketTypeDiscriminator()

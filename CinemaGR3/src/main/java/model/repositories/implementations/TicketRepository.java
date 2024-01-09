@@ -81,22 +81,6 @@ public class TicketRepository extends CassandraClient implements TicketRepositor
         session.execute(createTicketsTable);
     }
 
-    private void dropTicketsClientsTable()  {
-        SimpleStatement dropTicketsTable = SchemaBuilder
-                .dropTable(TicketConstants.TICKETS_CLIENTS_TABLE_NAME)
-                .ifExists()
-                .build();
-        session.execute(dropTicketsTable);
-    }
-
-    private void dropTicketsMoviesTable()  {
-        SimpleStatement dropTicketsTable = SchemaBuilder
-                .dropTable(TicketConstants.TICKETS_MOVIES_TABLE_NAME)
-                .ifExists()
-                .build();
-        session.execute(dropTicketsTable);
-    }
-
     // Create methods
 
     @Override

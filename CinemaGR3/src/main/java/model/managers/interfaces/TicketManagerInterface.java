@@ -2,7 +2,6 @@ package model.managers.interfaces;
 
 import model.exceptions.managers.create_exceptions.TicketManagerCreateException;
 import model.exceptions.managers.read_exceptions.TicketManagerReadException;
-import model.exceptions.managers.update_exceptions.TicketManagerUpdateException;
 import model.model.Ticket;
 
 import java.time.Instant;

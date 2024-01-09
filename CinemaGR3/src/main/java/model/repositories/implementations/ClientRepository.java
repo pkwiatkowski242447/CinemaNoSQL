@@ -49,14 +49,6 @@ public class ClientRepository extends CassandraClient implements ClientRepositor
         session.execute(createClientsTable);
     }
 
-    private void dropClientsTable() {
-        SimpleStatement dropClientsTable = SchemaBuilder
-                .dropTable(ClientConstants.CLIENTS_TABLE_NAME)
-                .ifExists()
-                .build();
-        session.execute(dropClientsTable);
-    }
-
     // Create methods
 
     @Override

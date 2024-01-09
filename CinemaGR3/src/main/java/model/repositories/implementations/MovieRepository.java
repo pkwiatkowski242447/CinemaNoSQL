@@ -49,14 +49,6 @@ public class MovieRepository extends CassandraClient implements MovieRepositoryI
         session.execute(createMoviesTable);
     }
 
-    private void dropMoviesTable() {
-        SimpleStatement dropMoviesTable = SchemaBuilder
-                .dropTable(MovieConstants.MOVIES_TABLE_NAME)
-                .ifExists()
-                .build();
-        session.execute(dropMoviesTable);
-    }
-
     // Create methods
 
     @Override

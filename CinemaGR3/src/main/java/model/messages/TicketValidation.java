@@ -1,7 +1,5 @@
 package model.messages;
 
-import model.constants.TicketConstants;
-
 public class TicketValidation {
 
     public static final String TICKET_ID_NULL = "Ticket Id could not be a reference to null.";
