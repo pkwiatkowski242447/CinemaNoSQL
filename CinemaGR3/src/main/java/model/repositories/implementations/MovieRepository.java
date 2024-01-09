@@ -1,52 +1,88 @@
 package model.repositories.implementations;
 
-import com.datastax.oss.driver.api.core.CqlIdentifier;
-import com.datastax.oss.driver.api.core.CqlSession;
-import com.datastax.oss.driver.api.core.cql.SimpleStatement;
-import com.datastax.oss.driver.api.core.type.DataTypes;
-import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
+import com.mongodb.MongoException;
+import com.mongodb.client.ClientSession;
+import com.mongodb.client.model.CreateCollectionOptions;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.ValidationOptions;
 import jakarta.validation.ConstraintViolation;
-import model.model.Movie;
 import model.constants.MovieConstants;
+import model.exceptions.MongoConfigNotFoundException;
+import model.exceptions.repositories.object_not_found_exceptions.MovieObjectNotFoundException;
+import model.model.Movie;
 import model.exceptions.repositories.create_exceptions.MovieRepositoryCreateException;
 import model.exceptions.repositories.delete_exceptions.MovieRepositoryDeleteException;
 import model.exceptions.repositories.read_exceptions.MovieRepositoryReadException;
 import model.exceptions.repositories.update_exceptions.MovieRepositoryUpdateException;
 import model.exceptions.validation.MovieObjectNotValidException;
-import model.repositories.daos.MovieDao;
 import model.repositories.interfaces.MovieRepositoryInterface;
-import model.repositories.mappers.MovieMapper;
-import model.repositories.mappers.MovieMapperBuilder;
+import org.bson.Document;
+import org.bson.conversions.Bson;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-public class MovieRepository extends CassandraClient implements MovieRepositoryInterface {
+public class MovieRepository extends MongoRepository implements MovieRepositoryInterface {
 
-    private final CqlSession session;
-    private final MovieMapper movieMapper;
-    private final MovieDao movieDao;
+    public MovieRepository(String databaseName) throws MongoConfigNotFoundException {
+        super.initDatabaseConnection(databaseName);
 
-    public MovieRepository(CqlSession cqlSession) {
-        this.session = cqlSession;
-        this.createMoviesTable();
+        // Checking if collection "movies" exists.
+        boolean collectionExists = false;
+        for (String collectionName : mongoDatabase.listCollectionNames()) {
+            if (collectionName.equals(this.movieCollectionName)) {
+                collectionExists = true;
+                break;
+            }
+        }
 
-        this.movieMapper = new MovieMapperBuilder(session).build();
-        this.movieDao = movieMapper.movieDao();
-    }
-
-    private void createMoviesTable() {
-        SimpleStatement createMoviesTable = SchemaBuilder
-                .createTable(MovieConstants.MOVIES_TABLE_NAME)
-                .ifNotExists()
-                .withPartitionKey(CqlIdentifier.fromCql(MovieConstants.MOVIE_ID), DataTypes.UUID)
-                .withColumn(CqlIdentifier.fromCql(MovieConstants.MOVIE_TITLE), DataTypes.TEXT)
-                .withColumn(CqlIdentifier.fromCql(MovieConstants.MOVIE_BASE_PRICE), DataTypes.DOUBLE)
-                .withColumn(CqlIdentifier.fromCql(MovieConstants.NUMBER_OF_AVAILABLE_SEATS), DataTypes.INT)
-                .withColumn(CqlIdentifier.fromCql(MovieConstants.SCREENING_ROOM_NUMBER), DataTypes.INT)
-                .build();
-        session.execute(createMoviesTable);
+        // If collection does not exist - then create it with a specific JSON Schema.
+        if (!collectionExists) {
+            ValidationOptions validationOptions = new ValidationOptions().validator(
+                    Document.parse("""
+                            {
+                                $jsonSchema: {
+                                    "bsonType": "object",
+                                    "required": ["_id", "movie_title", "movie_base_price", "number_of_available_seats", "screening_room_number"],
+                                    "properties": {
+                                        "_id": {
+                                            "description": "UUID identifier of a certain movie document.",
+                                            "bsonType": "binData",
+                                            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                                        }
+                                        "movie_title": {
+                                            "description": "String containing certain movie title.",
+                                            "bsonType": "string",
+                                            "minLength": 1,
+                                            "maxLength": 150
+                                        }
+                                        "movie_base_price": {
+                                            "description": "Double value holding base price of the movie - that is before any discounts.",
+                                            "bsonType": "double",
+                                            "minimum": 0,
+                                            "maximum": 100
+                                        }
+                                        "number_of_available_seats": {
+                                            "description": "Integer indicating number of available seats inside screening room.",
+                                            "bsonType": "int",
+                                            "minimum": 0,
+                                            "maximum": 150
+                                        }
+                                        "screening_room_number": {
+                                             "description": "Integer indicating the number of the screening room.",
+                                             "bsonType": "int",
+                                             "minimum": 1,
+                                             "maximum": 20
+                                        }
+                                    }
+                                }
+                            }
+                            """));
+            CreateCollectionOptions createCollectionOptions = new CreateCollectionOptions().validationOptions(validationOptions);
+            mongoDatabase.createCollection(this.movieCollectionName, createCollectionOptions);
+        }
     }
 
     // Create methods
@@ -56,9 +92,18 @@ public class MovieRepository extends CassandraClient implements MovieRepositoryI
         Movie movie = new Movie(UUID.randomUUID(), movieTitle, movieBasePrice, numberOfAvailableSeats, screeningRoomNumber);
         try {
             this.checkIfMovieObjectIsValid(movie);
-            movieDao.create(movie);
-            return movieDao.findByUUID(movie.getMovieID());
-        } catch (MovieObjectNotValidException | MovieRepositoryReadException exception) {
+
+            this.getMovieCollection().insertOne(movie);
+
+            Bson movieFilter = Filters.eq(MovieConstants.DOCUMENT_ID, movie.getMovieID());
+            Movie foundMovie = this.getMovieCollection().find(movieFilter).first();
+
+            if (foundMovie == null) {
+                throw new MovieObjectNotFoundException("Client object with id: " + movie.getMovieID() + " could not be found in the database.");
+            } else {
+                return foundMovie;
+            }
+        } catch (MongoException | MovieObjectNotValidException | MovieObjectNotFoundException exception) {
             throw new MovieRepositoryCreateException(exception.getMessage(), exception);
         }
     }
@@ -68,55 +113,91 @@ public class MovieRepository extends CassandraClient implements MovieRepositoryI
     @Override
     public Movie findByUUID(UUID movieId) throws MovieRepositoryReadException {
         try {
-            return movieDao.findByUUID(movieId);
-        } catch (MovieRepositoryReadException exception) {
+            Bson movieFilter = Filters.eq(MovieConstants.DOCUMENT_ID, movieId);
+            Movie foundMovie = this.getMovieCollection().find(movieFilter).first();
+
+            if (foundMovie == null) {
+                throw new MovieObjectNotFoundException("Client object with id: " + movieId + " could not be found in the database.");
+            } else {
+                return foundMovie;
+            }
+        } catch (MongoException | MovieObjectNotFoundException exception) {
             throw new MovieRepositoryReadException(exception.getMessage(), exception);
         }
     }
 
     @Override
     public List<Movie> findAll() throws MovieRepositoryReadException {
-        try {
-            return movieDao.findAll();
-        } catch (MovieRepositoryReadException exception) {
+        List<Movie> listOfFoundMovies = new ArrayList<>();
+        try(ClientSession clientSession = mongoClient.startSession()) {
+            clientSession.startTransaction();
+            Bson movieFilter = Filters.empty();
+            listOfFoundMovies.addAll(this.getMovieCollection().find(movieFilter).into(new ArrayList<>()));
+            clientSession.commitTransaction();
+        } catch (MongoException exception) {
             throw new MovieRepositoryReadException(exception.getMessage(), exception);
         }
+        return listOfFoundMovies;
     }
 
     // Update methods
 
     @Override
     public void update(Movie movie) throws MovieRepositoryUpdateException {
-        try {
-            movieDao.findByUUID(movie.getMovieID());
+        try(ClientSession clientSession = mongoClient.startSession()) {
             this.checkIfMovieObjectIsValid(movie);
-        } catch (MovieRepositoryReadException | MovieObjectNotValidException exception) {
+
+            clientSession.startTransaction();
+
+            Bson movieFilter = Filters.eq(MovieConstants.DOCUMENT_ID, movie.getMovieID());
+            Movie updatedMovie = this.getMovieCollection().findOneAndReplace(movieFilter, movie);
+
+            if (updatedMovie == null) {
+                throw new MovieObjectNotFoundException("Movie object with id: " + movie.getMovieID() + " could not be updated, since it is not in the database.");
+            }
+
+            clientSession.commitTransaction();
+        } catch (MongoException | MovieObjectNotValidException | MovieObjectNotFoundException exception) {
             throw new MovieRepositoryUpdateException(exception.getMessage(), exception);
         }
-        movieDao.update(movie);
     }
 
     // Delete methods
 
     @Override
     public void delete(Movie movie) throws MovieRepositoryDeleteException {
-        try {
-            movieDao.findByUUID(movie.getMovieID());
-        } catch (MovieRepositoryReadException exception) {
+        try(ClientSession clientSession = mongoClient.startSession()) {
+            clientSession.startTransaction();
+
+            Bson movieFilter = Filters.eq(MovieConstants.DOCUMENT_ID, movie.getMovieID());
+            Movie removedMovie = this.getMovieCollection().findOneAndDelete(movieFilter);
+
+            if (removedMovie == null) {
+                throw new MovieObjectNotFoundException("Movie object with id: " + movie.getMovieID() + " could not be deleted, since it is not in the database.");
+            }
+
+            clientSession.commitTransaction();
+        } catch (MongoException | MovieObjectNotFoundException exception) {
             throw new MovieRepositoryDeleteException(exception.getMessage(), exception);
         }
-        movieDao.delete(movie);
     }
 
     @Override
     public void delete(UUID movieID) throws MovieRepositoryDeleteException {
-        Movie movie;
-        try {
-            movie = movieDao.findByUUID(movieID);
-        } catch (MovieRepositoryReadException exception) {
+        try(ClientSession clientSession = mongoClient.startSession()) {
+            clientSession.startTransaction();
+
+            Bson movieFilter = Filters.eq(MovieConstants.DOCUMENT_ID, movieID);
+            Movie removedMovie = this.getMovieCollection().findOneAndDelete(movieFilter);
+
+            if (removedMovie == null) {
+                throw new MovieObjectNotFoundException("Movie object with id: " + movieID + " could not be deleted, since it is not in the database.");
+            }
+
+            clientSession.commitTransaction();
+        } catch (MongoException | MovieObjectNotFoundException exception) {
             throw new MovieRepositoryDeleteException(exception.getMessage(), exception);
         }
-        movieDao.delete(movie);
     }
 
     private void checkIfMovieObjectIsValid(Movie movie) throws MovieObjectNotValidException {

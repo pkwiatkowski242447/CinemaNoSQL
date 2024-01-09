@@ -3,44 +3,51 @@ package model.model;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
+import model.constants.TicketConstants;
 import model.messages.TicketValidation;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.bson.codecs.pojo.annotations.BsonDiscriminator;
+import org.bson.codecs.pojo.annotations.BsonProperty;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Getter
+@BsonDiscriminator(key = TicketConstants.TICKET_DISCRIMINATOR)
 public abstract class Ticket {
 
+    @BsonProperty(TicketConstants.DOCUMENT_ID)
     @NotNull(message = TicketValidation.TICKET_ID_NULL)
     protected UUID ticketID;
 
+    @BsonProperty(TicketConstants.MOVIE_TIME)
     @Setter
     @NotNull(message = TicketValidation.MOVIE_TIME_NULL)
     protected Instant movieTime;
 
+    @BsonProperty(TicketConstants.RESERVATION_TIME)
     @NotNull(message = TicketValidation.RESERVATION_TIME_NULL)
     protected Instant reservationTime;
 
+    @BsonProperty(TicketConstants.TICKET_BASE_PRICE)
     @Setter
     @Min(value = 0, message = TicketValidation.TICKET_BASE_PRICE_NEGATIVE)
     @Max(value = 100, message = TicketValidation.TICKET_BASE_PRICE_TOO_HIGH)
     protected double ticketBasePrice;
 
+    @BsonProperty(TicketConstants.TICKET_FINAL_PRICE)
     @PositiveOrZero(message = TicketValidation.TICKET_FINAL_PRICE_NEGATIVE)
     protected double ticketFinalPrice;
 
+    @BsonProperty(TicketConstants.MOVIE_ID)
     @NotNull(message = TicketValidation.MOVIE_ID_NULL)
     protected UUID movieId;
 
+    @BsonProperty(TicketConstants.CLIENT_ID)
     @NotNull(message = TicketValidation.CLIENT_ID_NULL)
     protected UUID clientId;
-
-    @NotEmpty(message = TicketValidation.TICKET_TYPE_DISCRIMINATOR_BLANK)
-    @Pattern(regexp = TicketValidation.TICKET_TYPE_DISCRIMINATOR_REGEX_PATTERN, message = TicketValidation.TICKET_TYPE_DISCRIMINATOR_INCORRECT_VALUE)
-    protected String ticketTypeDiscriminator;
 
     // ToString method
 
@@ -53,7 +60,6 @@ public abstract class Ticket {
                 .append("ticketFinalPrice: ", ticketFinalPrice)
                 .append("movieId: ", movieId)
                 .append("clientId: ", clientId)
-                .append("ticketTypeDiscriminator: ", ticketTypeDiscriminator)
                 .toString();
     }
 
@@ -75,7 +81,6 @@ public abstract class Ticket {
                 .append(reservationTime, ticket.reservationTime)
                 .append(movieId, ticket.movieId)
                 .append(clientId, ticket.clientId)
-                .append(ticketTypeDiscriminator, ticket.ticketTypeDiscriminator)
                 .isEquals();
     }
 
@@ -91,7 +96,6 @@ public abstract class Ticket {
                 .append(ticketFinalPrice)
                 .append(movieId)
                 .append(clientId)
-                .append(ticketTypeDiscriminator)
                 .toHashCode();
     }
 }

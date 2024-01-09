@@ -1,14 +1,13 @@
 package repository_tests;
 
-import com.datastax.oss.driver.api.core.CqlSession;
+import model.constants.GeneralConstants;
 import model.model.Client;
-import model.exceptions.CassandraConfigNotFound;
+import model.exceptions.MongoConfigNotFoundException;
 import model.exceptions.repositories.create_exceptions.ClientRepositoryCreateException;
 import model.exceptions.repositories.delete_exceptions.ClientRepositoryDeleteException;
 import model.exceptions.repositories.read_exceptions.ClientRepositoryReadException;
 import model.exceptions.repositories.update_exceptions.ClientRepositoryUpdateException;
 import model.exceptions.repositories.update_exceptions.RepositoryUpdateException;
-import model.repositories.implementations.CassandraClient;
 import model.repositories.implementations.ClientRepository;
 import org.junit.jupiter.api.*;
 
@@ -19,16 +18,14 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ClientRepositoryTest {
 
-    private static CqlSession cqlSession;
     private Client clientNo1;
     private Client clientNo2;
     private Client clientNo3;
     private static ClientRepository clientRepositoryForTests;
 
     @BeforeAll
-    public static void init() throws CassandraConfigNotFound {
-        cqlSession = CassandraClient.initializeCassandraSession();
-        clientRepositoryForTests = new ClientRepository(cqlSession);
+    public static void init() throws MongoConfigNotFoundException {
+        clientRepositoryForTests = new ClientRepository(GeneralConstants.TEST_DB_NAME);
     }
 
     @BeforeEach
@@ -70,12 +67,12 @@ public class ClientRepositoryTest {
 
     @AfterAll
     public static void destroy() {
-        cqlSession.close();
+        clientRepositoryForTests.close();
     }
 
     @Test
-    public void clientRepositoryConstructorTest() {
-        ClientRepository clientRepository = new ClientRepository(cqlSession);
+    public void clientRepositoryConstructorTest() throws MongoConfigNotFoundException {
+        ClientRepository clientRepository = new ClientRepository(GeneralConstants.TEST_DB_NAME);
         assertNotNull(clientRepository);
     }
 

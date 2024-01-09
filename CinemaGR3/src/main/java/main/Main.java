@@ -1,14 +1,18 @@
 package main;
 
-import com.datastax.oss.driver.api.core.CqlSession;
+import model.constants.GeneralConstants;
+import model.exceptions.MongoConfigNotFoundException;
+import model.exceptions.managers.create_exceptions.ClientManagerCreateException;
+import model.exceptions.managers.create_exceptions.MovieManagerCreateException;
+import model.exceptions.managers.create_exceptions.TicketManagerCreateException;
+import model.exceptions.managers.delete_exceptions.DeleteManagerException;
+import model.exceptions.managers.read_exceptions.ReadManagerException;
 import model.managers.implementations.ClientManager;
 import model.managers.implementations.MovieManager;
 import model.managers.implementations.TicketManager;
 import model.model.Client;
 import model.model.Movie;
 import model.model.Ticket;
-import model.exceptions.repositories.delete_exceptions.RepositoryDeleteException;
-import model.repositories.implementations.CassandraClient;
 import model.repositories.implementations.ClientRepository;
 import model.repositories.implementations.MovieRepository;
 import model.repositories.implementations.TicketRepository;
@@ -20,11 +24,10 @@ import java.util.List;
 public class Main {
 
     public static void main(String[] args) {
-        try(CqlSession session = CassandraClient.initializeCassandraSession()) {
-
-            ClientRepository clientRepository = new ClientRepository(session);
-            MovieRepository movieRepository = new MovieRepository(session);
-            TicketRepository ticketRepository = new TicketRepository(session);
+        try {
+            ClientRepository clientRepository = new ClientRepository(GeneralConstants.PROD_DB_NAME);
+            MovieRepository movieRepository = new MovieRepository(GeneralConstants.PROD_DB_NAME);
+            TicketRepository ticketRepository = new TicketRepository(GeneralConstants.PROD_DB_NAME);
 
             ClientManager clientManager = new ClientManager(clientRepository);
             MovieManager movieManager = new MovieManager(movieRepository);
@@ -65,17 +68,37 @@ public class Main {
             String movieNo3Title = "A Space Odyssey";
             double movieNo3BasePrice = 59.99;
 
-            Client clientNo1 = clientManager.create(clientNo1Name, clientNo1Surname, clientNo1Age);
-            Client clientNo2 = clientManager.create(clientNo2Name, clientNo2Surname, clientNo2Age);
-            Client clientNo3 = clientManager.create(clientNo3Name, clientNo3Surname, clientNo3Age);
+            Client clientNo1;
+            Client clientNo2;
+            Client clientNo3;
 
-            Movie movieNo1 = movieManager.create(movieNo1Title, movieNo1BasePrice, screeningRoomNo1NumberOfAvailSeats, screeningRoomNo1Number);
-            Movie movieNo2 = movieManager.create(movieNo2Title, movieNo2BasePrice, screeningRoomNo2NumberOfAvailSeats, screeningRoomNo2Number);
-            Movie movieNo3 = movieManager.create(movieNo3Title, movieNo3BasePrice, screeningRoomNo3NumberOfAvailSeats, screeningRoomNo3Number);
+            try {
+                clientNo1 = clientManager.create(clientNo1Name, clientNo1Surname, clientNo1Age);
+                clientNo2 = clientManager.create(clientNo2Name, clientNo2Surname, clientNo2Age);
+                clientNo3 = clientManager.create(clientNo3Name, clientNo3Surname, clientNo3Age);
+            } catch (ClientManagerCreateException exception) {
+                throw new RuntimeException("Sample clients could not be created in the repository..", exception);
+            }
 
-            ticketManager.createNormalTicket(movieTimeNo1, reservationTimeNo1, movieNo1.getMovieID(), clientNo1.getClientID());
-            ticketManager.createReducedTicket(movieTimeNo2, reservationTimeNo2, movieNo2.getMovieID(), clientNo2.getClientID());
-            ticketManager.createReducedTicket(movieTimeNo3, reservationTimeNo3, movieNo3.getMovieID(), clientNo3.getClientID());
+            Movie movieNo1;
+            Movie movieNo2;
+            Movie movieNo3;
+
+            try {
+                movieNo1 = movieManager.create(movieNo1Title, movieNo1BasePrice, screeningRoomNo1NumberOfAvailSeats, screeningRoomNo1Number);
+                movieNo2 = movieManager.create(movieNo2Title, movieNo2BasePrice, screeningRoomNo2NumberOfAvailSeats, screeningRoomNo2Number);
+                movieNo3 = movieManager.create(movieNo3Title, movieNo3BasePrice, screeningRoomNo3NumberOfAvailSeats, screeningRoomNo3Number);
+            } catch (MovieManagerCreateException exception) {
+                throw new RuntimeException("Sample movies could not be created in the repository..", exception);
+            }
+
+            try {
+                ticketManager.createNormalTicket(movieTimeNo1, reservationTimeNo1, movieNo1.getMovieID(), clientNo1.getClientID());
+                ticketManager.createReducedTicket(movieTimeNo2, reservationTimeNo2, movieNo2.getMovieID(), clientNo2.getClientID());
+                ticketManager.createReducedTicket(movieTimeNo3, reservationTimeNo3, movieNo3.getMovieID(), clientNo3.getClientID());
+            } catch (TicketManagerCreateException exception) {
+                throw new RuntimeException("Sample tickets could not be created in the repository.", exception);
+            }
 
             try {
                 List<Client> listOfClients = clientManager.findAll();
@@ -97,19 +120,19 @@ public class Main {
                 }
 
                 for (Ticket ticket : listOfTickets) {
-                    ticketManager.getTicketRepository().delete(ticket);
+                    ticketManager.delete(ticket);
                 }
 
                 int numOfTicketsAfter = ticketManager.findAll().size();
 
                 for (Movie movie : listOfMovies) {
-                    movieManager.getMovieRepository().delete(movie);
+                    movieManager.delete(movie);
                 }
 
                 int numOfMoviesAfter = movieManager.findAll().size();
 
                 for (Client client : listOfClients) {
-                    clientManager.getClientRepository().delete(client);
+                    clientManager.delete(client);
                 }
 
                 int numOfClientsAfter = clientManager.findAll().size();
@@ -122,11 +145,13 @@ public class Main {
 
                 System.out.println("Number of clients before: " + numOfClientsBefore);
                 System.out.println("Number of clients after: " + numOfClientsAfter);
-            } catch (RepositoryDeleteException exception) {
-                throw new RuntimeException("Error while removing objects from repository.", exception);
+            } catch (ReadManagerException exception) {
+                throw new RuntimeException("Exception occurred when performing read operations.", exception);
+            } catch (DeleteManagerException exception) {
+                throw new RuntimeException("Exception occurred when performing delete operations.", exception);
             }
-        } catch (Exception exception) {
-            throw new RuntimeException("Unknown exception was thrown.", exception);
+        } catch (MongoConfigNotFoundException exception) {
+            throw new RuntimeException("Configuration file for connection with MongoDB cluster was not found.", exception);
         }
     }
 }

@@ -1,6 +1,6 @@
 package manager_tests;
 
-import com.datastax.oss.driver.api.core.CqlSession;
+import model.constants.GeneralConstants;
 import model.exceptions.managers.create_exceptions.ClientManagerCreateException;
 import model.exceptions.managers.create_exceptions.CreateManagerException;
 import model.exceptions.managers.delete_exceptions.ClientManagerDeleteException;
@@ -10,12 +10,11 @@ import model.exceptions.managers.read_exceptions.ReadManagerException;
 import model.exceptions.managers.update_exceptions.ClientManagerUpdateException;
 import model.exceptions.managers.update_exceptions.UpdateManagerException;
 import model.model.Client;
-import model.exceptions.CassandraConfigNotFound;
+import model.exceptions.MongoConfigNotFoundException;
 import model.exceptions.repositories.create_exceptions.ClientRepositoryCreateException;
 import model.exceptions.repositories.delete_exceptions.ClientRepositoryDeleteException;
 import model.exceptions.repositories.read_exceptions.ClientRepositoryReadException;
 import model.managers.implementations.ClientManager;
-import model.repositories.implementations.CassandraClient;
 import model.repositories.implementations.ClientRepository;
 import org.junit.jupiter.api.*;
 
@@ -28,22 +27,20 @@ public class ClientManagerTest {
 
     private static ClientRepository clientRepositoryForTests;
     private static ClientManager clientManagerForTests;
-    private static CqlSession cqlSession;
 
     private Client clientNo1;
     private Client clientNo2;
     private Client clientNo3;
 
     @BeforeAll
-    public static void init() throws CassandraConfigNotFound {
-        cqlSession = CassandraClient.initializeCassandraSession();
-        clientRepositoryForTests = new ClientRepository(cqlSession);
+    public static void init() throws MongoConfigNotFoundException {
+        clientRepositoryForTests = new ClientRepository(GeneralConstants.TEST_DB_NAME);
         clientManagerForTests = new ClientManager(clientRepositoryForTests);
     }
 
     @AfterAll
     public static void destroy() {
-        cqlSession.close();
+        clientRepositoryForTests.close();
     }
 
     @BeforeEach
@@ -84,19 +81,19 @@ public class ClientManagerTest {
     }
 
     @Test
-    public void clientManagerCreateClientManagerTestPositive() {
-        ClientRepository clientRepository = new ClientRepository(cqlSession);
+    public void clientManagerCreateClientManagerTestPositive() throws MongoConfigNotFoundException {
+        ClientRepository clientRepository = new ClientRepository(GeneralConstants.TEST_DB_NAME);
         assertNotNull(clientRepository);
         ClientManager clientManager = new ClientManager(clientRepository);
         assertNotNull(clientManager);
     }
 
     @Test
-    public void clientManagerSetClientRepositoryForClientManagerTestPositive() {
-        ClientRepository clientRepositoryNo1 = new ClientRepository(cqlSession);
+    public void clientManagerSetClientRepositoryForClientManagerTestPositive() throws MongoConfigNotFoundException {
+        ClientRepository clientRepositoryNo1 = new ClientRepository(GeneralConstants.TEST_DB_NAME);
         assertNotNull(clientRepositoryNo1);
 
-        ClientRepository clientRepositoryNo2 = new ClientRepository(cqlSession);
+        ClientRepository clientRepositoryNo2 = new ClientRepository(GeneralConstants.TEST_DB_NAME);
         assertNotNull(clientRepositoryNo2);
 
         ClientManager clientManager = new ClientManager(clientRepositoryNo1);
@@ -462,7 +459,7 @@ public class ClientManagerTest {
     }
 
     @Test
-    public void clientManagerDeleteClientThatIsNotInTheRepositoryTestNegative() throws ReadManagerException, DeleteManagerException {
+    public void clientManagerDeleteClientThatIsNotInTheRepositoryTestNegative() {
         String clientName = "Stefania";
         String clientSurname = "Czarnecka";
         int clientAge = 35;
@@ -489,7 +486,7 @@ public class ClientManagerTest {
     }
 
     @Test
-    public void clientManagerDeleteClientByIdThatIsNotInTheRepositoryTestNegative() throws ReadManagerException, DeleteManagerException {
+    public void clientManagerDeleteClientByIdThatIsNotInTheRepositoryTestNegative() {
         String clientName = "Stefania";
         String clientSurname = "Czarnecka";
         int clientAge = 35;

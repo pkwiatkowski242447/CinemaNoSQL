@@ -2,7 +2,7 @@ package model.constants;
 
 public class MovieConstants {
 
-    public static final String MOVIES_TABLE_NAME = "movies";
+    public static final String DOCUMENT_ID = "_id";
     public static final String MOVIE_ID = "movie_id";
     public static final String MOVIE_TITLE = "movie_title";
     public static final String MOVIE_BASE_PRICE = "movie_base_price";

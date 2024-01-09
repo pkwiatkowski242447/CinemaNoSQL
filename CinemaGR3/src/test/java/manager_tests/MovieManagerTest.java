@@ -1,6 +1,6 @@
 package manager_tests;
 
-import com.datastax.oss.driver.api.core.CqlSession;
+import model.constants.GeneralConstants;
 import model.exceptions.managers.create_exceptions.CreateManagerException;
 import model.exceptions.managers.create_exceptions.MovieManagerCreateException;
 import model.exceptions.managers.delete_exceptions.DeleteManagerException;
@@ -10,12 +10,11 @@ import model.exceptions.managers.read_exceptions.ReadManagerException;
 import model.exceptions.managers.update_exceptions.MovieManagerUpdateException;
 import model.exceptions.managers.update_exceptions.UpdateManagerException;
 import model.model.Movie;
-import model.exceptions.CassandraConfigNotFound;
+import model.exceptions.MongoConfigNotFoundException;
 import model.exceptions.repositories.create_exceptions.MovieRepositoryCreateException;
 import model.exceptions.repositories.delete_exceptions.MovieRepositoryDeleteException;
 import model.exceptions.repositories.read_exceptions.MovieRepositoryReadException;
 import model.managers.implementations.MovieManager;
-import model.repositories.implementations.CassandraClient;
 import model.repositories.implementations.MovieRepository;
 import org.junit.jupiter.api.*;
 
@@ -28,22 +27,20 @@ public class MovieManagerTest {
 
     private static MovieRepository movieRepositoryForTests;
     private static MovieManager movieManagerForTests;
-    private static CqlSession cqlSession;
 
     private Movie movieNo1;
     private Movie movieNo2;
     private Movie movieNo3;
 
     @BeforeAll
-    public static void init() throws CassandraConfigNotFound {
-        cqlSession = CassandraClient.initializeCassandraSession();
-        movieRepositoryForTests = new MovieRepository(cqlSession);
+    public static void init() throws MongoConfigNotFoundException {
+        movieRepositoryForTests = new MovieRepository(GeneralConstants.TEST_DB_NAME);
         movieManagerForTests = new MovieManager(movieRepositoryForTests);
     }
 
     @AfterAll
     public static void destroy() {
-        cqlSession.close();
+        movieRepositoryForTests.close();
     }
 
     @BeforeEach
@@ -87,19 +84,19 @@ public class MovieManagerTest {
     }
 
     @Test
-    public void movieManagerCreateMovieManagerTestPositive() {
-        MovieRepository movieRepository = new MovieRepository(cqlSession);
+    public void movieManagerCreateMovieManagerTestPositive() throws MongoConfigNotFoundException {
+        MovieRepository movieRepository = new MovieRepository(GeneralConstants.TEST_DB_NAME);
         assertNotNull(movieRepository);
         MovieManager movieManager = new MovieManager(movieRepository);
         assertNotNull(movieManager);
     }
 
     @Test
-    public void movieManagerSetMovieRepositoryForMovieManagerTestPositive() {
-        MovieRepository movieRepositoryNo1 = new MovieRepository(cqlSession);
+    public void movieManagerSetMovieRepositoryForMovieManagerTestPositive() throws MongoConfigNotFoundException {
+        MovieRepository movieRepositoryNo1 = new MovieRepository(GeneralConstants.TEST_DB_NAME);
         assertNotNull(movieRepositoryNo1);
 
-        MovieRepository movieRepositoryNo2 = new MovieRepository(cqlSession);
+        MovieRepository movieRepositoryNo2 = new MovieRepository(GeneralConstants.TEST_DB_NAME);
         assertNotNull(movieRepositoryNo2);
 
         MovieManager movieManager = new MovieManager(movieRepositoryNo1);

@@ -1,13 +1,12 @@
 package repository_tests;
 
-import com.datastax.oss.driver.api.core.CqlSession;
+import model.constants.GeneralConstants;
 import model.model.Movie;
-import model.exceptions.CassandraConfigNotFound;
+import model.exceptions.MongoConfigNotFoundException;
 import model.exceptions.repositories.create_exceptions.MovieRepositoryCreateException;
 import model.exceptions.repositories.delete_exceptions.MovieRepositoryDeleteException;
 import model.exceptions.repositories.read_exceptions.MovieRepositoryReadException;
 import model.exceptions.repositories.update_exceptions.MovieRepositoryUpdateException;
-import model.repositories.implementations.CassandraClient;
 import model.repositories.implementations.MovieRepository;
 import org.junit.jupiter.api.*;
 
@@ -18,8 +17,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class MovieRepositoryTest {
 
-    private static CqlSession cqlSession;
-
     private static MovieRepository movieRepositoryForTests;
 
     private Movie movieNo1;
@@ -27,9 +24,8 @@ public class MovieRepositoryTest {
     private Movie movieNo3;
 
     @BeforeAll
-    public static void init() throws CassandraConfigNotFound {
-        cqlSession = CassandraClient.initializeCassandraSession();
-        movieRepositoryForTests = new MovieRepository(cqlSession);
+    public static void init() throws MongoConfigNotFoundException {
+        movieRepositoryForTests = new MovieRepository(GeneralConstants.TEST_DB_NAME);
     }
 
     @BeforeEach
@@ -75,12 +71,12 @@ public class MovieRepositoryTest {
 
     @AfterAll
     public static void destroy() {
-        cqlSession.close();
+        movieRepositoryForTests.close();
     }
 
     @Test
-    public void movieRepositoryConstructorTest() {
-        MovieRepository movieRepository = new MovieRepository(cqlSession);
+    public void movieRepositoryConstructorTest() throws MongoConfigNotFoundException {
+        MovieRepository movieRepository = new MovieRepository(GeneralConstants.TEST_DB_NAME);
         assertNotNull(movieRepository);
     }
 
@@ -163,7 +159,7 @@ public class MovieRepositoryTest {
 
     @Test
     public void movieRepositoryCreateMovieWithMovieBasePriceNegativeTestNegative() {
-        String movieTitle = "American Psycho";;
+        String movieTitle = "American Psycho";
         double movieBasePrice = -1.50;
         int screeningRoomNumber = 1;
         int numberOfAvailableSeats = 90;

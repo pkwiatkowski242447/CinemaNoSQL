@@ -2,92 +2,217 @@ version: '3.9'
 
 services:
 
-  cassandranode1:
-    image: docker.io/bitnami/cassandra:latest
-    hostname: cassandranode1
-    ports:
-      - "7000:7000"
-      - "9042:9042"
-    volumes:
-      - cassandra_node1_data:/bitnami
+  mongo_1:
+    build: .
+    image: mongoimg0:6.0.2
+    container_name: mongonode1
+    hostname: mongonode1
     networks:
-      cassandranet:
+      - mongonet
+    ports:
+      - "27020:27020"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=adminpassword
+    command: --config /etc/mongod.conf --port 27020
+    healthcheck:
+      test: ["CMD", "mongosh", "--port", "27020", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 2s
+      retries: 5
+
+  mongo_2:
+    build: .
+    image: mongoimg0:6.0.2
+    container_name: mongonode2
+    hostname: mongonode2
+    networks:
+      - mongonet
+    ports:
+      - "27021:27021"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=adminpassword
+    command: --config /etc/mongod.conf --port 27021
+    healthcheck:
+      test: [ "CMD", "mongosh", "--port", "27021", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 2s
+      retries: 5
+
+  mongo_3:
+    build: .
+    image: mongoimg0:6.0.2
+    container_name: mongonode3
+    hostname: mongonode3
+    networks:
+      - mongonet
+    ports:
+      - "27022:27022"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=adminpassword
+    command: --config /etc/mongod.conf --port 27022
+    healthcheck:
+      test: [ "CMD", "mongosh", "--port", "27022", "--eval", "db.adminCommand('ping')" ]
+      interval: 10s
+      timeout: 2s
+      retries: 5
+
+  mongoinit:
+    build: .
+    image: mongoimg0:6.0.2
+    hostname: mongodbinit
+    container_name: mongodbinit
+    networks:
+      - mongonet
+    depends_on:
+      mongo_1:
+        condition: service_healthy
+      mongo_2:
+        condition: service_healthy
+      mongo_3:
+        condition: service_healthy
+    command: >
+      mongosh --host mongonode1:27020 --username admin --password adminpassword --authenticationDatabase admin --eval
+      '
+      rs.initiate(
+        {
+          "_id": "replicaSet0",
+          "members": [
+            { _id: 0, host : "mongonode1:27020" },
+            { _id: 1, host : "mongonode2:27021" },
+            { _id: 2, host : "mongonode3:27022" }
+          ]
+        }
+      );
+      '
+      
+  kafka1:
+    image: docker.io/bitnami/kafka:3.6
+    hostname: kafka1
+    container_name: kafka1
+    ports:
+      - target: 9192
+        published: 9192
+        protocol: tcp
+      - target: 9193
+        published: 9193
+        protocol: tcp
+    environment:
+      - KAFKA_CFG_BROKER_ID=1
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_CFG_BROKER_RACK=RACK1
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=CONTROLLER://:9193,DOCKER_EXTERNAL://kafka1:9192,DOCKER_INTERNAL://kafka1:19192
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,DOCKER_EXTERNAL:PLAINTEXT,DOCKER_INTERNAL:PLAINTEXT
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=DOCKER_INTERNAL
+      - KAFKA_CFG_ADVERTISED_LISTENERS=DOCKER_EXTERNAL://kafka1:9192,DOCKER_INTERNAL://kafka1:19192
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka1:9193,2@kafka2:9293,3@kafka3:9393
+      - KAFKA_KRAFT_CLUSTER_ID=NTg2OWZhNzY3NDhjMTFlZG
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_OPTS=-Dlog4j.rootLogger=DEBUG
+    volumes:
+      - kafka1_data:/bitnami/kafka
+    networks:
+      kafkanet:
         ipv4_address: 172.24.0.2
-    environment:
-      - CASSANDRA_LISTEN_ADDRESS=cassandranode1
-      - CASSANDRA_BROADCAST_ADDRESS=cassandranode1
-      - CASSANDRA_SEEDS=cassandranode1,cassandranode2,cassandranode3
-      - CASSANDRA_CLUSTER_NAME=nbd-cassandra-cluster
-      - CASSANDRA_DATACENTER=dc1
-      - CASSANDRA_PASSWORD_SEEDER=yes
-      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
-      - CASSANDRA_USER=cassandra
-      - CASSANDRA_PASSWORD=cassandra
-      - MAX_HEAP_SIZE=2G
-      - HEAP_NEWSIZE=200M
 
-
-  cassandranode2:
-    image: docker.io/bitnami/cassandra:latest
-    hostname: cassandranode2
+  kafka2:
+    image: docker.io/bitnami/kafka:3.6
+    hostname: kafka2
+    container_name: kafka2
     ports:
-      - "7001:7001"
-      - "9043:9043"
+      - target: 9292
+        published: 9292
+        protocol: tcp
+      - target: 9293
+        published: 9293
+        protocol: tcp
+    environment:
+      - KAFKA_CFG_BROKER_ID=2
+      - KAFKA_CFG_NODE_ID=2
+      - KAFKA_CFG_BROKER_RACK=RACK1
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=CONTROLLER://:9293,DOCKER_EXTERNAL://kafka2:9292,DOCKER_INTERNAL://kafka2:19292
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,DOCKER_EXTERNAL:PLAINTEXT,DOCKER_INTERNAL:PLAINTEXT
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=DOCKER_INTERNAL
+      - KAFKA_CFG_ADVERTISED_LISTENERS=DOCKER_EXTERNAL://kafka2:9292,DOCKER_INTERNAL://kafka2:19292
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka1:9193,2@kafka2:9293,3@kafka3:9393
+      - KAFKA_KRAFT_CLUSTER_ID=NTg2OWZhNzY3NDhjMTFlZG
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_OPTS=-Dlog4j.rootLogger=DEBUG
     volumes:
-      - cassandra_node2_data:/bitnami
+      - kafka2_data:/bitnami/kafka
     networks:
-      cassandranet:
+      kafkanet:
         ipv4_address: 172.24.0.3
-    environment:
-      - CASSANDRA_LISTEN_ADDRESS=cassandranode2
-      - CASSANDRA_BROADCAST_ADDRESS=cassandranode2
-      - CASSANDRA_SEEDS=cassandranode1,cassandranode2,cassandranode3
-      - CASSANDRA_CLUSTER_NAME=nbd-cassandra-cluster
-      - CASSANDRA_DATACENTER=dc1
-      - CASSANDRA_PASSWORD_SEEDER=yes
-      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
-      - CASSANDRA_USER=cassandra
-      - CASSANDRA_PASSWORD=cassandra
-      - MAX_HEAP_SIZE=2G
-      - HEAP_NEWSIZE=200M
 
-  cassandranode3:
-    image: docker.io/bitnami/cassandra:latest
-    hostname: cassandranode3
+  kafka3:
+    image: docker.io/bitnami/kafka:3.6
+    hostname: kafka3
+    container_name: kafka3
     ports:
-      - "7002:7002"
-      - "9044:9044"
-    volumes:
-      - cassandra_node3_data:/bitnami
-    networks:
-      cassandranet:
-        ipv4_address: 172.24.0.4
+      - target: 9392
+        published: 9392
+        protocol: tcp
+      - target: 9393
+        published: 9393
+        protocol: tcp
     environment:
-      - CASSANDRA_LISTEN_ADDRESS=cassandranode3
-      - CASSANDRA_BROADCAST_ADDRESS=cassandranode3
-      - CASSANDRA_SEEDS=cassandranode1,cassandranode2,cassandranode3
-      - CASSANDRA_CLUSTER_NAME=nbd-cassandra-cluster
-      - CASSANDRA_DATACENTER=dc1
-      - CASSANDRA_PASSWORD_SEEDER=yes
-      - CASSANDRA_ENDPOINT_SNITCH=GossipingPropertyFileSnitch
-      - CASSANDRA_USER=cassandra
-      - CASSANDRA_PASSWORD=cassandra
-      - MAX_HEAP_SIZE=2G
-      - HEAP_NEWSIZE=200M
+      - KAFKA_CFG_BROKER_ID=3
+      - KAFKA_CFG_NODE_ID=3
+      - KAFKA_CFG_BROKER_RACK=RACK1
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=CONTROLLER://:9393,DOCKER_EXTERNAL://kafka3:9392,DOCKER_INTERNAL://kafka3:19392
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,DOCKER_EXTERNAL:PLAINTEXT,DOCKER_INTERNAL:PLAINTEXT
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=DOCKER_INTERNAL
+      - KAFKA_CFG_ADVERTISED_LISTENERS=DOCKER_EXTERNAL://kafka3:9392,DOCKER_INTERNAL://kafka3:19392
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka1:9193,2@kafka2:9293,3@kafka3:9393
+      - KAFKA_KRAFT_CLUSTER_ID=NTg2OWZhNzY3NDhjMTFlZG
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_OPTS=-Dlog4j.rootLogger=DEBUG
+    volumes:
+      - kafka3_data:/bitnami/kafka
+    networks:
+      kafkanet:
+        ipv4_address: 172.24.0.4
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:7.3.0
+    hostname: schema-registry
+    container_name: schema-registry
+    depends_on:
+      - kafka1
+      - kafka2
+      - kafka3
+    ports:
+      - "8081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'kafka1:19192,kafka2:19292,kafka3:19392'
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
 
 volumes:
-  cassandra_node1_data:
+  kafka1_data:
     driver: local
-  cassandra_node2_data:
+  kafka2_data:
     driver: local
-  cassandra_node3_data:
+  kafka3_data:
     driver: local
 
 networks:
-  cassandranet:
+  mongonet: {}
+  kafkanet:
     ipam:
       driver: default
       config:
-      - subnet: 172.24.0.0/24
-        ip_range: 172.24.0.0/24
-        gateway: 172.24.0.1
+        - subnet: 172.24.0.0/16
+          gateway: 172.24.0.1
+          ip_range: 172.24.0.0/24

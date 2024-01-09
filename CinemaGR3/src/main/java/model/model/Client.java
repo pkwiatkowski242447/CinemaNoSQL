@@ -1,63 +1,42 @@
 package model.model;
 
-import com.datastax.oss.driver.api.mapper.annotations.*;
-import com.datastax.oss.driver.api.mapper.entity.naming.NamingConvention;
 import jakarta.validation.constraints.*;
 import model.constants.ClientConstants;
-import model.constants.GeneralConstants;
 import model.messages.ClientValidation;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.bson.codecs.pojo.annotations.BsonCreator;
+import org.bson.codecs.pojo.annotations.BsonProperty;
 
 import java.util.UUID;
 
-@Entity(defaultKeyspace = GeneralConstants.KEY_SPACE)
-@CqlName(value = ClientConstants.CLIENTS_TABLE_NAME)
-@PropertyStrategy(mutable = false)
-@NamingStrategy(convention = NamingConvention.SNAKE_CASE_INSENSITIVE)
 public class Client {
 
-    @PartitionKey
-    @CqlName(value = ClientConstants.CLIENT_ID)
-    private UUID clientID;
+    @BsonProperty(ClientConstants.DOCUMENT_ID)
+    private final UUID clientID;
 
-    @CqlName(value = ClientConstants.CLIENT_NAME)
+    @BsonProperty(ClientConstants.CLIENT_NAME)
     @NotBlank(message = ClientValidation.CLIENT_NAME_BLANK)
     @Size(min = 1, message = ClientValidation.CLIENT_NAME_TOO_SHORT)
     @Size(max = 50, message = ClientValidation.CLIENT_NAME_TOO_LONG)
     private String clientName;
 
-    @CqlName(value = ClientConstants.CLIENT_SURNAME)
+    @BsonProperty(ClientConstants.CLIENT_SURNAME)
     @NotBlank(message = ClientValidation.CLIENT_SURNAME_BLANK)
     @Size(min = 2, message = ClientValidation.CLIENT_SURNAME_TOO_SHORT)
     @Size(max = 100, message = ClientValidation.CLIENT_SURNAME_TOO_LONG)
     private String clientSurname;
 
-    @CqlName(value = ClientConstants.CLIENT_AGE)
+    @BsonProperty(ClientConstants.CLIENT_AGE)
     @Min(value = 18, message = ClientValidation.CLIENT_AGE_TOO_LOW)
     @Max(value = 120, message = ClientValidation.CLIENT_AGE_TOO_HIGH)
     private int clientAge;
 
-    @CqlName(value = ClientConstants.CLIENT_STATUS_ACTIVE)
+    @BsonProperty(ClientConstants.CLIENT_STATUS_ACTIVE)
     private boolean clientStatusActive;
 
     // Constructors
-
-    public Client() {
-    }
-
-    public Client(UUID clientID,
-                  String clientName,
-                  String clientSurname,
-                  int clientAge,
-                  boolean clientStatusActive) {
-        this.clientID = clientID;
-        this.clientName = clientName;
-        this.clientSurname = clientSurname;
-        this.clientAge = clientAge;
-        this.clientStatusActive = clientStatusActive;
-    }
 
     public Client(UUID clientID,
                   String clientName,
@@ -68,6 +47,19 @@ public class Client {
         this.clientSurname = clientSurname;
         this.clientAge = clientAge;
         this.clientStatusActive = true;
+    }
+
+    @BsonCreator
+    public Client(@BsonProperty(ClientConstants.DOCUMENT_ID) UUID clientID,
+                  @BsonProperty(ClientConstants.CLIENT_NAME) String clientName,
+                  @BsonProperty(ClientConstants.CLIENT_SURNAME) String clientSurname,
+                  @BsonProperty(ClientConstants.CLIENT_AGE) int clientAge,
+                  @BsonProperty(ClientConstants.CLIENT_STATUS_ACTIVE) boolean clientStatusActive) {
+        this.clientID = clientID;
+        this.clientName = clientName;
+        this.clientSurname = clientSurname;
+        this.clientAge = clientAge;
+        this.clientStatusActive = clientStatusActive;
     }
 
     // Getter
@@ -93,10 +85,6 @@ public class Client {
     }
 
     // Setter
-
-    public void setClientID(UUID clientID) {
-        this.clientID = clientID;
-    }
 
     public void setClientName(String clientName) {
         this.clientName = clientName;

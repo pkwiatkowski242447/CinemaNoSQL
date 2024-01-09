@@ -2,7 +2,7 @@ package model.constants;
 
 public class ClientConstants {
 
-    public static final String CLIENTS_TABLE_NAME = "clients";
+    public static final String DOCUMENT_ID = "_id";
     public static final String CLIENT_ID = "client_id";
     public static final String CLIENT_NAME = "client_name";
     public static final String CLIENT_SURNAME = "client_surname";

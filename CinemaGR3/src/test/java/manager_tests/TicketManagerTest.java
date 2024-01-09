@@ -1,6 +1,6 @@
 package manager_tests;
 
-import com.datastax.oss.driver.api.core.CqlSession;
+import model.constants.GeneralConstants;
 import model.exceptions.managers.create_exceptions.ClientManagerCreateException;
 import model.exceptions.managers.create_exceptions.CreateManagerException;
 import model.exceptions.managers.create_exceptions.MovieManagerCreateException;
@@ -17,8 +17,7 @@ import model.managers.implementations.TicketManager;
 import model.model.Client;
 import model.model.Movie;
 import model.model.Ticket;
-import model.exceptions.CassandraConfigNotFound;
-import model.repositories.implementations.CassandraClient;
+import model.exceptions.MongoConfigNotFoundException;
 import model.repositories.implementations.ClientRepository;
 import model.repositories.implementations.MovieRepository;
 import model.repositories.implementations.TicketRepository;
@@ -61,15 +60,12 @@ public class TicketManagerTest {
     private static ClientManager clientManagerForTests;
     private static MovieManager movieManagerForTests;
 
-    private static CqlSession cqlSession;
 
     @BeforeAll
-    public static void init() throws CassandraConfigNotFound {
-        cqlSession = CassandraClient.initializeCassandraSession();
-
-        ticketRepositoryForTests = new TicketRepository(cqlSession);
-        clientRepositoryForTests = new ClientRepository(cqlSession);
-        movieRepositoryForTests = new MovieRepository(cqlSession);
+    public static void init() throws MongoConfigNotFoundException {
+        ticketRepositoryForTests = new TicketRepository(GeneralConstants.TEST_DB_NAME);
+        clientRepositoryForTests = new ClientRepository(GeneralConstants.TEST_DB_NAME);
+        movieRepositoryForTests = new MovieRepository(GeneralConstants.TEST_DB_NAME);
         ticketManagerForTests = new TicketManager(clientRepositoryForTests, movieRepositoryForTests, ticketRepositoryForTests);
         clientManagerForTests = new ClientManager(clientRepositoryForTests);
         movieManagerForTests = new MovieManager(movieRepositoryForTests);
@@ -77,7 +73,9 @@ public class TicketManagerTest {
 
     @AfterAll
     public static void destroy() {
-        cqlSession.close();
+        clientRepositoryForTests.close();
+        movieRepositoryForTests.close();
+        ticketRepositoryForTests.close();
     }
 
     @BeforeEach
@@ -171,10 +169,10 @@ public class TicketManagerTest {
     }
 
     @Test
-    public void createTicketManagerTest() {
-        ClientRepository clientRepository = new ClientRepository(cqlSession);
-        MovieRepository movieRepository = new MovieRepository(cqlSession);
-        TicketRepository ticketRepository = new TicketRepository(cqlSession);
+    public void createTicketManagerTest() throws MongoConfigNotFoundException {
+        ClientRepository clientRepository = new ClientRepository(GeneralConstants.TEST_DB_NAME);
+        MovieRepository movieRepository = new MovieRepository(GeneralConstants.TEST_DB_NAME);
+        TicketRepository ticketRepository = new TicketRepository(GeneralConstants.TEST_DB_NAME);
 
         assertNotNull(clientRepository);
         assertNotNull(movieRepository);
@@ -186,11 +184,11 @@ public class TicketManagerTest {
     }
 
     @Test
-    public void setTicketRepositoryForTicketManagerTest() {
-        TicketRepository ticketRepositoryNo1 = new TicketRepository(cqlSession);
+    public void setTicketRepositoryForTicketManagerTest() throws MongoConfigNotFoundException {
+        TicketRepository ticketRepositoryNo1 = new TicketRepository(GeneralConstants.TEST_DB_NAME);
         assertNotNull(ticketRepositoryNo1);
 
-        TicketRepository ticketRepositoryNo2 = new TicketRepository(cqlSession);
+        TicketRepository ticketRepositoryNo2 = new TicketRepository(GeneralConstants.TEST_DB_NAME);
         assertNotNull(ticketRepositoryNo2);
 
         TicketManager ticketManager = new TicketManager(clientRepositoryForTests, movieRepositoryForTests, ticketRepositoryNo1);

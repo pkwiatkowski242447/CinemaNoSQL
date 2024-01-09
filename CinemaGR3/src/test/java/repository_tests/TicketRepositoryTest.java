@@ -1,11 +1,11 @@
 package repository_tests;
 
-import com.datastax.oss.driver.api.core.CqlSession;
+import model.constants.GeneralConstants;
 import model.exceptions.repositories.update_exceptions.TicketRepositoryUpdateException;
 import model.model.Client;
 import model.model.Movie;
 import model.model.Ticket;
-import model.exceptions.CassandraConfigNotFound;
+import model.exceptions.MongoConfigNotFoundException;
 import model.exceptions.repositories.create_exceptions.ClientRepositoryCreateException;
 import model.exceptions.repositories.create_exceptions.MovieRepositoryCreateException;
 import model.exceptions.repositories.delete_exceptions.ClientRepositoryDeleteException;
@@ -17,7 +17,6 @@ import model.exceptions.repositories.read_exceptions.MovieRepositoryReadExceptio
 import model.exceptions.repositories.read_exceptions.TicketRepositoryReadException;
 import model.exceptions.repositories.update_exceptions.RepositoryUpdateException;
 import model.model.ticket_types.Normal;
-import model.repositories.implementations.CassandraClient;
 import model.repositories.implementations.ClientRepository;
 import model.repositories.implementations.MovieRepository;
 import model.repositories.implementations.TicketRepository;
@@ -32,8 +31,6 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TicketRepositoryTest {
-
-    private static CqlSession cqlSession;
 
     private static TicketRepository ticketRepositoryForTests;
     private static ClientRepository clientRepositoryForTests;
@@ -60,16 +57,17 @@ public class TicketRepositoryTest {
     private Ticket ticketNo3;
 
     @BeforeAll
-    public static void init() throws CassandraConfigNotFound {
-        cqlSession = CassandraClient.initializeCassandraSession();
-        clientRepositoryForTests = new ClientRepository(cqlSession);
-        movieRepositoryForTests = new MovieRepository(cqlSession);
-        ticketRepositoryForTests = new TicketRepository(cqlSession);
+    public static void init() throws MongoConfigNotFoundException {
+        clientRepositoryForTests = new ClientRepository(GeneralConstants.TEST_DB_NAME);
+        movieRepositoryForTests = new MovieRepository(GeneralConstants.TEST_DB_NAME);
+        ticketRepositoryForTests = new TicketRepository(GeneralConstants.TEST_DB_NAME);
     }
 
     @AfterAll
     public static void destroy() {
-        cqlSession.close();
+        clientRepositoryForTests.close();
+        movieRepositoryForTests.close();
+        ticketRepositoryForTests.close();
     }
 
     @BeforeEach
@@ -164,8 +162,8 @@ public class TicketRepositoryTest {
     }
 
     @Test
-    public void ticketRepositoryConstructorTest() {
-        TicketRepository ticketRepository = new TicketRepository(cqlSession);
+    public void ticketRepositoryConstructorTest() throws MongoConfigNotFoundException {
+        TicketRepository ticketRepository = new TicketRepository(GeneralConstants.TEST_DB_NAME);
         assertNotNull(ticketRepository);
     }
 
