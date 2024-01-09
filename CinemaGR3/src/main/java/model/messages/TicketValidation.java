@@ -18,7 +18,7 @@ public class TicketValidation {
 
     public static final String TICKET_FINAL_PRICE_NEGATIVE = "Ticket final price could not be negative.";
 
-    public static final String TICKET_TYPE_DISCRIMINATOR_REGEX_PATTERN = "/^(" + TicketConstants.NORMAL_TICKET + "|" + TicketConstants.REDUCED_TICKET + ")$/";
+    public static final String TICKET_TYPE_DISCRIMINATOR_REGEX_PATTERN = "^(normal|reduced)$";
     public static final String TICKET_TYPE_DISCRIMINATOR_INCORRECT_VALUE = "Given value of ticket type discriminator is incorrect.";
     public static final String TICKET_TYPE_DISCRIMINATOR_BLANK = "Ticket type discriminator could neither be blank nor null.";
 }

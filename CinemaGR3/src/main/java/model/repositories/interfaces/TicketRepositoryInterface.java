@@ -1,9 +1,11 @@
 package model.repositories.interfaces;
 
-import model.Ticket;
-import model.exceptions.create_exceptions.TicketRepositoryCreateException;
+import model.exceptions.repositories.read_exceptions.TicketRepositoryReadException;
+import model.model.Ticket;
+import model.exceptions.repositories.create_exceptions.TicketRepositoryCreateException;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public interface TicketRepositoryInterface extends RepositoryInterface<Ticket> {
@@ -12,4 +14,9 @@ public interface TicketRepositoryInterface extends RepositoryInterface<Ticket> {
 
     Ticket createNormalTicket(Instant movieTime, Instant reservationTime, double ticketBasePrice, UUID movieId, UUID clientId) throws TicketRepositoryCreateException;
     Ticket createReducedTicket(Instant movieTime, Instant reservationTime, double ticketBasePrice, UUID movieId, UUID clientId) throws TicketRepositoryCreateException;
+
+    // R - read methods for ticket repository interface
+
+    List<Ticket> findAllTicketsForAGivenClientId(UUID clientId) throws TicketRepositoryReadException;
+    List<Ticket> findAllTicketsForAGivenMovieId(UUID movieId) throws TicketRepositoryReadException;
 }

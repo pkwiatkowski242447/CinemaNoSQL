@@ -1,25 +1,28 @@
 package manager_tests;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import model.Client;
-import model.Movie;
-import model.Ticket;
+import model.exceptions.managers.create_exceptions.ClientManagerCreateException;
+import model.exceptions.managers.create_exceptions.CreateManagerException;
+import model.exceptions.managers.create_exceptions.MovieManagerCreateException;
+import model.exceptions.managers.create_exceptions.TicketManagerCreateException;
+import model.exceptions.managers.delete_exceptions.DeleteManagerException;
+import model.exceptions.managers.delete_exceptions.TicketManagerDeleteException;
+import model.exceptions.managers.read_exceptions.ReadManagerException;
+import model.exceptions.managers.read_exceptions.TicketManagerReadException;
+import model.exceptions.managers.update_exceptions.TicketManagerUpdateException;
+import model.exceptions.managers.update_exceptions.UpdateManagerException;
+import model.managers.implementations.ClientManager;
+import model.managers.implementations.MovieManager;
+import model.managers.implementations.TicketManager;
+import model.model.Client;
+import model.model.Movie;
+import model.model.Ticket;
 import model.exceptions.CassandraConfigNotFound;
-import model.exceptions.create_exceptions.ClientRepositoryCreateException;
-import model.exceptions.create_exceptions.MovieRepositoryCreateException;
-import model.exceptions.create_exceptions.TicketRepositoryCreateException;
-import model.exceptions.delete_exceptions.ClientRepositoryDeleteException;
-import model.exceptions.delete_exceptions.MovieRepositoryDeleteException;
-import model.exceptions.delete_exceptions.TicketRepositoryDeleteException;
-import model.exceptions.read_exceptions.ClientRepositoryReadException;
-import model.exceptions.read_exceptions.MovieRepositoryReadException;
-import model.exceptions.read_exceptions.TicketRepositoryReadException;
-import model.managers.*;
 import model.repositories.implementations.CassandraClient;
 import model.repositories.implementations.ClientRepository;
 import model.repositories.implementations.MovieRepository;
 import model.repositories.implementations.TicketRepository;
-import model.ticket_types.Normal;
+import model.model.ticket_types.Normal;
 import org.junit.jupiter.api.*;
 
 import java.time.Instant;
@@ -67,7 +70,7 @@ public class TicketManagerTest {
         ticketRepositoryForTests = new TicketRepository(cqlSession);
         clientRepositoryForTests = new ClientRepository(cqlSession);
         movieRepositoryForTests = new MovieRepository(cqlSession);
-        ticketManagerForTests = new TicketManager(ticketRepositoryForTests);
+        ticketManagerForTests = new TicketManager(clientRepositoryForTests, movieRepositoryForTests, ticketRepositoryForTests);
         clientManagerForTests = new ClientManager(clientRepositoryForTests);
         movieManagerForTests = new MovieManager(movieRepositoryForTests);
     }
@@ -82,51 +85,51 @@ public class TicketManagerTest {
         String clientNo1Name = "John";
         String clientNo1Surname = "Smith";
         int clientNo1Age = 21;
+
         String clientNo2Name = "Mary";
         String clientNo2Surname = "Jane";
         int clientNo2Age = 18;
+
         String clientNo3Name = "Vincent";
         String clientNo3Surname = "Vega";
         int clientNo3Age = 40;
 
         try {
-            clientNo1 = clientRepositoryForTests.create(clientNo1Name, clientNo1Surname, clientNo1Age);
-            clientNo2 = clientRepositoryForTests.create(clientNo2Name, clientNo2Surname, clientNo2Age);
-            clientNo3 = clientRepositoryForTests.create(clientNo3Name, clientNo3Surname, clientNo3Age);
-        } catch (ClientRepositoryCreateException exception) {
+            clientNo1 = clientManagerForTests.create(clientNo1Name, clientNo1Surname, clientNo1Age);
+            clientNo2 = clientManagerForTests.create(clientNo2Name, clientNo2Surname, clientNo2Age);
+            clientNo3 = clientManagerForTests.create(clientNo3Name, clientNo3Surname, clientNo3Age);
+        } catch (ClientManagerCreateException exception) {
             throw new RuntimeException("Sample clients could not be created in repository.", exception);
         }
 
-        int screeningRoomNo1Floor = 1;
-        int screeningRoomNo1Number = 10;
-        int screeningRoomNo1NumberOfAvailSeats = 45;
-        int screeningRoomNo2Floor = 2;
-        int screeningRoomNo2Number = 5;
-        int screeningRoomNo2NumberOfAvailSeats = 90;
-        int screeningRoomNo3Floor = 0;
-        int screeningRoomNo3Number = 19;
-        int screeningRoomNo3NumberOfAvailSeats = 120;
-
         String movieNo1Title = "Harry Potter and The Goblet of Fire";
         double movieNo1BasePrice = 20.05;
+        int screeningRoomNo1NumberOfAvailSeats = 45;
+        int screeningRoomNo1Number = 10;
+
         String movieNo2Title = "The Da Vinci Code";
         double movieNo2BasePrice = 40.5;
+        int screeningRoomNo2NumberOfAvailSeats = 90;
+        int screeningRoomNo2Number = 5;
+
         String movieNo3Title = "A Space Odyssey";
         double movieNo3BasePrice = 59.99;
+        int screeningRoomNo3NumberOfAvailSeats = 120;
+        int screeningRoomNo3Number = 19;
 
         try {
-            movieNo1 = movieRepositoryForTests.create(movieNo1Title, movieNo1BasePrice, screeningRoomNo1NumberOfAvailSeats, screeningRoomNo1Number);
-            movieNo2 = movieRepositoryForTests.create(movieNo2Title, movieNo2BasePrice, screeningRoomNo2NumberOfAvailSeats, screeningRoomNo2Number);
-            movieNo3 = movieRepositoryForTests.create(movieNo3Title, movieNo3BasePrice, screeningRoomNo3NumberOfAvailSeats, screeningRoomNo3Number);
-        } catch (MovieRepositoryCreateException exception) {
+            movieNo1 = movieManagerForTests.create(movieNo1Title, movieNo1BasePrice, screeningRoomNo1NumberOfAvailSeats, screeningRoomNo1Number);
+            movieNo2 = movieManagerForTests.create(movieNo2Title, movieNo2BasePrice, screeningRoomNo2NumberOfAvailSeats, screeningRoomNo2Number);
+            movieNo3 = movieManagerForTests.create(movieNo3Title, movieNo3BasePrice, screeningRoomNo3NumberOfAvailSeats, screeningRoomNo3Number);
+        } catch (MovieManagerCreateException exception) {
             throw new RuntimeException("Sample movies could not be created in repository.", exception);
         }
 
         try {
-            ticketNo1 = ticketManagerForTests.getTicketRepository().createNormalTicket(movieTimeNo1, reservationTimeNo1, movieNo1.getMovieBasePrice(), movieNo1.getMovieID(), clientNo1.getClientID());
-            ticketNo2 = ticketManagerForTests.getTicketRepository().createNormalTicket(movieTimeNo2, reservationTimeNo2, movieNo2.getMovieBasePrice(), movieNo2.getMovieID(), clientNo2.getClientID());
-            ticketNo3 = ticketManagerForTests.getTicketRepository().createNormalTicket(movieTimeNo3, reservationTimeNo3, movieNo3.getMovieBasePrice(), movieNo3.getMovieID(), clientNo3.getClientID());
-        } catch (TicketRepositoryCreateException exception) {
+            ticketNo1 = ticketManagerForTests.createNormalTicket(movieTimeNo1, reservationTimeNo1, movieNo1.getMovieID(), clientNo1.getClientID());
+            ticketNo2 = ticketManagerForTests.createNormalTicket(movieTimeNo2, reservationTimeNo2, movieNo2.getMovieID(), clientNo2.getClientID());
+            ticketNo3 = ticketManagerForTests.createNormalTicket(movieTimeNo3, reservationTimeNo3, movieNo3.getMovieID(), clientNo3.getClientID());
+        } catch (TicketManagerCreateException exception) {
             throw new RuntimeException("Sample tickets could not be created in repository.", exception);
         }
     }
@@ -134,101 +137,312 @@ public class TicketManagerTest {
     @AfterEach
     public void depopulateTicketRepositoryAfterEach() {
         try {
-            List<Ticket> listOfTickets = ticketRepositoryForTests.findAll();
+            List<Ticket> listOfTickets = ticketManagerForTests.findAll();
             for (Ticket ticket : listOfTickets) {
-                ticketRepositoryForTests.delete(ticket);
+                ticketManagerForTests.delete(ticket);
             }
-        } catch (TicketRepositoryDeleteException exception) {
+        } catch (DeleteManagerException exception) {
             throw new RuntimeException("Sample tickets could not be deleted from the repository.", exception);
-        } catch (TicketRepositoryReadException exception) {
+        } catch (ReadManagerException exception) {
             throw new RuntimeException("Sample tickets could not be read from the repository.", exception);
         }
 
         try {
-            List<Movie> listOfMovies = movieRepositoryForTests.findAll();
+            List<Movie> listOfMovies = movieManagerForTests.findAll();
             for (Movie movie : listOfMovies) {
-                movieRepositoryForTests.delete(movie);
+                movieManagerForTests.delete(movie);
             }
-        } catch (MovieRepositoryDeleteException exception) {
+        } catch (DeleteManagerException exception) {
             throw new RuntimeException("Sample movies could not be deleted from the repository.", exception);
-        } catch (MovieRepositoryReadException exception) {
+        } catch (ReadManagerException exception) {
             throw new RuntimeException("Sample movies could not be read from the repository.", exception);
         }
 
         try {
-            List<Client> listOfClients = clientRepositoryForTests.findAll();
+            List<Client> listOfClients = clientManagerForTests.findAll();
             for (Client client : listOfClients) {
-                clientRepositoryForTests.delete(client);
+                clientManagerForTests.delete(client);
             }
-        } catch (ClientRepositoryDeleteException exception) {
+        } catch (DeleteManagerException exception) {
             throw new RuntimeException("Sample clients could not be deleted from the repository.", exception);
-        } catch (ClientRepositoryReadException exception) {
+        } catch (ReadManagerException exception) {
             throw new RuntimeException("Sample clients could not be read from the repository.", exception);
         }
     }
 
     @Test
-    public void createTicketManagerTest() throws CassandraConfigNotFound {
+    public void createTicketManagerTest() {
+        ClientRepository clientRepository = new ClientRepository(cqlSession);
+        MovieRepository movieRepository = new MovieRepository(cqlSession);
         TicketRepository ticketRepository = new TicketRepository(cqlSession);
+
+        assertNotNull(clientRepository);
+        assertNotNull(movieRepository);
         assertNotNull(ticketRepository);
-        TicketManager ticketManager = new TicketManager(ticketRepository);
+
+        TicketManager ticketManager = new TicketManager(clientRepository, movieRepository, ticketRepository);
+
         assertNotNull(ticketManager);
-        ticketRepository.close();
     }
 
     @Test
-    public void setTicketRepositoryForTicketManagerTest() throws CassandraConfigNotFound {
+    public void setTicketRepositoryForTicketManagerTest() {
         TicketRepository ticketRepositoryNo1 = new TicketRepository(cqlSession);
         assertNotNull(ticketRepositoryNo1);
+
         TicketRepository ticketRepositoryNo2 = new TicketRepository(cqlSession);
         assertNotNull(ticketRepositoryNo2);
-        TicketManager ticketManager = new TicketManager(ticketRepositoryNo1);
+
+        TicketManager ticketManager = new TicketManager(clientRepositoryForTests, movieRepositoryForTests, ticketRepositoryNo1);
         assertNotNull(ticketManager);
+
         ticketManager.setTicketRepository(ticketRepositoryNo2);
+
         assertNotEquals(ticketRepositoryNo1, ticketManager.getTicketRepository());
         assertEquals(ticketRepositoryNo2, ticketManager.getTicketRepository());
-        ticketRepositoryNo1.close();
-        ticketRepositoryNo2.close();
     }
 
     @Test
-    public void registerNewTicketTestPositive() {
-        int numOfTicketsBefore = ticketManagerForTests.getAll().size();
-        Ticket ticket = ticketManagerForTests.registerNormalTicket(movieTimeNo1, reservationTimeNo1, movieNo1.getMovieBasePrice(), movieNo1.getMovieID(), clientNo1.getClientID());
+    public void ticketManagerCreateTicketTestPositive() throws ReadManagerException, CreateManagerException {
+        int numOfTicketsBefore = ticketManagerForTests.findAll().size();
+        int numberOfAvailableSeatsBefore = movieManagerForTests.findByUUID(movieNo1.getMovieID()).getNumberOfAvailableSeats();
+
+        Instant movieTime = Instant.now();
+        Instant reservationTime = Instant.now();
+        UUID movieId = movieNo1.getMovieID();
+        UUID clientId = clientNo1.getClientID();
+
+        Ticket ticket = ticketManagerForTests.createNormalTicket(movieTime, reservationTime, movieId, clientId);
         assertNotNull(ticket);
-        int numOfTicketsAfter = ticketManagerForTests.getAll().size();
+
+        int numOfTicketsAfter = ticketManagerForTests.findAll().size();
+        int numberOfAvailableSeatsAfter = movieManagerForTests.findByUUID(movieNo1.getMovieID()).getNumberOfAvailableSeats();
+
         assertNotEquals(numOfTicketsBefore, numOfTicketsAfter);
+        assertEquals(numberOfAvailableSeatsBefore, numberOfAvailableSeatsAfter + 1);
     }
 
     @Test
-    public void registerNewTicketTestNegative() {
-        Ticket ticket = ticketManagerForTests.registerNormalTicket(null, reservationTimeNo1, movieNo1.getMovieBasePrice(), movieNo1.getMovieID(), clientNo1.getClientID());
-        assertNull(ticket);
-    }
+    public void ticketManagerCreateTwoTicketsWhenThereIsOnlyOneAvailableSeatTestPositive() throws UpdateManagerException, ReadManagerException, CreateManagerException {
+        movieNo1.setNumberOfAvailableSeats(1);
+        movieManagerForTests.update(movieNo1);
 
-    @Test
-    public void getCertainTicketFromTicketRepositoryTestPositive() {
-        Ticket someTicketFromRepo = ticketManagerForTests.getAll().get(0);
-        assertNotNull(someTicketFromRepo);
-        Ticket foundTicket = ticketManagerForTests.get(someTicketFromRepo.getTicketID());
-        assertNotNull(foundTicket);
-        assertEquals(someTicketFromRepo, foundTicket);
-    }
+        int numberOfAvailableSeatsBeforeFirstOne = movieManagerForTests.findByUUID(movieNo1.getMovieID()).getNumberOfAvailableSeats();
 
-    @Test
-    public void getCertainTicketFromTicketRepositoryTestNegative() {
-        Ticket ticket = new Normal(UUID.randomUUID(), movieTimeNo1, reservationTimeNo1, movieNo1.getMovieBasePrice(), movieNo1.getMovieID(), clientNo1.getClientID());
+        Instant movieTime = Instant.now();
+        Instant reservationTime = Instant.now();
+        UUID movieId = movieNo1.getMovieID();
+        UUID clientId = clientNo1.getClientID();
+
+        Ticket ticket = ticketManagerForTests.createNormalTicket(movieTime, reservationTime, movieId, clientId);
         assertNotNull(ticket);
-        Ticket foundTicket = ticketManagerForTests.get(ticket.getTicketID());
-        assertNull(foundTicket);
+
+        int numberOfAvailableSeatsBeforeSecondOne = movieManagerForTests.findByUUID(movieNo1.getMovieID()).getNumberOfAvailableSeats();
+
+        assertThrows(TicketManagerCreateException.class, () -> ticketManagerForTests.createNormalTicket(movieTime, reservationTime, movieId, clientId));
+
+        int numberOfAvailableSeatsAfterSecondOne = movieManagerForTests.findByUUID(movieNo1.getMovieID()).getNumberOfAvailableSeats();
+
+        assertEquals(numberOfAvailableSeatsBeforeFirstOne, 1);
+        assertEquals(numberOfAvailableSeatsBeforeSecondOne, 0);
+        assertEquals(numberOfAvailableSeatsAfterSecondOne, 0);
     }
 
     @Test
-    public void getAllTicketsFromRepositoryTest() throws TicketRepositoryReadException {
-        List<Ticket> listOfAllTicketsNo1 = ticketManagerForTests.getTicketRepository().findAll();
-        List<Ticket> listOfAllTicketsNo2 = ticketManagerForTests.getAll();
-        assertNotNull(listOfAllTicketsNo1);
-        assertNotNull(listOfAllTicketsNo2);
-        assertEquals(listOfAllTicketsNo1.size(), listOfAllTicketsNo2.size());
+    public void ticketManagerCreateTicketWithNullMovieTimeTestNegative() {
+        Instant movieTime = null;
+        Instant reservationTime = Instant.now();
+        UUID movieId = movieNo1.getMovieID();
+        UUID clientId = clientNo1.getClientID();
+        assertThrows(TicketManagerCreateException.class, () -> ticketManagerForTests.createNormalTicket(movieTime, reservationTime, movieId, clientId));
+    }
+
+    @Test
+    public void ticketManagerCreateTicketWithNullReservationTimeTestNegative() {
+        Instant movieTime = Instant.now();
+        Instant reservationTime = null;
+        UUID movieId = movieNo1.getMovieID();
+        UUID clientId = clientNo1.getClientID();
+        assertThrows(TicketManagerCreateException.class, () -> ticketManagerForTests.createNormalTicket(movieTime, reservationTime, movieId, clientId));
+    }
+
+    @Test
+    public void ticketManagerCreateTicketWithNullMovieIdTestNegative() {
+        Instant movieTime = Instant.now();
+        Instant reservationTime = Instant.now();
+        UUID movieId = null;
+        UUID clientId = clientNo1.getClientID();
+        assertThrows(TicketManagerCreateException.class, () -> ticketManagerForTests.createNormalTicket(movieTime, reservationTime, movieId, clientId));
+    }
+
+    @Test
+    public void ticketManagerCreateTicketWithNullClientIdTestNegative() {
+        Instant movieTime = Instant.now();
+        Instant reservationTime = Instant.now();
+        UUID movieId = movieNo1.getMovieID();
+        UUID clientId = null;
+        assertThrows(TicketManagerCreateException.class, () -> ticketManagerForTests.createNormalTicket(movieTime, reservationTime, movieId, clientId));
+    }
+
+    @Test
+    public void ticketManagerUpdateTicketThatIsNotInTheRepositoryTestNegative() {
+        Instant movieTime = Instant.now();
+        Instant reservationTime = Instant.now();
+        double movieBasePrice = 42.50;
+        UUID movieId = movieNo1.getMovieID();
+        UUID clientId = clientNo1.getClientID();
+
+        Ticket ticket = new Normal(UUID.randomUUID(), movieTime, reservationTime, movieBasePrice, movieId, clientId);
+        assertNotNull(ticket);
+
+        assertThrows(TicketManagerUpdateException.class, () -> ticketManagerForTests.update(ticket));
+    }
+
+    @Test
+    public void ticketManagerUpdateTicketWithNullMovieTimeTestNegative() {
+        Instant movieTime = null;
+        ticketNo1.setMovieTime(movieTime);
+        assertThrows(TicketManagerUpdateException.class, () -> ticketManagerForTests.update(ticketNo1));
+    }
+
+    @Test
+    public void ticketManagerUpdateTicketWithMovieBasePriceTooLowTestNegative() {
+        double movieBasePrice = -0.01;
+        ticketNo1.setTicketBasePrice(movieBasePrice);
+        assertThrows(TicketManagerUpdateException.class, () -> ticketManagerForTests.update(ticketNo1));
+    }
+
+    @Test
+    public void ticketManagerUpdateTicketWithMovieBasePriceTooHighTestNegative() {
+        double movieBasePrice = 100.01;
+        ticketNo1.setTicketBasePrice(movieBasePrice);
+        assertThrows(TicketManagerUpdateException.class, () -> ticketManagerForTests.update(ticketNo1));
+    }
+
+    @Test
+    public void ticketManagerUpdateTicketWithMovieBasePriceEqualTo0TestPositive() throws UpdateManagerException, ReadManagerException{
+        double movieBasePrice = 0;
+        ticketNo1.setTicketBasePrice(movieBasePrice);
+
+        ticketManagerForTests.update(ticketNo1);
+
+        Ticket foundTicket = ticketManagerForTests.findByUUID(ticketNo1.getTicketID());
+        assertNotNull(foundTicket);
+
+        assertEquals(ticketNo1, foundTicket);
+    }
+
+    @Test
+    public void ticketManagerUpdateTicketWithMovieBasePriceEqualTo100TestPositive() throws UpdateManagerException, ReadManagerException{
+        double movieBasePrice = 100;
+        ticketNo1.setTicketBasePrice(movieBasePrice);
+
+        ticketManagerForTests.update(ticketNo1);
+
+        Ticket foundTicket = ticketManagerForTests.findByUUID(ticketNo1.getTicketID());
+        assertNotNull(foundTicket);
+
+        assertEquals(ticketNo1, foundTicket);
+    }
+
+    @Test
+    public void ticketManagerDeleteTicketTestPositive() throws ReadManagerException, DeleteManagerException {
+        int numberOfAvailableSeatsBefore = movieManagerForTests.findByUUID(movieNo1.getMovieID()).getNumberOfAvailableSeats();
+        int numberOfTicketsBefore = ticketManagerForTests.findAll().size();
+
+        UUID removedTicketUUID = ticketNo1.getTicketID();
+
+        ticketManagerForTests.delete(ticketNo1);
+
+        int numberOfAvailableSeatsAfter = movieManagerForTests.findByUUID(movieNo1.getMovieID()).getNumberOfAvailableSeats();
+        int numberOfTicketsAfter = ticketManagerForTests.findAll().size();
+
+        assertEquals(numberOfTicketsBefore, 3);
+        assertEquals(numberOfTicketsAfter, 2);
+        assertEquals(numberOfAvailableSeatsBefore, numberOfAvailableSeatsAfter - 1);
+
+        assertThrows(TicketManagerReadException.class, () -> ticketManagerForTests.findByUUID(removedTicketUUID));
+    }
+
+    @Test
+    public void ticketManagerDeleteTicketThatIsNotInTheRepositoryTestNegative() {
+        Instant movieTime = Instant.now();
+        Instant reservationTime = Instant.now();
+        double movieBasePrice = 42.50;
+        UUID movieId = movieNo1.getMovieID();
+        UUID clientId = clientNo1.getClientID();
+
+        Ticket ticket = new Normal(UUID.randomUUID(), movieTime, reservationTime, movieBasePrice, movieId, clientId);
+        assertNotNull(ticket);
+
+        assertThrows(TicketManagerDeleteException.class, () -> ticketManagerForTests.delete(ticket));
+    }
+
+    @Test
+    public void ticketManagerDeleteTicketByIdTestPositive() throws ReadManagerException, DeleteManagerException {
+        int numberOfAvailableSeatsBefore = movieManagerForTests.findByUUID(movieNo1.getMovieID()).getNumberOfAvailableSeats();
+        int numberOfTicketsBefore = ticketManagerForTests.findAll().size();
+
+        UUID removedTicketUUID = ticketNo1.getTicketID();
+
+        ticketManagerForTests.delete(ticketNo1.getTicketID());
+
+        int numberOfAvailableSeatsAfter = movieManagerForTests.findByUUID(movieNo1.getMovieID()).getNumberOfAvailableSeats();
+        int numberOfTicketsAfter = ticketManagerForTests.findAll().size();
+
+        assertEquals(numberOfTicketsBefore, 3);
+        assertEquals(numberOfTicketsAfter, 2);
+        assertEquals(numberOfAvailableSeatsBefore, numberOfAvailableSeatsAfter - 1);
+
+        assertThrows(TicketManagerReadException.class, () -> ticketManagerForTests.findByUUID(removedTicketUUID));
+    }
+
+    @Test
+    public void ticketManagerDeleteTicketByIdThatIsNotInTheRepositoryTestNegative() {
+        Instant movieTime = Instant.now();
+        Instant reservationTime = Instant.now();
+        double movieBasePrice = 42.50;
+        UUID movieId = movieNo1.getMovieID();
+        UUID clientId = clientNo1.getClientID();
+
+        Ticket ticket = new Normal(UUID.randomUUID(), movieTime, reservationTime, movieBasePrice, movieId, clientId);
+        assertNotNull(ticket);
+
+        assertThrows(TicketManagerDeleteException.class, () -> ticketManagerForTests.delete(ticket.getTicketID()));
+    }
+
+    @Test
+    public void ticketManagerFindTicketTestPositive() throws ReadManagerException {
+        Ticket foundTicket = ticketManagerForTests.findByUUID(ticketNo1.getTicketID());
+        assertNotNull(foundTicket);
+        assertEquals(ticketNo1, foundTicket);
+    }
+
+    @Test
+    public void ticketManagerFindTicketThatIsNotInTheRepositoryTestNegative() {
+        Instant movieTime = Instant.now();
+        Instant reservationTime = Instant.now();
+        double movieBasePrice = 25.75;
+        UUID movieId = movieNo1.getMovieID();
+        UUID clientId = clientNo1.getClientID();
+
+        Ticket ticket = new Normal(UUID.randomUUID(), movieTime, reservationTime, movieBasePrice, movieId, clientId);
+        assertNotNull(ticket);
+
+        assertThrows(TicketManagerReadException.class, () -> ticketManagerForTests.findByUUID(ticket.getTicketID()));
+    }
+
+    @Test
+    public void ticketManagerFindAllTicketsTestPositive() throws ReadManagerException, DeleteManagerException {
+        List<Ticket> startingListOfTickets = ticketManagerForTests.findAll();
+        assertNotNull(startingListOfTickets);
+
+        ticketManagerForTests.delete(ticketNo1);
+
+        List<Ticket> finalListOfTickets = ticketManagerForTests.findAll();
+        assertNotNull(finalListOfTickets);
+
+        assertEquals(startingListOfTickets.size(), 3);
+        assertEquals(finalListOfTickets.size(), 2);
     }
 }

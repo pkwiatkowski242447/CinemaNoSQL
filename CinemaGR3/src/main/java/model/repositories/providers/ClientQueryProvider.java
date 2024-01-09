@@ -2,14 +2,14 @@ package model.repositories.providers;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.Row;
+import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.mapper.MapperContext;
 import com.datastax.oss.driver.api.mapper.entity.EntityHelper;
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 import com.datastax.oss.driver.api.querybuilder.relation.Relation;
-import com.datastax.oss.driver.api.querybuilder.select.Select;
-import model.Client;
+import model.model.Client;
 import model.constants.ClientConstants;
-import model.exceptions.read_exceptions.ClientRepositoryReadException;
+import model.exceptions.repositories.read_exceptions.ClientRepositoryReadException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,11 +28,12 @@ public class ClientQueryProvider {
     // Read methods
 
     public Client findByUUID(UUID clientId) throws ClientRepositoryReadException {
-        Select findByUUID = QueryBuilder
+        SimpleStatement findByUUID = QueryBuilder
                 .selectFrom(ClientConstants.CLIENTS_TABLE_NAME)
                 .all()
-                .where(Relation.column(ClientConstants.CLIENT_ID).isEqualTo(QueryBuilder.literal(clientId)));
-        Row clientRow = session.execute(findByUUID.build()).one();
+                .where(Relation.column(ClientConstants.CLIENT_ID).isEqualTo(QueryBuilder.literal(clientId)))
+                .build();
+        Row clientRow = session.execute(findByUUID).one();
 
         if (clientRow != null) {
             return this.convertRowToClient(clientRow);
@@ -42,30 +43,34 @@ public class ClientQueryProvider {
     }
 
     public List<Client> findAll() throws ClientRepositoryReadException {
-        Select findAll = QueryBuilder
+        List<Client> listOfFoundClients = new ArrayList<>();
+        SimpleStatement findAll = QueryBuilder
                 .selectFrom(ClientConstants.CLIENTS_TABLE_NAME)
-                .all();
-        List<Row> clientRows = session.execute(findAll.build()).all();
+                .all()
+                .allowFiltering()
+                .build();
+        List<Row> clientRows = session.execute(findAll).all();
 
         if (!clientRows.isEmpty()) {
-            return this.convertRowsToClients(clientRows);
-        } else {
-            throw new ClientRepositoryReadException("No client objects were found in the database.");
+            listOfFoundClients.addAll(this.convertRowsToClients(clientRows));
         }
+        return listOfFoundClients;
     }
 
     public List<Client> findAllActive() throws ClientRepositoryReadException {
-        Select findAll = QueryBuilder
+        List<Client> listOfFoundClients = new ArrayList<>();
+        SimpleStatement findAll = QueryBuilder
                 .selectFrom(ClientConstants.CLIENTS_TABLE_NAME)
                 .all()
-                .where(Relation.column(ClientConstants.CLIENT_STATUS_ACTIVE).isEqualTo(QueryBuilder.literal(true)));
-        List<Row> clientRows = session.execute(findAll.build()).all();
+                .allowFiltering()
+                .where(Relation.column(ClientConstants.CLIENT_STATUS_ACTIVE).isEqualTo(QueryBuilder.literal(true)))
+                .build();
+        List<Row> clientRows = session.execute(findAll).all();
 
         if (!clientRows.isEmpty()) {
-            return this.convertRowsToClients(clientRows);
-        } else {
-            throw new ClientRepositoryReadException("No client objects were found in the database.");
+            listOfFoundClients.addAll(this.convertRowsToClients(clientRows));
         }
+        return listOfFoundClients;
     }
 
     // Additional methods

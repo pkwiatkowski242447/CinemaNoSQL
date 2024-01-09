@@ -1,8 +1,8 @@
 package model.repositories.interfaces;
 
-import model.exceptions.delete_exceptions.RepositoryDeleteException;
-import model.exceptions.read_exceptions.RepositoryReadException;
-import model.exceptions.update_exceptions.RepositoryUpdateException;
+import model.exceptions.repositories.delete_exceptions.RepositoryDeleteException;
+import model.exceptions.repositories.read_exceptions.RepositoryReadException;
+import model.exceptions.repositories.update_exceptions.RepositoryUpdateException;
 
 import java.util.List;
 import java.util.UUID;

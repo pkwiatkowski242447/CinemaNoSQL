@@ -6,20 +6,27 @@ import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.core.type.DataTypes;
 import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 import jakarta.validation.ConstraintViolation;
-import model.Ticket;
+import model.dtos.TicketClientDTO;
+import model.dtos.TicketMovieDTO;
+import model.dtos.converter.TicketConverter;
+import model.exceptions.TicketTypeNotFoundException;
+import model.model.Ticket;
 import model.constants.TicketConstants;
-import model.exceptions.create_exceptions.TicketRepositoryCreateException;
-import model.exceptions.delete_exceptions.TicketRepositoryDeleteException;
-import model.exceptions.read_exceptions.TicketRepositoryReadException;
-import model.exceptions.update_exceptions.TicketRepositoryUpdateException;
-import model.repositories.daos.TicketDao;
+import model.exceptions.repositories.create_exceptions.TicketRepositoryCreateException;
+import model.exceptions.repositories.delete_exceptions.TicketRepositoryDeleteException;
+import model.exceptions.repositories.read_exceptions.TicketRepositoryReadException;
+import model.exceptions.repositories.update_exceptions.TicketRepositoryUpdateException;
+import model.exceptions.validation.TicketObjectNotValidException;
+import model.repositories.daos.TicketClientDao;
+import model.repositories.daos.TicketMovieDao;
 import model.repositories.interfaces.TicketRepositoryInterface;
 import model.repositories.mappers.TicketMapper;
 import model.repositories.mappers.TicketMapperBuilder;
-import model.ticket_types.Normal;
-import model.ticket_types.Reduced;
+import model.model.ticket_types.Normal;
+import model.model.ticket_types.Reduced;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -29,35 +36,62 @@ public class TicketRepository extends CassandraClient implements TicketRepositor
 
     private final CqlSession session;
     private final TicketMapper ticketMapper;
-    private final TicketDao ticketDao;
+    private final TicketClientDao ticketClientDao;
+    private final TicketMovieDao ticketMovieDao;
 
     public TicketRepository(CqlSession cqlSession) {
         this.session = cqlSession;
-        this.createTicketsTable();
+        this.createTicketsForClientsTable();
+        this.createTicketsForMoviesTable();
 
         this.ticketMapper = new TicketMapperBuilder(session).build();
-        this.ticketDao = ticketMapper.ticketDao();
+        this.ticketClientDao = ticketMapper.ticketClientDao();
+        this.ticketMovieDao = ticketMapper.ticketMovieDao();
     }
 
-    private void createTicketsTable() {
+    private void createTicketsForClientsTable() {
         SimpleStatement createTicketsTable = SchemaBuilder
-                .createTable(TicketConstants.TICKETS_TABLE_NAME)
+                .createTable(TicketConstants.TICKETS_CLIENTS_TABLE_NAME)
                 .ifNotExists()
-                .withPartitionKey(CqlIdentifier.fromCql(TicketConstants.TICKET_ID), DataTypes.UUID)
+                .withPartitionKey(CqlIdentifier.fromCql(TicketConstants.CLIENT_ID), DataTypes.UUID)
+                .withClusteringColumn(CqlIdentifier.fromCql(TicketConstants.TICKET_ID), DataTypes.UUID)
                 .withColumn(CqlIdentifier.fromCql(TicketConstants.MOVIE_TIME), DataTypes.TIMESTAMP)
                 .withColumn(CqlIdentifier.fromCql(TicketConstants.RESERVATION_TIME), DataTypes.TIMESTAMP)
                 .withColumn(CqlIdentifier.fromCql(TicketConstants.TICKET_BASE_PRICE), DataTypes.DOUBLE)
                 .withColumn(CqlIdentifier.fromCql(TicketConstants.TICKET_FINAL_PRICE), DataTypes.DOUBLE)
                 .withColumn(CqlIdentifier.fromCql(TicketConstants.MOVIE_ID), DataTypes.UUID)
+                .withColumn(CqlIdentifier.fromCql(TicketConstants.TICKET_TYPE_DISCRIMINATOR), DataTypes.TEXT)
+                .build();
+        session.execute(createTicketsTable);
+    }
+
+    private void createTicketsForMoviesTable() {
+        SimpleStatement createTicketsTable = SchemaBuilder
+                .createTable(TicketConstants.TICKETS_MOVIES_TABLE_NAME)
+                .ifNotExists()
+                .withPartitionKey(CqlIdentifier.fromCql(TicketConstants.MOVIE_ID), DataTypes.UUID)
+                .withClusteringColumn(CqlIdentifier.fromCql(TicketConstants.TICKET_ID), DataTypes.UUID)
+                .withColumn(CqlIdentifier.fromCql(TicketConstants.MOVIE_TIME), DataTypes.TIMESTAMP)
+                .withColumn(CqlIdentifier.fromCql(TicketConstants.RESERVATION_TIME), DataTypes.TIMESTAMP)
+                .withColumn(CqlIdentifier.fromCql(TicketConstants.TICKET_BASE_PRICE), DataTypes.DOUBLE)
+                .withColumn(CqlIdentifier.fromCql(TicketConstants.TICKET_FINAL_PRICE), DataTypes.DOUBLE)
                 .withColumn(CqlIdentifier.fromCql(TicketConstants.CLIENT_ID), DataTypes.UUID)
                 .withColumn(CqlIdentifier.fromCql(TicketConstants.TICKET_TYPE_DISCRIMINATOR), DataTypes.TEXT)
                 .build();
         session.execute(createTicketsTable);
     }
 
-    private void dropTicketsTable()  {
+    private void dropTicketsClientsTable()  {
         SimpleStatement dropTicketsTable = SchemaBuilder
-                .dropTable(TicketConstants.TICKETS_TABLE_NAME)
+                .dropTable(TicketConstants.TICKETS_CLIENTS_TABLE_NAME)
+                .ifExists()
+                .build();
+        session.execute(dropTicketsTable);
+    }
+
+    private void dropTicketsMoviesTable()  {
+        SimpleStatement dropTicketsTable = SchemaBuilder
+                .dropTable(TicketConstants.TICKETS_MOVIES_TABLE_NAME)
                 .ifExists()
                 .build();
         session.execute(dropTicketsTable);
@@ -68,11 +102,12 @@ public class TicketRepository extends CassandraClient implements TicketRepositor
     @Override
     public Ticket createNormalTicket(Instant movieTime, Instant reservationTime, double ticketBasePrice, UUID movieId, UUID clientId) throws TicketRepositoryCreateException {
         Ticket normalTicket = new Normal(UUID.randomUUID(), movieTime, reservationTime, ticketBasePrice, movieId, clientId);
-        this.validateTicketCreation(normalTicket);
-        ticketDao.create(normalTicket);
         try {
-            return ticketDao.findByUUID(normalTicket.getTicketID());
-        } catch (TicketRepositoryReadException exception) {
+            this.checkIfTicketObjectIsValid(normalTicket);
+            ticketClientDao.create(TicketConverter.toTicketClientDTO(normalTicket));
+            ticketMovieDao.create(TicketConverter.toTicketMovieDTO(normalTicket));
+            return TicketConverter.toTicketFromTicketClientDTO(ticketClientDao.findByUUID(normalTicket.getTicketID()));
+        } catch (TicketObjectNotValidException | TicketRepositoryReadException | TicketTypeNotFoundException exception) {
             throw new TicketRepositoryCreateException(exception.getMessage(), exception);
         }
     }
@@ -80,11 +115,12 @@ public class TicketRepository extends CassandraClient implements TicketRepositor
     @Override
     public Ticket createReducedTicket(Instant movieTime, Instant reservationTime, double ticketBasePrice, UUID movieId, UUID clientId) throws TicketRepositoryCreateException {
         Ticket reducedTicket = new Reduced(UUID.randomUUID(), movieTime, reservationTime, ticketBasePrice, movieId, clientId);
-        this.validateTicketCreation(reducedTicket);
-        ticketDao.create(reducedTicket);
         try {
-            return ticketDao.findByUUID(reducedTicket.getTicketID());
-        } catch (TicketRepositoryReadException exception) {
+            this.checkIfTicketObjectIsValid(reducedTicket);
+            ticketClientDao.create(TicketConverter.toTicketClientDTO(reducedTicket));
+            ticketMovieDao.create(TicketConverter.toTicketMovieDTO(reducedTicket));
+            return TicketConverter.toTicketFromTicketClientDTO(ticketClientDao.findByUUID(reducedTicket.getTicketID()));
+        } catch (TicketObjectNotValidException | TicketRepositoryReadException | TicketTypeNotFoundException exception) {
             throw new TicketRepositoryCreateException(exception.getMessage(), exception);
         }
     }
@@ -94,8 +130,8 @@ public class TicketRepository extends CassandraClient implements TicketRepositor
     @Override
     public Ticket findByUUID(UUID ticketId) throws TicketRepositoryReadException {
         try {
-            return ticketDao.findByUUID(ticketId);
-        } catch (TicketRepositoryReadException exception) {
+            return TicketConverter.toTicketFromTicketClientDTO(ticketClientDao.findByUUID(ticketId));
+        } catch (TicketRepositoryReadException | TicketTypeNotFoundException exception) {
             throw new TicketRepositoryReadException(exception.getMessage(), exception);
         }
     }
@@ -103,8 +139,38 @@ public class TicketRepository extends CassandraClient implements TicketRepositor
     @Override
     public List<Ticket> findAll() throws TicketRepositoryReadException {
         try {
-            return ticketDao.findAll();
-        } catch (TicketRepositoryReadException exception) {
+            List<Ticket> listOfTickets = new ArrayList<>();
+            for (TicketClientDTO ticketClientDTO : ticketClientDao.findAll()) {
+                listOfTickets.add(TicketConverter.toTicketFromTicketClientDTO(ticketClientDTO));
+            }
+            return listOfTickets;
+        } catch (TicketRepositoryReadException | TicketTypeNotFoundException exception) {
+            throw new TicketRepositoryReadException(exception.getMessage(), exception);
+        }
+    }
+
+    @Override
+    public List<Ticket> findAllTicketsForAGivenClientId(UUID clientId) throws TicketRepositoryReadException{
+        try {
+            List<Ticket> listOfTickets = new ArrayList<>();
+            for (TicketClientDTO ticketClientDTO : ticketClientDao.findAllForAGivenClientId(clientId)) {
+                listOfTickets.add(TicketConverter.toTicketFromTicketClientDTO(ticketClientDTO));
+            }
+            return listOfTickets;
+        } catch (TicketTypeNotFoundException exception) {
+            throw new TicketRepositoryReadException(exception.getMessage(), exception);
+        }
+    }
+
+    @Override
+    public List<Ticket> findAllTicketsForAGivenMovieId(UUID movieId) throws TicketRepositoryReadException {
+        try {
+            List<Ticket> listOfTickets = new ArrayList<>();
+            for (TicketMovieDTO ticketMovieDTO : ticketMovieDao.findAllForAGivenMovieId(movieId)) {
+                listOfTickets.add(TicketConverter.toTicketFromTicketMovieDTO(ticketMovieDTO));
+            }
+            return listOfTickets;
+        } catch (TicketTypeNotFoundException exception) {
             throw new TicketRepositoryReadException(exception.getMessage(), exception);
         }
     }
@@ -113,59 +179,52 @@ public class TicketRepository extends CassandraClient implements TicketRepositor
 
     @Override
     public void update(Ticket ticket) throws TicketRepositoryUpdateException {
-        Set<ConstraintViolation<Ticket>> violations = validator.validate(ticket);
-        if (!violations.isEmpty()) {
-            StringBuilder stringBuilder = new StringBuilder();
-            for (ConstraintViolation<Ticket> violation : violations) {
-                stringBuilder.append(violation.toString()).append(" : ");
-            }
-            throw new TicketRepositoryUpdateException("Bean validation for client object failed. Cause: " + stringBuilder);
+        try {
+            ticketClientDao.findByUUID(ticket.getTicketID());
+            ticketMovieDao.findByUUID(ticket.getTicketID());
+            this.checkIfTicketObjectIsValid(ticket);
+        } catch (TicketRepositoryReadException | TicketObjectNotValidException exception) {
+            throw new TicketRepositoryUpdateException(exception.getMessage(), exception);
         }
-        ticketDao.update(ticket);
+        ticketClientDao.update(TicketConverter.toTicketClientDTO(ticket));
+        ticketMovieDao.update(TicketConverter.toTicketMovieDTO(ticket));
     }
 
     // Delete methods
 
     @Override
     public void delete(Ticket ticket) throws TicketRepositoryDeleteException {
-        Set<ConstraintViolation<Ticket>> violations = validator.validate(ticket);
-        if (!violations.isEmpty()) {
-            StringBuilder stringBuilder = new StringBuilder();
-            for (ConstraintViolation<Ticket> violation : violations) {
-                stringBuilder.append(violation.toString()).append(" : ");
-            }
-            throw new TicketRepositoryDeleteException("Bean validation for client object failed. Cause: " + stringBuilder);
+        try {
+            ticketClientDao.findByUUID(ticket.getTicketID());
+            ticketMovieDao.findByUUID(ticket.getTicketID());
+        } catch (TicketRepositoryReadException exception) {
+            throw new TicketRepositoryDeleteException(exception.getMessage(), exception);
         }
-        ticketDao.delete(ticket);
+        ticketClientDao.delete(TicketConverter.toTicketClientDTO(ticket));
+        ticketMovieDao.delete(TicketConverter.toTicketMovieDTO(ticket));
     }
 
     @Override
     public void delete(UUID ticketID) throws TicketRepositoryDeleteException {
         Ticket ticket;
         try {
-            ticket = ticketDao.findByUUID(ticketID);
-        } catch (TicketRepositoryReadException exception) {
+            ticket = TicketConverter.toTicketFromTicketClientDTO(ticketClientDao.findByUUID(ticketID));
+            ticketMovieDao.findByUUID(ticketID);
+        } catch (TicketRepositoryReadException | TicketTypeNotFoundException exception) {
             throw new TicketRepositoryDeleteException(exception.getMessage(), exception);
         }
-        Set<ConstraintViolation<Ticket>> violations = validator.validate(ticket);
-        if (!violations.isEmpty()) {
-            StringBuilder stringBuilder = new StringBuilder();
-            for (ConstraintViolation<Ticket> violation : violations) {
-                stringBuilder.append(violation.toString()).append(" : ");
-            }
-            throw new TicketRepositoryDeleteException("Bean validation for client object failed. Cause: " + stringBuilder);
-        }
-        ticketDao.delete(ticket);
+        ticketClientDao.delete(TicketConverter.toTicketClientDTO(ticket));
+        ticketMovieDao.delete(TicketConverter.toTicketMovieDTO(ticket));
     }
 
-    private void validateTicketCreation(Ticket ticket) throws TicketRepositoryCreateException {
+    public void checkIfTicketObjectIsValid(Ticket ticket) throws TicketObjectNotValidException {
         Set<ConstraintViolation<Ticket>> violations = validator.validate(ticket);
         if (!violations.isEmpty()) {
             StringBuilder stringBuilder = new StringBuilder();
             for (ConstraintViolation<Ticket> violation : violations) {
                 stringBuilder.append(violation.toString()).append(" : ");
             }
-            throw new TicketRepositoryCreateException("Bean validation for client object failed. Cause: " + stringBuilder);
+            throw new TicketObjectNotValidException("Bean validation for client object failed. Cause: " + stringBuilder);
         }
     }
 }

@@ -1,7 +1,7 @@
 package model.repositories.interfaces;
 
-import model.Movie;
-import model.exceptions.create_exceptions.MovieRepositoryCreateException;
+import model.model.Movie;
+import model.exceptions.repositories.create_exceptions.MovieRepositoryCreateException;
 
 public interface MovieRepositoryInterface extends RepositoryInterface<Movie> {
 

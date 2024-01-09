@@ -1,9 +1,9 @@
 package model.repositories.daos;
 
 import com.datastax.oss.driver.api.mapper.annotations.*;
-import model.Movie;
+import model.model.Movie;
 import model.constants.GeneralConstants;
-import model.exceptions.read_exceptions.MovieRepositoryReadException;
+import model.exceptions.repositories.read_exceptions.MovieRepositoryReadException;
 import model.repositories.providers.MovieQueryProvider;
 
 import java.util.List;

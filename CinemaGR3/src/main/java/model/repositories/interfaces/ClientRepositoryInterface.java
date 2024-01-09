@@ -1,9 +1,9 @@
 package model.repositories.interfaces;
 
-import model.Client;
-import model.exceptions.create_exceptions.ClientRepositoryCreateException;
-import model.exceptions.read_exceptions.ClientRepositoryReadException;
-import model.exceptions.update_exceptions.ClientRepositoryUpdateException;
+import model.model.Client;
+import model.exceptions.repositories.create_exceptions.ClientRepositoryCreateException;
+import model.exceptions.repositories.read_exceptions.ClientRepositoryReadException;
+import model.exceptions.repositories.update_exceptions.ClientRepositoryUpdateException;
 
 import java.util.List;
 import java.util.UUID;

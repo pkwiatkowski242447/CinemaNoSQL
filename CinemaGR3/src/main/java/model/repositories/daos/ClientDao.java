@@ -1,9 +1,9 @@
 package model.repositories.daos;
 
 import com.datastax.oss.driver.api.mapper.annotations.*;
-import model.Client;
+import model.model.Client;
 import model.constants.GeneralConstants;
-import model.exceptions.read_exceptions.ClientRepositoryReadException;
+import model.exceptions.repositories.read_exceptions.ClientRepositoryReadException;
 import model.repositories.providers.ClientQueryProvider;
 
 import java.util.List;

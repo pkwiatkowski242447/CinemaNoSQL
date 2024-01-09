@@ -1,13 +1,13 @@
 package main;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import model.Client;
-import model.Movie;
-import model.Ticket;
-import model.exceptions.CassandraConfigNotFound;
-import model.exceptions.delete_exceptions.RepositoryDeleteException;
-import model.exceptions.read_exceptions.RepositoryReadException;
-import model.managers.*;
+import model.managers.implementations.ClientManager;
+import model.managers.implementations.MovieManager;
+import model.managers.implementations.TicketManager;
+import model.model.Client;
+import model.model.Movie;
+import model.model.Ticket;
+import model.exceptions.repositories.delete_exceptions.RepositoryDeleteException;
 import model.repositories.implementations.CassandraClient;
 import model.repositories.implementations.ClientRepository;
 import model.repositories.implementations.MovieRepository;
@@ -19,7 +19,7 @@ import java.util.List;
 
 public class Main {
 
-    public static void main(String[] args) throws CassandraConfigNotFound {
+    public static void main(String[] args) {
         try(CqlSession session = CassandraClient.initializeCassandraSession()) {
 
             ClientRepository clientRepository = new ClientRepository(session);
@@ -28,7 +28,7 @@ public class Main {
 
             ClientManager clientManager = new ClientManager(clientRepository);
             MovieManager movieManager = new MovieManager(movieRepository);
-            TicketManager ticketManager = new TicketManager(ticketRepository);
+            TicketManager ticketManager = new TicketManager(clientRepository, movieRepository, ticketRepository);
 
             Instant movieTimeNo1 = new Calendar.Builder().setDate(2023, 10, 1).setTimeOfDay(10, 15, 0).build().getTime().toInstant();
             Instant movieTimeNo2 = new Calendar.Builder().setDate(2023, 10, 8).setTimeOfDay(16, 13, 0).build().getTime().toInstant();
@@ -42,19 +42,13 @@ public class Main {
             String clientNo1Surname = "Smith";
             int clientNo1Age = 21;
 
-            Client clientNo1 = clientManager.register(clientNo1Name, clientNo1Surname, clientNo1Age);
-
             String clientNo2Name = "Mary";
             String clientNo2Surname = "Jane";
             int clientNo2Age = 18;
 
-            Client clientNo2 = clientManager.register(clientNo2Name, clientNo2Surname, clientNo2Age);
-
             String clientNo3Name = "Vincent";
             String clientNo3Surname = "Vega";
             int clientNo3Age = 40;
-
-            Client clientNo3 = clientManager.register(clientNo3Name, clientNo3Surname, clientNo3Age);
 
             int screeningRoomNo1Number = 10;
             int screeningRoomNo1NumberOfAvailSeats = 45;
@@ -71,41 +65,63 @@ public class Main {
             String movieNo3Title = "A Space Odyssey";
             double movieNo3BasePrice = 59.99;
 
-            Movie movieNo1 = movieManager.register(movieNo1Title, movieNo1BasePrice, screeningRoomNo1NumberOfAvailSeats, screeningRoomNo1Number);
-            Movie movieNo2 = movieManager.register(movieNo2Title, movieNo2BasePrice, screeningRoomNo2NumberOfAvailSeats, screeningRoomNo2Number);
-            Movie movieNo3 = movieManager.register(movieNo3Title, movieNo3BasePrice, screeningRoomNo3NumberOfAvailSeats, screeningRoomNo3Number);
+            Client clientNo1 = clientManager.create(clientNo1Name, clientNo1Surname, clientNo1Age);
+            Client clientNo2 = clientManager.create(clientNo2Name, clientNo2Surname, clientNo2Age);
+            Client clientNo3 = clientManager.create(clientNo3Name, clientNo3Surname, clientNo3Age);
 
-            ticketManager.registerNormalTicket(movieTimeNo1, reservationTimeNo1, movieNo1BasePrice, movieNo1.getMovieID(), clientNo1.getClientID());
-            ticketManager.registerNormalTicket(movieTimeNo2, reservationTimeNo2, movieNo2BasePrice, movieNo2.getMovieID(), clientNo2.getClientID());
-            ticketManager.registerReducedTicket(movieTimeNo3, reservationTimeNo3, movieNo3BasePrice, movieNo3.getMovieID(), clientNo3.getClientID());
+            Movie movieNo1 = movieManager.create(movieNo1Title, movieNo1BasePrice, screeningRoomNo1NumberOfAvailSeats, screeningRoomNo1Number);
+            Movie movieNo2 = movieManager.create(movieNo2Title, movieNo2BasePrice, screeningRoomNo2NumberOfAvailSeats, screeningRoomNo2Number);
+            Movie movieNo3 = movieManager.create(movieNo3Title, movieNo3BasePrice, screeningRoomNo3NumberOfAvailSeats, screeningRoomNo3Number);
+
+            Ticket ticketNo1 = ticketManager.createNormalTicket(movieTimeNo1, reservationTimeNo1, movieNo1.getMovieID(), clientNo1.getClientID());
+            Ticket ticketNo2 = ticketManager.createReducedTicket(movieTimeNo2, reservationTimeNo2, movieNo2.getMovieID(), clientNo2.getClientID());
+            Ticket ticketNo3 = ticketManager.createReducedTicket(movieTimeNo3, reservationTimeNo3, movieNo3.getMovieID(), clientNo3.getClientID());
 
             try {
-                List<Client> listOfClients = clientManager.getClientRepository().findAll();
+                List<Client> listOfClients = clientManager.findAll();
+                int numOfClientsBefore = listOfClients.size();
                 for (Client client : listOfClients) {
                     System.out.println(client.toString());
                 }
 
-                List<Ticket> ticketList = ticketManager.getTicketRepository().findAll();
-                int numOfTicketsBefore = ticketList.size();
-                for (Ticket ticket : ticketList) {
+                List<Ticket> listOfTickets = ticketManager.findAll();
+                int numOfTicketsBefore = listOfTickets.size();
+                for (Ticket ticket : listOfTickets) {
                     System.out.println(ticket.toString());
                 }
 
-                for (Ticket ticket : ticketList) {
+                List<Movie> listOfMovies = movieManager.findAll();
+                int numOfMoviesBefore = listOfMovies.size();
+                for (Movie movie : listOfMovies) {
+                    System.out.println(movie.toString());
+                }
+
+                for (Ticket ticket : listOfTickets) {
                     ticketManager.getTicketRepository().delete(ticket);
                 }
 
-                int numOfTicketsAfter = ticketManager.getTicketRepository().findAll().size();
+                int numOfTicketsAfter = ticketManager.findAll().size();
+
+                for (Movie movie : listOfMovies) {
+                    movieManager.getMovieRepository().delete(movie);
+                }
+
+                int numOfMoviesAfter = movieManager.findAll().size();
+
+                for (Client client : listOfClients) {
+                    clientManager.getClientRepository().delete(client);
+                }
+
+                int numOfClientsAfter = clientManager.findAll().size();
 
                 System.out.println("Number of tickets before: " + numOfTicketsBefore);
                 System.out.println("Number of tickets after: " + numOfTicketsAfter);
 
-                List<Movie> listOfMovies = movieManager.getMovieRepository().findAll();
-                for (Movie movie : listOfMovies) {
-                    System.out.println(movie.toString());
-                }
-            } catch (RepositoryReadException exception) {
-                throw new RuntimeException("Error while reading from repositories.", exception);
+                System.out.println("Number of movies before: " + numOfMoviesBefore);
+                System.out.println("Number of movies after: " + numOfMoviesAfter);
+
+                System.out.println("Number of clients before: " + numOfClientsBefore);
+                System.out.println("Number of clients after: " + numOfClientsAfter);
             } catch (RepositoryDeleteException exception) {
                 throw new RuntimeException("Error while removing objects from repository.", exception);
             }

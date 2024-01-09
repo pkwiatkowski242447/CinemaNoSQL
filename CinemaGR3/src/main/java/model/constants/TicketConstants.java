@@ -2,7 +2,8 @@ package model.constants;
 
 public class TicketConstants {
 
-    public static final String TICKETS_TABLE_NAME = "tickets";
+    public static final String TICKETS_CLIENTS_TABLE_NAME = "tickets_by_clients";
+    public static final String TICKETS_MOVIES_TABLE_NAME = "tickets_by_movies";
     public static final String TICKET_ID = "ticket_id";
     public static final String MOVIE_TIME = "movie_time";
     public static final String RESERVATION_TIME = "reservation_time";

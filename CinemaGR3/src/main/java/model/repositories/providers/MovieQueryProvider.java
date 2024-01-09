@@ -8,9 +8,9 @@ import com.datastax.oss.driver.api.mapper.MapperContext;
 import com.datastax.oss.driver.api.mapper.entity.EntityHelper;
 import com.datastax.oss.driver.api.querybuilder.QueryBuilder;
 import com.datastax.oss.driver.api.querybuilder.relation.Relation;
-import model.Movie;
+import model.model.Movie;
 import model.constants.MovieConstants;
-import model.exceptions.read_exceptions.MovieRepositoryReadException;
+import model.exceptions.repositories.read_exceptions.MovieRepositoryReadException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,17 +44,18 @@ public class MovieQueryProvider {
     }
 
     public List<Movie> findAll() throws MovieRepositoryReadException {
+        List<Movie> listOfFoundMovies = new ArrayList<>();
         SimpleStatement findByUUID = QueryBuilder
                 .selectFrom(MovieConstants.MOVIES_TABLE_NAME)
                 .all()
+                .allowFiltering()
                 .build();
         List<Row> movieRows = session.execute(findByUUID).all();
 
         if (!movieRows.isEmpty()) {
-            return this.convertRowsToMovies(movieRows);
-        } else {
-            throw new MovieRepositoryReadException("Movie object with given Id could not be found in the database.");
+            listOfFoundMovies.addAll(this.convertRowsToMovies(movieRows));
         }
+        return listOfFoundMovies;
     }
 
     // Additional methods

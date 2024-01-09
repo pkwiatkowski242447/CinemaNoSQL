@@ -6,12 +6,13 @@ import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.core.type.DataTypes;
 import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 import jakarta.validation.ConstraintViolation;
-import model.Movie;
+import model.model.Movie;
 import model.constants.MovieConstants;
-import model.exceptions.create_exceptions.MovieRepositoryCreateException;
-import model.exceptions.delete_exceptions.MovieRepositoryDeleteException;
-import model.exceptions.read_exceptions.MovieRepositoryReadException;
-import model.exceptions.update_exceptions.MovieRepositoryUpdateException;
+import model.exceptions.repositories.create_exceptions.MovieRepositoryCreateException;
+import model.exceptions.repositories.delete_exceptions.MovieRepositoryDeleteException;
+import model.exceptions.repositories.read_exceptions.MovieRepositoryReadException;
+import model.exceptions.repositories.update_exceptions.MovieRepositoryUpdateException;
+import model.exceptions.validation.MovieObjectNotValidException;
 import model.repositories.daos.MovieDao;
 import model.repositories.interfaces.MovieRepositoryInterface;
 import model.repositories.mappers.MovieMapper;
@@ -61,18 +62,11 @@ public class MovieRepository extends CassandraClient implements MovieRepositoryI
     @Override
     public Movie create(String movieTitle, double movieBasePrice, int numberOfAvailableSeats, int screeningRoomNumber) throws MovieRepositoryCreateException {
         Movie movie = new Movie(UUID.randomUUID(), movieTitle, movieBasePrice, numberOfAvailableSeats, screeningRoomNumber);
-        Set<ConstraintViolation<Movie>> violations = validator.validate(movie);
-        if (!violations.isEmpty()) {
-            StringBuilder stringBuilder = new StringBuilder();
-            for (ConstraintViolation<Movie> violation : violations) {
-                stringBuilder.append(violation.toString()).append(" : ");
-            }
-            throw new MovieRepositoryCreateException("Bean validation for client object failed. Cause: " + stringBuilder);
-        }
-        movieDao.create(movie);
         try {
+            this.checkIfMovieObjectIsValid(movie);
+            movieDao.create(movie);
             return movieDao.findByUUID(movie.getMovieID());
-        } catch (MovieRepositoryReadException exception) {
+        } catch (MovieObjectNotValidException | MovieRepositoryReadException exception) {
             throw new MovieRepositoryCreateException(exception.getMessage(), exception);
         }
     }
@@ -101,13 +95,11 @@ public class MovieRepository extends CassandraClient implements MovieRepositoryI
 
     @Override
     public void update(Movie movie) throws MovieRepositoryUpdateException {
-        Set<ConstraintViolation<Movie>> violations = validator.validate(movie);
-        if (!violations.isEmpty()) {
-            StringBuilder stringBuilder = new StringBuilder();
-            for (ConstraintViolation<Movie> violation : violations) {
-                stringBuilder.append(violation.toString()).append(" : ");
-            }
-            throw new MovieRepositoryUpdateException("Bean validation for client object failed. Cause: " + stringBuilder);
+        try {
+            movieDao.findByUUID(movie.getMovieID());
+            this.checkIfMovieObjectIsValid(movie);
+        } catch (MovieRepositoryReadException | MovieObjectNotValidException exception) {
+            throw new MovieRepositoryUpdateException(exception.getMessage(), exception);
         }
         movieDao.update(movie);
     }
@@ -116,13 +108,10 @@ public class MovieRepository extends CassandraClient implements MovieRepositoryI
 
     @Override
     public void delete(Movie movie) throws MovieRepositoryDeleteException {
-        Set<ConstraintViolation<Movie>> violations = validator.validate(movie);
-        if (!violations.isEmpty()) {
-            StringBuilder stringBuilder = new StringBuilder();
-            for (ConstraintViolation<Movie> violation : violations) {
-                stringBuilder.append(violation.toString()).append(" : ");
-            }
-            throw new MovieRepositoryDeleteException("Bean validation for client object failed. Cause: " + stringBuilder);
+        try {
+            movieDao.findByUUID(movie.getMovieID());
+        } catch (MovieRepositoryReadException exception) {
+            throw new MovieRepositoryDeleteException(exception.getMessage(), exception);
         }
         movieDao.delete(movie);
     }
@@ -135,14 +124,17 @@ public class MovieRepository extends CassandraClient implements MovieRepositoryI
         } catch (MovieRepositoryReadException exception) {
             throw new MovieRepositoryDeleteException(exception.getMessage(), exception);
         }
+        movieDao.delete(movie);
+    }
+
+    private void checkIfMovieObjectIsValid(Movie movie) throws MovieObjectNotValidException {
         Set<ConstraintViolation<Movie>> violations = validator.validate(movie);
         if (!violations.isEmpty()) {
             StringBuilder stringBuilder = new StringBuilder();
             for (ConstraintViolation<Movie> violation : violations) {
                 stringBuilder.append(violation.toString()).append(" : ");
             }
-            throw new MovieRepositoryDeleteException("Bean validation for client object failed. Cause: " + stringBuilder);
+            throw new MovieObjectNotValidException("Bean validation for client object failed. Cause: " + stringBuilder);
         }
-        movieDao.delete(movie);
     }
 }

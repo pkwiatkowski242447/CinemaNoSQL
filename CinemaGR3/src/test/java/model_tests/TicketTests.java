@@ -1,10 +1,10 @@
 package model_tests;
 
-import model.Client;
-import model.Movie;
-import model.Ticket;
-import model.ticket_types.Normal;
-import model.ticket_types.Reduced;
+import model.model.Client;
+import model.model.Movie;
+import model.model.Ticket;
+import model.model.ticket_types.Normal;
+import model.model.ticket_types.Reduced;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -111,7 +111,7 @@ public class TicketTests {
 
         UUID ticketID = UUID.randomUUID();
 
-        Ticket ticket = new Ticket(ticketID, movieTime, reservationTime, movieBasePrice, movieNo1.getMovieID(), clientNo1.getClientID());
+        Ticket ticket = new Normal(ticketID, movieTime, reservationTime, movieBasePrice, movieNo1.getMovieID(), clientNo1.getClientID());
 
         assertNotNull(ticket);
         assertNotNull(ticket.toString());

@@ -6,12 +6,13 @@ import com.datastax.oss.driver.api.core.cql.SimpleStatement;
 import com.datastax.oss.driver.api.core.type.DataTypes;
 import com.datastax.oss.driver.api.querybuilder.SchemaBuilder;
 import jakarta.validation.*;
-import model.Client;
+import model.model.Client;
 import model.constants.ClientConstants;
-import model.exceptions.create_exceptions.ClientRepositoryCreateException;
-import model.exceptions.delete_exceptions.ClientRepositoryDeleteException;
-import model.exceptions.read_exceptions.ClientRepositoryReadException;
-import model.exceptions.update_exceptions.ClientRepositoryUpdateException;
+import model.exceptions.repositories.create_exceptions.ClientRepositoryCreateException;
+import model.exceptions.repositories.delete_exceptions.ClientRepositoryDeleteException;
+import model.exceptions.repositories.read_exceptions.ClientRepositoryReadException;
+import model.exceptions.repositories.update_exceptions.ClientRepositoryUpdateException;
+import model.exceptions.validation.ClientObjectNotValidException;
 import model.repositories.daos.ClientDao;
 import model.repositories.interfaces.ClientRepositoryInterface;
 import model.repositories.mappers.ClientMapper;
@@ -61,18 +62,11 @@ public class ClientRepository extends CassandraClient implements ClientRepositor
     @Override
     public Client create(String clientName, String clientSurname, int clientAge) throws ClientRepositoryCreateException {
         Client client = new Client(UUID.randomUUID(), clientName, clientSurname, clientAge);
-        Set<ConstraintViolation<Client>> violations = validator.validate(client);
-        if (!violations.isEmpty()) {
-            StringBuilder stringBuilder = new StringBuilder();
-            for (ConstraintViolation<Client> violation : violations) {
-                stringBuilder.append(violation.toString()).append(" : ");
-            }
-            throw new ClientRepositoryCreateException("Bean validation for client object failed. Cause: " + stringBuilder);
-        }
-        clientDao.create(client);
         try {
+            this.checkIfClientObjectIsValid(client);
+            clientDao.create(client);
             return clientDao.findByUUID(client.getClientID());
-        } catch (ClientRepositoryReadException exception) {
+        } catch (ClientObjectNotValidException | ClientRepositoryReadException exception) {
             throw new ClientRepositoryCreateException(exception.getMessage(), exception);
         }
     }
@@ -110,13 +104,11 @@ public class ClientRepository extends CassandraClient implements ClientRepositor
 
     @Override
     public void update(Client client) throws ClientRepositoryUpdateException {
-        Set<ConstraintViolation<Client>> violations = validator.validate(client);
-        if (!violations.isEmpty()) {
-            StringBuilder stringBuilder = new StringBuilder();
-            for (ConstraintViolation<Client> violation : violations) {
-                stringBuilder.append(violation.toString()).append(" : ");
-            }
-            throw new ClientRepositoryUpdateException("Bean validation for client object failed. Cause: " + stringBuilder);
+        try {
+            clientDao.findByUUID(client.getClientID());
+            this.checkIfClientObjectIsValid(client);
+        } catch (ClientRepositoryReadException | ClientObjectNotValidException exception) {
+            throw new ClientRepositoryUpdateException(exception.getMessage(), exception);
         }
         clientDao.update(client);
     }
@@ -127,17 +119,9 @@ public class ClientRepository extends CassandraClient implements ClientRepositor
         try {
             client = clientDao.findByUUID(clientId);
             client.setClientStatusActive(false);
-        } catch (ClientRepositoryReadException exception) {
+            this.checkIfClientObjectIsValid(client);
+        } catch (ClientRepositoryReadException | ClientObjectNotValidException exception) {
             throw new ClientRepositoryUpdateException(exception.getMessage(), exception);
-        }
-        client.setClientStatusActive(false);
-        Set<ConstraintViolation<Client>> violations = validator.validate(client);
-        if (!violations.isEmpty()) {
-            StringBuilder stringBuilder = new StringBuilder();
-            for (ConstraintViolation<Client> violation : violations) {
-                stringBuilder.append(violation.toString()).append(" : ");
-            }
-            throw new ClientRepositoryUpdateException("Bean validation for client object failed. Cause: " + stringBuilder);
         }
         clientDao.update(client);
     }
@@ -146,13 +130,10 @@ public class ClientRepository extends CassandraClient implements ClientRepositor
 
     @Override
     public void delete(Client client) throws ClientRepositoryDeleteException {
-        Set<ConstraintViolation<Client>> violations = validator.validate(client);
-        if (!violations.isEmpty()) {
-            StringBuilder stringBuilder = new StringBuilder();
-            for (ConstraintViolation<Client> violation : violations) {
-                stringBuilder.append(violation.toString()).append(" : ");
-            }
-            throw new ClientRepositoryDeleteException("Bean validation for client object failed. Cause: " + stringBuilder);
+        try {
+            clientDao.findByUUID(client.getClientID());
+        } catch (ClientRepositoryReadException exception) {
+            throw new ClientRepositoryDeleteException(exception.getMessage(), exception);
         }
         clientDao.delete(client);
     }
@@ -162,18 +143,20 @@ public class ClientRepository extends CassandraClient implements ClientRepositor
         Client client;
         try {
             client = clientDao.findByUUID(clientID);
-            client.setClientStatusActive(false);
         } catch (ClientRepositoryReadException exception) {
             throw new ClientRepositoryDeleteException(exception.getMessage(), exception);
         }
+        clientDao.delete(client);
+    }
+
+    private void checkIfClientObjectIsValid(Client client) throws ClientObjectNotValidException {
         Set<ConstraintViolation<Client>> violations = validator.validate(client);
         if (!violations.isEmpty()) {
             StringBuilder stringBuilder = new StringBuilder();
             for (ConstraintViolation<Client> violation : violations) {
                 stringBuilder.append(violation.toString()).append(" : ");
             }
-            throw new ClientRepositoryDeleteException("Bean validation for client object failed. Cause: " + stringBuilder);
+            throw new ClientObjectNotValidException("Bean validation for client object failed. Cause: " + stringBuilder);
         }
-        clientDao.delete(client);
     }
 }
