@@ -19,25 +19,40 @@ import model.exceptions.validation.TicketObjectNotValidException;
 import model.managers.interfaces.TicketManagerInterface;
 import model.model.Movie;
 import model.model.Ticket;
+import model.producer.TicketProducer;
 import model.repositories.implementations.ClientRepository;
 import model.repositories.implementations.MovieRepository;
 import model.repositories.implementations.TicketRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 @Getter @Setter
 public class TicketManager implements TicketManagerInterface {
 
+    private static final Logger logger = LoggerFactory.getLogger(TicketManager.class);
+
     private ClientRepository clientRepository;
     private MovieRepository movieRepository;
     private TicketRepository ticketRepository;
+    private TicketProducer ticketProducer;
 
     public TicketManager(ClientRepository clientRepository, MovieRepository movieRepository, TicketRepository ticketRepository) {
         this.clientRepository = clientRepository;
         this.movieRepository = movieRepository;
         this.ticketRepository = ticketRepository;
+
+        ticketProducer = new TicketProducer();
+        try {
+            ticketProducer.createTicketTopic();
+            TicketProducer.initializeProducer();
+        } catch (InterruptedException | ExecutionException exception) {
+            logger.debug(exception.getMessage());
+        }
     }
 
     // Create methods
@@ -51,8 +66,11 @@ public class TicketManager implements TicketManagerInterface {
             Movie movie = movieRepository.findByUUID(movieId);
             movie.setNumberOfAvailableSeats(movie.getNumberOfAvailableSeats() - 1);
             movieRepository.update(movie);
-            return this.ticketRepository.createNormalTicket(movieTime, reservationTime, movie.getMovieBasePrice(), movieId, clientId);
-        } catch (MovieRepositoryReadException | MovieRepositoryUpdateException | TicketObjectNotValidException | TicketRepositoryCreateException exception) {
+            Ticket ticket = this.ticketRepository.createNormalTicket(movieTime, reservationTime, movie.getMovieBasePrice(), movieId, clientId);
+            ticketProducer.sendTicket(ticket);
+            return ticket;
+        } catch (MovieRepositoryReadException | MovieRepositoryUpdateException | TicketObjectNotValidException | TicketRepositoryCreateException
+                 | InterruptedException | ExecutionException exception) {
             throw new TicketManagerCreateException(exception.getMessage(), exception);
         }
     }
@@ -66,8 +84,11 @@ public class TicketManager implements TicketManagerInterface {
             Movie movie = movieRepository.findByUUID(movieId);
             movie.setNumberOfAvailableSeats(movie.getNumberOfAvailableSeats() - 1);
             movieRepository.update(movie);
-            return this.ticketRepository.createReducedTicket(movieTime, reservationTime, movie.getMovieBasePrice(), movieId, clientId);
-        } catch (MovieRepositoryReadException | MovieRepositoryUpdateException | TicketObjectNotValidException | TicketRepositoryCreateException exception) {
+            Ticket ticket = this.ticketRepository.createReducedTicket(movieTime, reservationTime, movie.getMovieBasePrice(), movieId, clientId);
+            ticketProducer.sendTicket(ticket);
+            return ticket;
+        } catch (MovieRepositoryReadException | MovieRepositoryUpdateException | TicketObjectNotValidException | TicketRepositoryCreateException
+                 | InterruptedException | ExecutionException exception) {
             throw new TicketManagerCreateException(exception.getMessage(), exception);
         }
     }

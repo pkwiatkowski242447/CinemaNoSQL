@@ -443,4 +443,12 @@ public class TicketManagerTest {
         assertEquals(startingListOfTickets.size(), 3);
         assertEquals(finalListOfTickets.size(), 2);
     }
+    
+    @Test
+    public void ticketManagerCreateThreeNewTickets() throws TicketManagerCreateException {
+        ticketManagerForTests.createNormalTicket(movieTimeNo1, reservationTimeNo1, movieNo1.getMovieID(), clientNo1.getClientID());
+        ticketManagerForTests.createNormalTicket(movieTimeNo1, reservationTimeNo1, movieNo2.getMovieID(), clientNo1.getClientID());
+        ticketManagerForTests.createReducedTicket(movieTimeNo1, reservationTimeNo1, movieNo1.getMovieID(), clientNo1.getClientID());
+        ticketManagerForTests.createReducedTicket(movieTimeNo1, reservationTimeNo1, movieNo2.getMovieID(), clientNo1.getClientID());
+    }
 }
