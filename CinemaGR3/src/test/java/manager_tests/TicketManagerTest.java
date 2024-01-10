@@ -445,4 +445,42 @@ public class TicketManagerTest {
         assertEquals(startingListOfTickets.size(), 3);
         assertEquals(finalListOfTickets.size(), 2);
     }
+
+    @Test
+    public void ticketManagerFindAllTicketsForCertainClientIdTestPositive() throws ReadManagerException, CreateManagerException {
+        List<Ticket> startingListOfTickets = ticketManagerForTests.findAllForGivenClientId(clientNo1.getClientID());
+        assertNotNull(startingListOfTickets);
+
+        Instant movieTime = Instant.now();
+        Instant reservationTime = Instant.now();
+        UUID movieId = movieNo1.getMovieID();
+        UUID clientId = clientNo1.getClientID();
+
+        ticketManagerForTests.createNormalTicket(movieTime, reservationTime, movieId, clientId);
+
+        List<Ticket> finalListOfTickets = ticketManagerForTests.findAllForGivenClientId(clientNo1.getClientID());
+        assertNotNull(finalListOfTickets);
+
+        assertEquals(startingListOfTickets.size(), 1);
+        assertEquals(finalListOfTickets.size(), 2);
+    }
+
+    @Test
+    public void ticketManagerFindAllTicketsForCertainMovieIdTestPositive() throws ReadManagerException, CreateManagerException {
+        List<Ticket> startingListOfTickets = ticketManagerForTests.findAllForGivenMovieId(movieNo1.getMovieID());
+        assertNotNull(startingListOfTickets);
+
+        Instant movieTime = Instant.now();
+        Instant reservationTime = Instant.now();
+        UUID movieId = movieNo1.getMovieID();
+        UUID clientId = clientNo1.getClientID();
+
+        ticketManagerForTests.createNormalTicket(movieTime, reservationTime, movieId, clientId);
+
+        List<Ticket> finalListOfTickets = ticketManagerForTests.findAllForGivenMovieId(movieNo1.getMovieID());
+        assertNotNull(finalListOfTickets);
+
+        assertEquals(startingListOfTickets.size(), 1);
+        assertEquals(finalListOfTickets.size(), 2);
+    }
 }

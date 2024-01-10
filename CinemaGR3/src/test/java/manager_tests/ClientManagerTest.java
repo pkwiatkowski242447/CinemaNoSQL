@@ -447,6 +447,56 @@ public class ClientManagerTest {
     }
 
     @Test
+    public void clientManagerDeactivateClientTestPositive() throws ReadManagerException, UpdateManagerException {
+        boolean clientStatusActiveBefore = clientManagerForTests.findByUUID(clientNo1.getClientID()).isClientStatusActive();
+        assertTrue(clientStatusActiveBefore);
+
+        clientManagerForTests.deactivate(clientNo1.getClientID());
+
+        boolean clientStatusActiveAfter = clientManagerForTests.findByUUID(clientNo1.getClientID()).isClientStatusActive();
+        assertFalse(clientStatusActiveAfter);
+    }
+
+    @Test
+    public void clientManagerDeactivateClientThatIsNotInTheDatabaseTestNegative() {
+        String clientName = "Stefania";
+        String clientSurname = "Czarnecka";
+        int clientAge = 35;
+
+        Client client = new Client(UUID.randomUUID(), clientName, clientSurname, clientAge);
+        assertNotNull(client);
+
+        assertThrows(ClientManagerUpdateException.class, () -> clientManagerForTests.deactivate(client.getClientID()));
+    }
+
+    @Test
+    public void clientManagerActivateClientTestPositive() throws ReadManagerException, UpdateManagerException {
+        clientManagerForTests.deactivate(clientNo1.getClientID());
+        boolean clientStatusActiveBefore = clientManagerForTests.findByUUID(clientNo1.getClientID()).isClientStatusActive();
+        assertFalse(clientStatusActiveBefore);
+
+        clientManagerForTests.activate(clientNo1.getClientID());
+
+        boolean clientStatusActiveAfter = clientManagerForTests.findByUUID(clientNo1.getClientID()).isClientStatusActive();
+        assertTrue(clientStatusActiveAfter);
+    }
+
+    @Test
+    public void clientManagerActivateClientThatIsNotInTheDatabaseTestNegative() {
+        String clientName = "Stefania";
+        String clientSurname = "Czarnecka";
+        int clientAge = 35;
+
+        Client client = new Client(UUID.randomUUID(), clientName, clientSurname, clientAge);
+        assertNotNull(client);
+
+        client.setClientStatusActive(false);
+        assertFalse(client.isClientStatusActive());
+
+        assertThrows(ClientManagerUpdateException.class, () -> clientManagerForTests.activate(client.getClientID()));
+    }
+
+    @Test
     public void clientManagerDeleteClientTestPositive() throws ReadManagerException, DeleteManagerException {
         int numberOfClientsBefore = clientManagerForTests.findAll().size();
         
