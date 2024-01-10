@@ -10,4 +10,8 @@ public class TicketConstants {
     public static final String TICKET_FINAL_PRICE = "ticket_final_price";
     public static final String MOVIE_ID = "movie_id";
     public static final String CLIENT_ID = "client_id";
+
+    public static final String TICKET_DISCRIMINATOR = "_clazz";
+    public static final String NORMAL_TICKET = "normal";
+    public static final String REDUCED_TICKET = "reduced";
 }

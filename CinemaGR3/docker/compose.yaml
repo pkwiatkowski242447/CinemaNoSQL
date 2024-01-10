@@ -7,6 +7,8 @@ services:
     image: mongoimg0:6.0.2
     container_name: mongonode1
     hostname: mongonode1
+    volumes:
+      - mongonode1_data:/data/db
     networks:
       - mongonet
     ports:
@@ -26,6 +28,8 @@ services:
     image: mongoimg0:6.0.2
     container_name: mongonode2
     hostname: mongonode2
+    volumes:
+      - mongonode2_data:/data/db
     networks:
       - mongonet
     ports:
@@ -45,6 +49,8 @@ services:
     image: mongoimg0:6.0.2
     container_name: mongonode3
     hostname: mongonode3
+    volumes:
+      - mongonode3_data:/data/db
     networks:
       - mongonet
     ports:
@@ -200,6 +206,12 @@ services:
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
 
 volumes:
+  mongonode1_data:
+    driver: local
+  mongonode2_data:
+    driver: local
+  mongonode3_data:
+    driver: local
   kafka1_data:
     driver: local
   kafka2_data:

@@ -25,5 +25,6 @@ public class GeneralConstants {
 
     // DB names
 
-    public static final String BACKUP_DB_NAME = "backup";
+    public static final String BACKUP_DB_NAME_NO_1 = "backup_no1";
+    public static final String BACKUP_DB_NAME_NO_2 = "backup_no2";
 }

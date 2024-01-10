@@ -1,5 +1,6 @@
 package model.model;
 
+import jakarta.json.bind.annotation.JsonbProperty;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,33 +20,40 @@ import java.util.UUID;
 public abstract class Ticket {
 
     @BsonProperty(TicketConstants.DOCUMENT_ID)
+    @JsonbProperty(TicketConstants.TICKET_ID)
     @NotNull(message = TicketValidation.TICKET_ID_NULL)
     protected UUID ticketID;
 
     @BsonProperty(TicketConstants.MOVIE_TIME)
+    @JsonbProperty(TicketConstants.MOVIE_TIME)
     @Setter
     @NotNull(message = TicketValidation.MOVIE_TIME_NULL)
     protected Instant movieTime;
 
     @BsonProperty(TicketConstants.RESERVATION_TIME)
+    @JsonbProperty(TicketConstants.RESERVATION_TIME)
     @NotNull(message = TicketValidation.RESERVATION_TIME_NULL)
     protected Instant reservationTime;
 
     @BsonProperty(TicketConstants.TICKET_BASE_PRICE)
+    @JsonbProperty(TicketConstants.TICKET_BASE_PRICE)
     @Setter
     @Min(value = 0, message = TicketValidation.TICKET_BASE_PRICE_NEGATIVE)
     @Max(value = 100, message = TicketValidation.TICKET_BASE_PRICE_TOO_HIGH)
     protected double ticketBasePrice;
 
     @BsonProperty(TicketConstants.TICKET_FINAL_PRICE)
+    @JsonbProperty(TicketConstants.TICKET_FINAL_PRICE)
     @PositiveOrZero(message = TicketValidation.TICKET_FINAL_PRICE_NEGATIVE)
     protected double ticketFinalPrice;
 
     @BsonProperty(TicketConstants.MOVIE_ID)
+    @JsonbProperty(TicketConstants.MOVIE_ID)
     @NotNull(message = TicketValidation.MOVIE_ID_NULL)
     protected UUID movieId;
 
     @BsonProperty(TicketConstants.CLIENT_ID)
+    @JsonbProperty(TicketConstants.CLIENT_ID)
     @NotNull(message = TicketValidation.CLIENT_ID_NULL)
     protected UUID clientId;
 

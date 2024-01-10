@@ -9,6 +9,7 @@ import org.apache.kafka.clients.producer.*;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.KafkaFuture;
 import org.apache.kafka.common.errors.ProducerFencedException;
+import org.apache.kafka.common.errors.TopicExistsException;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.common.serialization.UUIDSerializer;
 import org.slf4j.Logger;
@@ -34,15 +35,16 @@ public class TicketProducer {
         producerConfig.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka1:9192,kafka2:9292,kafka3:9392");
         producerConfig.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, "46d54bc9-8db4-4665-8fcb-df0b8e3e589b");
         ticketProducer = new KafkaProducer(producerConfig);
+        ticketProducer.initTransactions();
     }
 
     public void sendTicket(Ticket ticket) throws ExecutionException, InterruptedException {
-        ticketProducer.initTransactions();
         try {
             ticketProducer.beginTransaction();
 
             String jsonString = JsonbBuilder.create().toJson(ticket);
-            jsonString = String.format("[cinema_name : cinema]:%s", jsonString);
+            jsonString = String.format("[cinema_name:cinema] %s", jsonString);
+            logger.debug("Json string: " + jsonString);
             ProducerRecord<UUID, String> ticketRecord = new ProducerRecord<>(KafkaConstants.TICKET_TOPIC, ticket.getTicketID(), jsonString);
             Future<RecordMetadata> ticketRecordSent = ticketProducer.send(ticketRecord);
             RecordMetadata recordMetadata = ticketRecordSent.get();
@@ -70,6 +72,8 @@ public class TicketProducer {
             futureResult.get();
         } catch (ExecutionException exception) {
             logger.debug("Execution exception occurred: " + exception.getMessage(), exception);
+        } catch (TopicExistsException exception) {
+            logger.debug("Topic already exists: " + exception.getMessage(), exception);
         }
     }
 }
