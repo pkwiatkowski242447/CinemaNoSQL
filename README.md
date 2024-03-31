@@ -1,4 +1,4 @@
-# nonrelational_databases
+# CinemaNoSQL
 This repository contains source code of project that was developed throughout entire semeter on Non-reletaional Databases course on TUL.
 
 -> How to run the project (in any release)?
